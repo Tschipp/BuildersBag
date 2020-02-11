@@ -8,6 +8,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import tschipp.buildersbag.BuildersBag;
@@ -25,6 +26,7 @@ public class BuildersBagItem extends Item
 		this.setRegistryName(name);
 		this.setCreativeTab(CreativeTabs.TOOLS);
 		this.setMaxStackSize(1);
+		this.tier = tier;
 	}
 	
 	@Override

@@ -22,9 +22,8 @@ public class ContainerBag extends Container
 	private IBagCap bagCap;
 	private EntityPlayer player;
 	private EnumHand hand;
-	private int invSize;
+	public int invSize;
 	private ItemStackHandler inv;
-	private int slotIndex = 0;
 
 	public ContainerBag(EntityPlayer player, ItemStack bag, EnumHand hand)
 	{
@@ -41,14 +40,15 @@ public class ContainerBag extends Container
 	private void setupInventories()
 	{
 		setupPlayerInventory();
-//		setupBagInventory();
-//		setupModuleInventories();
+		setupBagInventory();
+		setupModuleInventories();
 	}
 
 	
 
 	private void setupBagInventory()
 	{
+		int slotIndex = 0;
 		int x = 0;
 		int y = 0;
 
@@ -60,7 +60,7 @@ public class ContainerBag extends Container
 			for (int j = 0; j < 9; j++)
 			{
 				if (slotIndex < invSize)
-					addSlotToContainer(new SlotItemHandler(inv, slotIndex++, x + j * 19, y + i * 19));
+					addSlotToContainer(new SlotItemHandler(inv, slotIndex++, x + j * 18, y + i * 18));
 				else
 					return;
 			}
@@ -72,7 +72,7 @@ public class ContainerBag extends Container
 		int x = 0;
 		int y = 0;
 
-		slotIndex = 9;
+		int slotIndex = 9;
 		
 		x += LEFT_OFFSET + 1;
 		y += TOP_OFFSET + 1 + getBagRows(invSize)* 18 + INV_OFFSET;
@@ -81,7 +81,7 @@ public class ContainerBag extends Container
 		{
 			for (int j = 0; j < 9; j++)
 			{
-				addSlotToContainer(new Slot(player.inventory, slotIndex++, x + j * 19, y + i * 19));
+				addSlotToContainer(new Slot(player.inventory, slotIndex++, x + j * 18, y + i * 18));
 			}
 		}
 		
@@ -91,7 +91,7 @@ public class ContainerBag extends Container
 		
 		for (int j = 0; j < 9; j++)
 		{
-			addSlotToContainer(new Slot(player.inventory, slotIndex++, x + j * 19, y));
+			addSlotToContainer(new Slot(player.inventory, slotIndex++, x + j * 18, y));
 		}
 	}
 	
