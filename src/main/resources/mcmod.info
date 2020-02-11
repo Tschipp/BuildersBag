@@ -1,0 +1,15 @@
+[
+{
+  "modid": "buildersbag",
+  "name": "${modname_long}",
+  "description": "Builder's bag provides a unifying bag for many building mods",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Tschipp"],
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
