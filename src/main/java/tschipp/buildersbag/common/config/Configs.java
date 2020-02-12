@@ -33,9 +33,8 @@ public class Configs {
 		@Comment("Stack size of the tier 2 bag")
 		public int tier2StackSize = 64;
 		
-		@Config.RequiresMcRestart
 		@Comment("Modules of the tier 2 bag")
-		public String[] tier2Modules = new String[] {"buildersbag:random"};
+		public String[] tier2Modules = new String[] {"buildersbag:random", "buildersbag:chisel"};
 		
 		
 		
@@ -49,9 +48,8 @@ public class Configs {
 		@Comment("Stack size of the tier 3 bag")
 		public int tier3StackSize = 64;
 		
-		@Config.RequiresMcRestart
 		@Comment("Modules of the tier 3 bag")
-		public String[] tier3Modules = new String[] {"buildersbag:random", "buildersbag:littletiles", "buildersbag:chiselsandbits"};
+		public String[] tier3Modules = new String[] {"buildersbag:random", "buildersbag:chisel", "buildersbag:littletiles", "buildersbag:chiselsandbits"};
 		
 		
 		
@@ -65,9 +63,8 @@ public class Configs {
 		@Comment("Stack size of the tier 4 bag")
 		public int tier4StackSize = 96;
 		
-		@Config.RequiresMcRestart
 		@Comment("Modules of the tier 4 bag")
-		public String[] tier4Modules = new String[] {"buildersbag:random", "buildersbag:littletiles", "buildersbag:chiselsandbits", "buildersbag:crafting"};
+		public String[] tier4Modules = new String[] {"buildersbag:random", "buildersbag:chisel", "buildersbag:littletiles", "buildersbag:chiselsandbits", "buildersbag:crafting"};
 		
 		
 		
@@ -81,9 +78,8 @@ public class Configs {
 		@Comment("Stack size of the tier 5 bag")
 		public int tier5StackSize = 128;
 		
-		@Config.RequiresMcRestart
 		@Comment("Modules of the tier 5 bag")
-		public String[] tier5Modules = new String[] {"buildersbag:random", "buildersbag:littletiles", "buildersbag:chiselsandbits", "buildersbag:crafting"};
+		public String[] tier5Modules = new String[] {"buildersbag:random", "buildersbag:chisel", "buildersbag:littletiles", "buildersbag:chiselsandbits", "buildersbag:crafting"};
 
 	}
 

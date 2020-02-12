@@ -15,6 +15,7 @@ public class CommonProxy
 		NetworkRegistry.INSTANCE.registerGuiHandler(BuildersBag.instance, new BagGuiHandler());
 		RegistryHandler.registerCapabilities();
 		RegistryHandler.registerItems();
+		RegistryHandler.registerModules();
 	}
 
 	public void init(FMLInitializationEvent event)

@@ -20,6 +20,7 @@ import tschipp.buildersbag.common.caps.BagCap;
 import tschipp.buildersbag.common.caps.BagCapStorage;
 import tschipp.buildersbag.common.caps.IBagCap;
 import tschipp.buildersbag.common.item.BuildersBagItem;
+import tschipp.buildersbag.common.modules.ChiselModule;
 
 @EventBusSubscriber(modid = BuildersBag.MODID)
 public class RegistryHandler
@@ -42,6 +43,11 @@ public class RegistryHandler
 		items.add(tier3 = new BuildersBagItem(3));
 		items.add(tier4 = new BuildersBagItem(4));
 		items.add(tier5 = new BuildersBagItem(5));
+	}
+	
+	public static void registerModules()
+	{
+		addModule(new ResourceLocation(BuildersBag.MODID, "chisel"), ChiselModule::new);
 	}
 	
 	@SubscribeEvent

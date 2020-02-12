@@ -5,6 +5,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.AbstractBagModule;
 
@@ -29,20 +30,20 @@ public class CraftingModule extends AbstractBagModule
 	}
 
 	@Override
-	public Container getContainer()
-	{
-		return null;
-	}
-
-	@Override
 	public String[] getModDependencies()
 	{
 		return new String[0];
 	}
 
 	@Override
-	public IItemHandler getInventory()
+	public ItemStackHandler getInventory()
 	{
 		return null;
+	}
+
+	@Override
+	public boolean isToggleable()
+	{
+		return true;
 	}
 }

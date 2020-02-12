@@ -1,12 +1,10 @@
 package tschipp.buildersbag.api;
 
-import net.minecraft.inventory.Container;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.util.INBTSerializable;
-import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
 
 public interface IBagModule extends INBTSerializable<NBTTagCompound>
 {
@@ -15,13 +13,18 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 	
 	public void consume(ItemStack stack);
 	
-	public Container getContainer();
-	
 	public void toggle();
+	
+	public boolean isToggleable();
 	
 	public boolean isEnabled();
 	
+	public boolean isExpanded();
+	
+	public void setExpanded(boolean bool);
+	
 	public String[] getModDependencies();
 	
-	public IItemHandler getInventory();
+	public ItemStackHandler getInventory();
+	
 }
