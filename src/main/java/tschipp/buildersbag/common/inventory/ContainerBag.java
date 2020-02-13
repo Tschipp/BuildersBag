@@ -169,7 +169,7 @@ public class ContainerBag extends Container
 				ItemStackHandler handler = module.getInventory();
 				for(int j = 0; j < handler.getSlots(); j++)
 				{
-					addSlotToContainer(new ToggleableSlot(handler, slotIndex++, x - j * 18, y).setEnabled(false));
+					addSlotToContainer(new ToggleableSlot(handler, slotIndex++, x - j * 18 - 16, y).setEnabled(module.isExpanded()));
 				}
 			}
 			else

@@ -6,6 +6,7 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.relauncher.Side;
 import tschipp.buildersbag.common.RegistryHandler;
+import tschipp.buildersbag.common.crafting.CraftingHandler;
 import tschipp.buildersbag.common.inventory.BagGuiHandler;
 import tschipp.buildersbag.network.SyncItemStack;
 import tschipp.buildersbag.network.SyncModuleState;
@@ -31,7 +32,7 @@ public class CommonProxy
 
 	public void postInit(FMLPostInitializationEvent event)
 	{
-		
+		CraftingHandler.generateRecipes();
 	}
 
 }

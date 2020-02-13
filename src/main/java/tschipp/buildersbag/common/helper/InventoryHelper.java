@@ -105,7 +105,7 @@ public class InventoryHelper
 		{
 			for (IBagModule module : bag.getModules())
 			{
-				if (exclude == null ? true : exclude != module)
+				if (module.isEnabled() && (exclude == null ? true : exclude != module))
 				{
 					ItemStack provided = module.createStack(stack, bag, player);
 					if (ItemStack.areItemsEqual(stack, provided))
@@ -121,6 +121,9 @@ public class InventoryHelper
 
 	public static void addStack(ItemStack stack, IBagCap cap, EntityPlayer player)
 	{
+		if(player.isCreative())
+			return;
+		
 		ItemStackHandler handler = cap.getBlockInventory();
 		for (int i = 0; i < handler.getSlots(); i++)
 		{

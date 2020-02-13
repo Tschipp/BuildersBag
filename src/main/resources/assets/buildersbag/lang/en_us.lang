@@ -1,0 +1,10 @@
+buildersbag.module.buildersbag:random=Random Blocks
+buildersbag.module.buildersbag:chisel=Chisel
+buildersbag.module.buildersbag:crafting=Crafting
+
+buildersbag.module.left=Left click 
+buildersbag.module.shiftleft=Shift + left click 
+buildersbag.module.toggle=to toggle slots
+buildersbag.module.to=to 
+buildersbag.module.enable=enable
+buildersbag.module.disable=disable

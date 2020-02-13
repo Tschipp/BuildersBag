@@ -21,6 +21,7 @@ import tschipp.buildersbag.common.caps.BagCapStorage;
 import tschipp.buildersbag.common.caps.IBagCap;
 import tschipp.buildersbag.common.item.BuildersBagItem;
 import tschipp.buildersbag.common.modules.ChiselModule;
+import tschipp.buildersbag.common.modules.CraftingModule;
 import tschipp.buildersbag.common.modules.RandomnessModule;
 
 @EventBusSubscriber(modid = BuildersBag.MODID)
@@ -50,6 +51,7 @@ public class RegistryHandler
 	{
 		addModule(new ResourceLocation(BuildersBag.MODID, "chisel"), ChiselModule::new);
 		addModule(new ResourceLocation(BuildersBag.MODID, "random"), RandomnessModule::new);
+		addModule(new ResourceLocation(BuildersBag.MODID, "crafting"), CraftingModule::new);
 	}
 	
 	@SubscribeEvent

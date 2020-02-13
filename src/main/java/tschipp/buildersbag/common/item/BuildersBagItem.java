@@ -64,7 +64,9 @@ public class BuildersBagItem extends Item
 			ItemStack stack = player.getHeldItem(hand);
 			IBagCap bag = CapHelper.getBagCap(stack);
 			FakePlayer fake = new FakePlayer((WorldServer) world, player.getGameProfile());
-
+			fake.rotationPitch = player.rotationPitch;
+			fake.rotationYaw = player.rotationYaw;
+			
 			ItemStack placementStack = ItemStack.EMPTY;
 
 			for (IBagModule module : bag.getModules())
@@ -96,8 +98,7 @@ public class BuildersBagItem extends Item
 			ItemStack placementCopy = placementStack.copy();
 			
 			fake.setHeldItem(hand, placementStack);
-			fake.rotationPitch = player.rotationPitch;
-			fake.prevRotationYaw = player.rotationYaw;
+		
 
 			EnumActionResult result = placementStack.onItemUse(fake, world, pos, hand, facing, hitX, hitY, hitZ);
 			if(result != EnumActionResult.SUCCESS)

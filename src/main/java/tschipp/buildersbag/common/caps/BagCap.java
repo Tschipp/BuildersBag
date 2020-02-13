@@ -54,7 +54,7 @@ public class BagCap implements IBagCap
 	private void initModules(String[] modules)
 	{
 		List<IBagModule> moduleList = new ArrayList<IBagModule>();
-		Lists.newArrayList(modules).stream().forEach(s -> {
+		Lists.newArrayList(modules).stream().distinct().forEach(s -> {
 			IBagModule module = RegistryHandler.getModule(new ResourceLocation(s));
 			if (module != null)
 				moduleList.add(module);

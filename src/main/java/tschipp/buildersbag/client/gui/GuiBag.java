@@ -6,8 +6,9 @@ import static tschipp.buildersbag.common.helper.InventoryHelper.getTotalHeight;
 import static tschipp.buildersbag.common.helper.InventoryHelper.getTotalWidth;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
@@ -17,11 +18,12 @@ import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.inventory.ContainerBag;
-import tschipp.buildersbag.network.SyncItemStack;
 import tschipp.buildersbag.network.SyncModuleState;
 
 public class GuiBag extends GuiContainer
@@ -55,6 +57,28 @@ public class GuiBag extends GuiContainer
 	{
 		super.drawScreen(mouseX, mouseY, partialTicks);
 		this.renderHoveredToolTip(mouseX, mouseY);
+
+		int mX = mouseX - guiLeft;
+		int mY = mouseY - guiTop;
+
+		container.modules.forEach((module, triple) -> {
+
+			int x = triple.getLeft();
+			int y = triple.getMiddle();
+			boolean right = triple.getRight();
+
+			if (mX >= x && mX <= x + 32 && mY >= y && mY <= y + 32)
+			{
+				List<String> tooltip = new ArrayList<String>();
+				tooltip.add(TextFormatting.BOLD + I18n.translateToLocal("buildersbag.module." + module.getName()));
+				if (!module.doesntUseOwnInventory())
+					tooltip.add(TextFormatting.GOLD + I18n.translateToLocal("buildersbag.module.shiftleft") + TextFormatting.RESET + I18n.translateToLocal("buildersbag.module.toggle"));
+				tooltip.add(TextFormatting.GOLD + I18n.translateToLocal("buildersbag.module.left") + TextFormatting.RESET +  I18n.translateToLocal("buildersbag.module.to") + (module.isEnabled() ? TextFormatting.RED + I18n.translateToLocal("buildersbag.module.disable") : TextFormatting.GREEN + I18n.translateToLocal("buildersbag.module.enable")));
+				
+				this.drawHoveringText(tooltip, mouseX, mouseY);
+			}
+
+		});
 	}
 
 	@Override
@@ -73,22 +97,19 @@ public class GuiBag extends GuiContainer
 			int y = triple.getMiddle();
 			boolean right = triple.getRight();
 
-			if (right)
+			drawHoverableBackgroundToggleable(x, y, 32, 32, mouseX, mouseY, module.isEnabled());
+
+			RenderHelper.enableGUIStandardItemLighting();
+			itemRender.renderItemAndEffectIntoGUI(module.getDisplayItem(), x + 8 + guiLeft, y + 8 + guiTop);
+			RenderHelper.disableStandardItemLighting();
+
+			mc.getTextureManager().bindTexture(new ResourceLocation(BuildersBag.MODID + ":textures/gui/bag.png"));
+
+			ItemStackHandler handler = module.getInventory();
+			if (handler != null && module.isExpanded())
 			{
-				drawHoverableBackgroundToggleable(x, y, 32, 32, mouseX, mouseY, module.isEnabled());
-
-				RenderHelper.enableGUIStandardItemLighting();
-				itemRender.renderItemAndEffectIntoGUI(module.getDisplayItem(), x + 8 + guiLeft, y + 8 + guiTop);
-				RenderHelper.disableStandardItemLighting();
-
-				mc.getTextureManager().bindTexture(new ResourceLocation(BuildersBag.MODID + ":textures/gui/bag.png"));
-
-				ItemStackHandler handler = module.getInventory();
-				if (handler != null && module.isExpanded())
-				{
-					int slotWidth = getSlotWidth(handler.getSlots());
-					drawBackground(x + 32, y, slotWidth, 32);
-				}
+				int slotWidth = getSlotWidth(handler.getSlots());
+				drawBackground(x + (right ? 32 : -32), y, slotWidth, 32);
 			}
 
 		});
