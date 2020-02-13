@@ -12,6 +12,10 @@ public interface IBagCap
 	
 	public void setBlockInventory(ItemStackHandler handler);
 	
+	public void setSelectedInventory(ItemStackHandler handler);
+
+	public ItemStackHandler getSelectedInventory();
+	
 	public void setModules(IBagModule[] modules);
 	
 }

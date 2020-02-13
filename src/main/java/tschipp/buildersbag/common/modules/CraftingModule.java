@@ -1,16 +1,17 @@
 package tschipp.buildersbag.common.modules;
 
-import net.minecraft.inventory.Container;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
-import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.AbstractBagModule;
+import tschipp.buildersbag.common.caps.IBagCap;
 
 public class CraftingModule extends AbstractBagModule
 {
+
+	private static final ItemStack DISPLAY = new ItemStack(Blocks.CRAFTING_TABLE);
 
 	protected CraftingModule()
 	{
@@ -18,17 +19,11 @@ public class CraftingModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> provideStacks()
+	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag)
 	{
 		return null;
 	}
-
-	@Override
-	public void consume(ItemStack stack)
-	{
-		
-	}
-
+	
 	@Override
 	public String[] getModDependencies()
 	{
@@ -42,8 +37,22 @@ public class CraftingModule extends AbstractBagModule
 	}
 
 	@Override
-	public boolean isToggleable()
+	public boolean doesntUseOwnInventory()
 	{
 		return true;
 	}
+
+	@Override
+	public ItemStack getDisplayItem()
+	{
+		return DISPLAY;
+	}
+
+	@Override
+	public ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player)
+	{
+		return ItemStack.EMPTY;
+	}
+
+	
 }

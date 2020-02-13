@@ -13,6 +13,7 @@ import net.minecraftforge.common.capabilities.Capability.IStorage;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.RegistryHandler;
 import tschipp.buildersbag.common.inventory.BagItemStackHandler;
+import tschipp.buildersbag.common.inventory.SelectedBlockHandler;
 
 public class BagCapStorage implements IStorage<IBagCap>
 {
@@ -22,6 +23,7 @@ public class BagCapStorage implements IStorage<IBagCap>
 	{
 		NBTTagCompound tag = new NBTTagCompound();
 		NBTTagCompound inventory = instance.getBlockInventory().serializeNBT();
+		NBTTagCompound selected = instance.getSelectedInventory().serializeNBT();
 		NBTTagList modules = new NBTTagList();
 		
 		for(IBagModule module : instance.getModules())
@@ -31,6 +33,7 @@ public class BagCapStorage implements IStorage<IBagCap>
 		
 		tag.setTag("inventory", inventory);
 		tag.setTag("modules", modules);
+		tag.setTag("selected", selected);
 		
 		return tag;
 
@@ -41,11 +44,16 @@ public class BagCapStorage implements IStorage<IBagCap>
 	{
 		NBTTagCompound tag = (NBTTagCompound) nbt;
 		NBTTagCompound inventory = tag.getCompoundTag("inventory");
+		NBTTagCompound selected = tag.getCompoundTag("selected");
 		NBTTagList modules = tag.getTagList("modules", 10);
 
 		BagItemStackHandler handler = new BagItemStackHandler(0,0);
 		handler.deserializeNBT(inventory);
 		instance.setBlockInventory(handler);
+		
+		SelectedBlockHandler selectedHandler = new SelectedBlockHandler(1);
+		selectedHandler.deserializeNBT(selected);;
+		instance.setSelectedInventory(selectedHandler);
 		
 		List<IBagModule> parsedModules = new ArrayList<IBagModule>();
 		for(int i = 0; i < modules.tagCount(); i++)

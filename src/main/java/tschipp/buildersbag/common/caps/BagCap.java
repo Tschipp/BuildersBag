@@ -11,11 +11,13 @@ import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.RegistryHandler;
 import tschipp.buildersbag.common.config.BuildersBagConfig;
 import tschipp.buildersbag.common.inventory.BagItemStackHandler;
+import tschipp.buildersbag.common.inventory.SelectedBlockHandler;
 
 public class BagCap implements IBagCap
 {
 	private IBagModule[] modules = new IBagModule[0];
 	private ItemStackHandler inv = new ItemStackHandler(0);
+	private ItemStackHandler selected = new SelectedBlockHandler(1);
 
 	public BagCap()
 	{
@@ -49,8 +51,6 @@ public class BagCap implements IBagCap
 		}
 	}
 	
-	
-
 	private void initModules(String[] modules)
 	{
 		List<IBagModule> moduleList = new ArrayList<IBagModule>();
@@ -84,6 +84,18 @@ public class BagCap implements IBagCap
 	public void setModules(IBagModule[] modules)
 	{
 		this.modules = modules;
+	}
+
+	@Override
+	public void setSelectedInventory(ItemStackHandler handler)
+	{
+		this.selected = handler;
+	}
+
+	@Override
+	public ItemStackHandler getSelectedInventory()
+	{
+		return selected;
 	}
 
 }

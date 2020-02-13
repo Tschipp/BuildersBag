@@ -6,7 +6,7 @@ public abstract class AbstractBagModule implements IBagModule
 {
 
 	protected boolean enabled = false;
-	protected boolean expanded = true;
+	protected boolean expanded = false;
 	protected String name;
 	
 	public AbstractBagModule(String name)
@@ -38,6 +38,12 @@ public abstract class AbstractBagModule implements IBagModule
 		this.expanded = expanded;
 	}
 
+	@Override
+	public String getName()
+	{
+		return name;
+	}
+	
 	@Override
 	public void deserializeNBT(NBTTagCompound nbt)
 	{

@@ -18,6 +18,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
@@ -81,6 +82,9 @@ public class ContainerBag extends Container
 					return;
 			}
 		}
+		
+		addSlotToContainer(new SelectedBlockSlot(bagCap.getSelectedInventory(), 0, 80, -24));
+
 	}
 
 	private void setupPlayerInventory()
@@ -117,7 +121,7 @@ public class ContainerBag extends Container
 		
 		int moduleCount = getMaxModules(invSize);
 		int x = getTotalWidth() + 40;
-		int y = 7;
+		int y = 8;
 		
 		int rightModuleCount = 0;
 		
@@ -131,19 +135,18 @@ public class ContainerBag extends Container
 			processedModules = i + 1;
 			
 			IBagModule module = bagCap.getModules()[i];
+			
+			builder.put(module, new ImmutableTriple<Integer, Integer, Boolean>(x - 40, y - 8, true));
+
 			if(module.getInventory() != null)
 			{
 				int slotIndex = 0;
 				ItemStackHandler handler = module.getInventory();
 				for(int j = 0; j < handler.getSlots(); j++)
 				{
-					addSlotToContainer(new ToggleableSlot(handler, slotIndex++, x + j * 18, y).setEnabled(false));
+					addSlotToContainer(new ToggleableSlot(handler, slotIndex++, x + j * 18, y).setEnabled(module.isExpanded()));
 				}
 			}
-			else
-				continue;
-			
-			builder.put(module, new ImmutableTriple<Integer, Integer, Boolean>(x - 40, y - 8, true));
 			
 			x = getTotalWidth() + 40;
 			y += 34;
@@ -151,14 +154,15 @@ public class ContainerBag extends Container
 			
 		}
 		
-		
-		
 		y = 7;
 		x = -41;
 		
 		for(int i = processedModules; i < bagCap.getModules().length; i++)
 		{
 			IBagModule module = bagCap.getModules()[i];
+			
+			builder.put(module, new ImmutableTriple<Integer, Integer, Boolean>(x + 8, y - 8, false));
+
 			if(module.getInventory() != null)
 			{
 				int slotIndex = 0;
@@ -171,7 +175,6 @@ public class ContainerBag extends Container
 			else
 				continue;
 			
-			builder.put(module, new ImmutableTriple<Integer, Integer, Boolean>(x + 40, y - 8, false));
 			
 			x = -41;
 			y += 34;
@@ -179,6 +182,27 @@ public class ContainerBag extends Container
 		
 		this.modules = builder.build();
 	}
+	
+	public void updateModule(String name, NBTTagCompound nbt)
+	{
+		modules.forEach((module, triple) -> {
+			if(module.getName().equals(name))
+			{
+				module.deserializeNBT(nbt);
+			}
+		});
+		
+		update();
+	}
+	
+	public void update()
+	{
+		inventorySlots.clear();
+		inventoryItemStacks.clear();
+		
+		setupInventories();
+	}
+	
 
 	@Override
 	public boolean canInteractWith(EntityPlayer player)

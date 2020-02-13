@@ -23,6 +23,18 @@ public class BagItemStackHandler extends ItemStackHandler
 	}
 	
 	@Override
+	public int getSlotLimit(int slot)
+	{
+		return limit;
+	}
+	
+	@Override
+	protected int getStackLimit(int slot, ItemStack stack)
+	{
+		return getSlotLimit(slot);
+	}
+	
+	@Override
 	public NBTTagCompound serializeNBT()
 	{
 		NBTTagCompound tag = super.serializeNBT();
