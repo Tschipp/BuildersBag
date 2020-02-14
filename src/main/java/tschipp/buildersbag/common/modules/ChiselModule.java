@@ -107,16 +107,19 @@ public class ChiselModule extends AbstractBagModule
 	@Override
 	public ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player)
 	{
-		if (InventoryHelper.containsStack(stack, this.getPossibleStacks(bag)).isEmpty())
-			return ItemStack.EMPTY;
+//		if (InventoryHelper.containsStack(stack, this.getPossibleStacks(bag)).isEmpty())
+//			return ItemStack.EMPTY;
 
 		ItemStack chisel = handler.getStackInSlot(0);
 		if (chisel.isEmpty())
 			return ItemStack.EMPTY;
-		chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player);
+		if(chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
+			chisel.shrink(1);
 
 		ICarvingGroup group = CarvingUtils.getChiselRegistry().getGroup(stack);
-
+		if(group == null)
+			return ItemStack.EMPTY;
+		
 		NonNullList<ItemStack> availableBlocks = InventoryHelper.getStacks(bag.getBlockInventory());
 
 		for (ICarvingVariation variant : group)

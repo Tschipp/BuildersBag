@@ -1,5 +1,6 @@
 package tschipp.buildersbag.common.item;
 
+import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -82,7 +83,16 @@ public class BuildersBagItem extends Item
 			{
 				placementStack = bag.getSelectedInventory().getStackInSlot(0).copy();
 			}
-
+			
+			fake.setHeldItem(hand, placementStack);		
+			Block block = Block.getBlockFromItem(placementStack.getItem());
+			boolean canPlace =  world.mayPlace(block, pos.offset(facing), false, facing, player);
+			boolean canEdit = player.canPlayerEdit(pos, facing, placementStack);
+			boolean b = canEdit && canPlace;
+			
+			if(!b)
+				return EnumActionResult.FAIL;
+				
 			if (!player.isCreative())
 			{
 				placementStack = InventoryHelper.getOrProvideStack(placementStack, bag, player, null);
@@ -94,15 +104,12 @@ public class BuildersBagItem extends Item
 			}
 			else
 				placementStack = placementStack.copy();
-
-			ItemStack placementCopy = placementStack.copy();
 			
-			fake.setHeldItem(hand, placementStack);
-		
-
+			fake.setHeldItem(hand, placementStack);		
 			EnumActionResult result = placementStack.onItemUse(fake, world, pos, hand, facing, hitX, hitY, hitZ);
+			
 			if(result != EnumActionResult.SUCCESS)
-				InventoryHelper.addStack(placementCopy, bag, player);
+				InventoryHelper.addStack(placementStack, bag, player);
 			
 			return result;
 				
