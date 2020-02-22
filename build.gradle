@@ -44,7 +44,7 @@ dependencies {
 	deobfCompile "team.chisel:Chisel:${chisel_version}" //Chisel
 	compile "curse.maven:chisels-bits:${chisels_and_bits_version}" //C & B
 	compile "curse.maven:linear:${linear_version}" //Linear
-	compile "curse.maven:littletiles:${littletiles_version}" //LT
+	//compile "curse.maven:littletiles:${littletiles_version}" //LT
 	compile "curse.maven:creativecore:${creativecore_version}" //Creative Core
 
 }

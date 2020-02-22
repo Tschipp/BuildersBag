@@ -1,5 +1,7 @@
 package tschipp.buildersbag.common.modules;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -72,7 +74,7 @@ public class CraftingModule extends AbstractBagModule
 				continue;
 			
 			boolean containsAll = true;
-			
+						
 			for(Ingredient ing : container.getIngredients())
 			{
 				boolean hasMatchingStack = false;
@@ -101,17 +103,28 @@ public class CraftingModule extends AbstractBagModule
 			if(!containsAll)
 				continue;
 			
+			List<ItemStack> consumed = new ArrayList<ItemStack>();
+			
+			top:
 			for(Ingredient ing : container.getIngredients())
 			{
+				if(ing.getMatchingStacks().length == 0)
+					continue;
+				
 				for(ItemStack ingStack : ing.getMatchingStacks())
 				{
 					ItemStack provided = InventoryHelper.getOrProvideStack(ingStack, bag, player, null);
 					if(!provided.isEmpty())
 					{
-						provided.shrink(1);
-						continue;
+						consumed.add(provided.splitStack(1));
+						continue top;
 					}
 				}
+				
+				for(ItemStack s : consumed)
+					InventoryHelper.addStack(s, bag, player);
+				
+				return ItemStack.EMPTY;
 			}
 			
 			ItemStack output = container.getOutput();

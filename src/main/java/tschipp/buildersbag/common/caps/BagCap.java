@@ -98,4 +98,13 @@ public class BagCap implements IBagCap
 		return selected;
 	}
 
+	@Override
+	public boolean hasModuleAndEnabled(String name)
+	{
+		for(IBagModule m : modules)
+			if(m.getName().equals(name) && m.isEnabled())
+				return true;
+		return false;
+	}
+
 }

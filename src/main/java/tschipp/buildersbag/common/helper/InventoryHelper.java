@@ -9,6 +9,7 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.caps.IBagCap;
+import tschipp.buildersbag.common.item.BuildersBagItem;
 
 public class InventoryHelper
 {
@@ -105,7 +106,7 @@ public class InventoryHelper
 		{
 			for (IBagModule module : bag.getModules())
 			{
-				if (module.isEnabled() && (exclude == null ? true : exclude != module))
+				if (module.isEnabled() && !module.isSupplier() && (exclude == null ? true : exclude != module))
 				{
 					ItemStack provided = module.createStack(stack, bag, player);
 					if (ItemStack.areItemsEqual(stack, provided))
@@ -140,6 +141,29 @@ public class InventoryHelper
 		{
 			player.dropItem(stack, false);
 		}
+	}
+	
+	public static NonNullList<ItemStack> getBagsInInventory(EntityPlayer player)
+	{
+		NonNullList<ItemStack> list = NonNullList.create();
+		
+		for(ItemStack s : player.inventory.mainInventory)
+		{
+			if(s.getItem() instanceof BuildersBagItem)
+			{
+				list.add(s);
+			}
+		}
+		
+		for(ItemStack s : player.inventory.offHandInventory)
+		{
+			if(s.getItem() instanceof BuildersBagItem)
+			{
+				list.add(s);
+			}
+		}
+		
+		return list;
 	}
 
 }

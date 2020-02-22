@@ -18,4 +18,6 @@ public interface IBagCap
 	
 	public void setModules(IBagModule[] modules);
 	
+	public boolean hasModuleAndEnabled(String name);
+	
 }

@@ -107,17 +107,16 @@ public class ChiselModule extends AbstractBagModule
 	@Override
 	public ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player)
 	{
-//		if (InventoryHelper.containsStack(stack, this.getPossibleStacks(bag)).isEmpty())
-//			return ItemStack.EMPTY;
+		// if (InventoryHelper.containsStack(stack,
+		// this.getPossibleStacks(bag)).isEmpty())
+		// return ItemStack.EMPTY;
+
+		ICarvingGroup group = CarvingUtils.getChiselRegistry().getGroup(stack);
+		if (group == null)
+			return ItemStack.EMPTY;
 
 		ItemStack chisel = handler.getStackInSlot(0);
 		if (chisel.isEmpty())
-			return ItemStack.EMPTY;
-		if(chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
-			chisel.shrink(1);
-
-		ICarvingGroup group = CarvingUtils.getChiselRegistry().getGroup(stack);
-		if(group == null)
 			return ItemStack.EMPTY;
 		
 		NonNullList<ItemStack> availableBlocks = InventoryHelper.getStacks(bag.getBlockInventory());
@@ -127,7 +126,13 @@ public class ChiselModule extends AbstractBagModule
 			ItemStack provided = InventoryHelper.containsStack(variant.getStack(), availableBlocks);
 
 			if (!provided.isEmpty())
-			{
+			{		
+				if (!player.world.isRemote)
+				{
+					if (chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
+						chisel.shrink(1);
+				}
+				
 				provided.shrink(1);
 				return ItemHandlerHelper.copyStackWithSize(stack, 1);
 			}
@@ -139,6 +144,12 @@ public class ChiselModule extends AbstractBagModule
 
 			if (!provided.isEmpty())
 			{
+				if (!ItemStack.areItemsEqual(provided, stack) && !player.world.isRemote)
+				{
+					if (chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
+						chisel.shrink(1);
+				}
+				
 				provided.shrink(1);
 				return ItemHandlerHelper.copyStackWithSize(stack, 1);
 			}

@@ -1,20 +1,23 @@
 package tschipp.buildersbag.common.modules;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.AbstractBagModule;
 import tschipp.buildersbag.common.caps.IBagCap;
+import tschipp.buildersbag.common.helper.InventoryHelper;
 
-public class LittleTilesModule extends AbstractBagModule
+public class SupplierModule extends AbstractBagModule
 {
-	private static final ItemStack DISPLAY = new ItemStack(Item.getByNameOrId("littletiles:chisel"));
 
-	public LittleTilesModule()
+	private static final ItemStack DISPLAY = new ItemStack(Blocks.CHEST);
+
+	public SupplierModule()
 	{
-		super("buildersbag:littletiles");
+		super("buildersbag:supplier");
 	}
 
 	@Override
@@ -26,7 +29,7 @@ public class LittleTilesModule extends AbstractBagModule
 	@Override
 	public ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player)
 	{
-		return ItemStack.EMPTY;
+		return InventoryHelper.getOrProvideStack(stack, bag, player, this);
 	}
 
 	@Override
@@ -38,7 +41,7 @@ public class LittleTilesModule extends AbstractBagModule
 	@Override
 	public String[] getModDependencies()
 	{
-		return new String[] {"littletiles"};
+		return new String[0];
 	}
 
 	@Override
@@ -53,6 +56,9 @@ public class LittleTilesModule extends AbstractBagModule
 		return DISPLAY;
 	}
 	
-	
-
+	@Override
+	public boolean isSupplier()
+	{
+		return true;
+	}
 }

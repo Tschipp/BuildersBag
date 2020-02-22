@@ -22,7 +22,9 @@ import tschipp.buildersbag.common.caps.IBagCap;
 import tschipp.buildersbag.common.item.BuildersBagItem;
 import tschipp.buildersbag.common.modules.ChiselModule;
 import tschipp.buildersbag.common.modules.CraftingModule;
+import tschipp.buildersbag.common.modules.LittleTilesModule;
 import tschipp.buildersbag.common.modules.RandomnessModule;
+import tschipp.buildersbag.common.modules.SupplierModule;
 
 @EventBusSubscriber(modid = BuildersBag.MODID)
 public class RegistryHandler
@@ -52,6 +54,9 @@ public class RegistryHandler
 		addModule(new ResourceLocation(BuildersBag.MODID, "chisel"), ChiselModule::new);
 		addModule(new ResourceLocation(BuildersBag.MODID, "random"), RandomnessModule::new);
 		addModule(new ResourceLocation(BuildersBag.MODID, "crafting"), CraftingModule::new);
+		addModule(new ResourceLocation(BuildersBag.MODID, "littletiles"), LittleTilesModule::new);
+		addModule(new ResourceLocation(BuildersBag.MODID, "supplier"), SupplierModule::new);
+
 	}
 	
 	@SubscribeEvent

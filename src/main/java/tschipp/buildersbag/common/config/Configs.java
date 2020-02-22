@@ -64,7 +64,7 @@ public class Configs {
 		public int tier4StackSize = 96;
 		
 		@Comment("Modules of the tier 4 bag")
-		public String[] tier4Modules = new String[] {"buildersbag:random", "buildersbag:chisel", "buildersbag:littletiles", "buildersbag:chiselsandbits", "buildersbag:crafting"};
+		public String[] tier4Modules = new String[] {"buildersbag:random", "buildersbag:chisel", "buildersbag:littletiles", "buildersbag:chiselsandbits", "buildersbag:supplier"};
 		
 		
 		
@@ -79,7 +79,7 @@ public class Configs {
 		public int tier5StackSize = 128;
 		
 		@Comment("Modules of the tier 5 bag")
-		public String[] tier5Modules = new String[] {"buildersbag:random", "buildersbag:chisel", "buildersbag:littletiles", "buildersbag:chiselsandbits", "buildersbag:crafting"};
+		public String[] tier5Modules = new String[] {"buildersbag:random", "buildersbag:chisel", "buildersbag:littletiles", "buildersbag:chiselsandbits", "buildersbag:supplier", "buildersbag:crafting"};
 
 	}
 

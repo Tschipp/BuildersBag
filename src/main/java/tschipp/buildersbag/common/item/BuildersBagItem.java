@@ -1,8 +1,12 @@
 package tschipp.buildersbag.common.item;
 
+import com.creativemd.littletiles.common.api.ILittleInventory;
+
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
+import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -11,7 +15,6 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameType;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
@@ -22,10 +25,9 @@ import tschipp.buildersbag.common.caps.BagCapProvider;
 import tschipp.buildersbag.common.caps.IBagCap;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
+import tschipp.buildersbag.common.inventory.StackProviderIInventoryWrapper;
 
-import static tschipp.buildersbag.common.helper.InventoryHelper.*;
-
-public class BuildersBagItem extends Item
+public class BuildersBagItem extends Item implements ILittleInventory
 {
 
 	private int tier;
@@ -67,7 +69,7 @@ public class BuildersBagItem extends Item
 			FakePlayer fake = new FakePlayer((WorldServer) world, player.getGameProfile());
 			fake.rotationPitch = player.rotationPitch;
 			fake.rotationYaw = player.rotationYaw;
-			
+
 			ItemStack placementStack = ItemStack.EMPTY;
 
 			for (IBagModule module : bag.getModules())
@@ -83,16 +85,19 @@ public class BuildersBagItem extends Item
 			{
 				placementStack = bag.getSelectedInventory().getStackInSlot(0).copy();
 			}
+
+			if(placementStack.isEmpty())
+				return EnumActionResult.FAIL;
 			
-			fake.setHeldItem(hand, placementStack);		
+			fake.setHeldItem(hand, placementStack);
 			Block block = Block.getBlockFromItem(placementStack.getItem());
-			boolean canPlace =  world.mayPlace(block, pos.offset(facing), false, facing, player);
+			boolean canPlace = world.mayPlace(block, pos.offset(facing), false, facing, player);
 			boolean canEdit = player.canPlayerEdit(pos, facing, placementStack);
 			boolean b = canEdit && canPlace;
-			
-			if(!b)
+
+			if (!b)
 				return EnumActionResult.FAIL;
-				
+
 			if (!player.isCreative())
 			{
 				placementStack = InventoryHelper.getOrProvideStack(placementStack, bag, player, null);
@@ -101,18 +106,17 @@ public class BuildersBagItem extends Item
 				{
 					return EnumActionResult.FAIL;
 				}
-			}
-			else
+			} else
 				placementStack = placementStack.copy();
-			
-			fake.setHeldItem(hand, placementStack);		
+
+			fake.setHeldItem(hand, placementStack);
 			EnumActionResult result = placementStack.onItemUse(fake, world, pos, hand, facing, hitX, hitY, hitZ);
-			
-			if(result != EnumActionResult.SUCCESS)
+
+			if (result != EnumActionResult.SUCCESS)
 				InventoryHelper.addStack(placementStack, bag, player);
-			
+
 			return result;
-				
+
 		} else
 			return EnumActionResult.SUCCESS;
 	}
@@ -126,6 +130,32 @@ public class BuildersBagItem extends Item
 	public int getTier()
 	{
 		return tier;
+	}
+
+	@Override
+	public boolean canBeFilled(ItemStack stack)
+	{
+		return false;
+	}
+
+	@Override
+	public IInventory getInventory(ItemStack stack)
+	{
+		IBagCap bag = CapHelper.getBagCap(stack);
+
+		if (bag.hasModuleAndEnabled("buildersbag:littletiles"))
+		{
+			StackProviderIInventoryWrapper wrapper = new StackProviderIInventoryWrapper(bag, stack, null);
+			return wrapper;
+		}
+		
+		return new InventoryBasic("Builder's Bag", false, 0);
+	}
+
+	@Override
+	public void setInventory(ItemStack stack, IInventory inventory)
+	{
+		
 	}
 
 }
