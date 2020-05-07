@@ -52,7 +52,7 @@ repositories {
     }
 	
 	maven {
-		url "http://maven.blamejared.com/"
+		url "https://maven.blamejared.com/"
 	}
 }
 
