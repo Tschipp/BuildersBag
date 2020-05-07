@@ -1,0 +1,10 @@
+{
+	"recipes": 
+	{
+		"bag_upgrading": "tschipp.buildersbag.common.recipes.BagUpgradingRecipe$Factory"
+	}, 
+	"conditions" : 
+	{
+		"enable_update_recipes": "tschipp.buildersbag.common.recipes.EnableUpdateRecipes"
+	}
+}

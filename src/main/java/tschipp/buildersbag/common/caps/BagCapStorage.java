@@ -10,6 +10,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.Capability.IStorage;
+import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.RegistryHandler;
 import tschipp.buildersbag.common.inventory.BagItemStackHandler;
@@ -47,12 +48,12 @@ public class BagCapStorage implements IStorage<IBagCap>
 		NBTTagCompound selected = tag.getCompoundTag("selected");
 		NBTTagList modules = tag.getTagList("modules", 10);
 
-		BagItemStackHandler handler = new BagItemStackHandler(0,0);
+		BagItemStackHandler handler = new BagItemStackHandler(0);
 		handler.deserializeNBT(inventory);
 		instance.setBlockInventory(handler);
 		
 		SelectedBlockHandler selectedHandler = new SelectedBlockHandler(1);
-		selectedHandler.deserializeNBT(selected);;
+		selectedHandler.deserializeNBT(selected);
 		instance.setSelectedInventory(selectedHandler);
 		
 		List<IBagModule> parsedModules = new ArrayList<IBagModule>();

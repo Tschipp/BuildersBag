@@ -1,0 +1,29 @@
+{
+  "result": {
+    "item": "buildersbag:builders_bag_tier_one"
+  },
+  "pattern": [
+    " l ",
+    "lcl",
+    "slw"
+  ],
+  "type": "forge:ore_shaped",
+  "key": {
+    "w": {
+      "ore": "plankWood",
+      "type": "forge:ore_dict"
+    },
+    "s": {
+      "ore": "stone",
+      "type": "forge:ore_dict"
+    },
+    "c": {
+      "ore": "chestWood",
+      "type": "forge:ore_dict"
+    }, 
+    "l": {
+      "ore": "leather",
+	  "type": "forge:ore_dict"
+    }
+  }
+}

@@ -1,8 +1,8 @@
 package tschipp.buildersbag.common.helper;
 
 import net.minecraft.item.ItemStack;
+import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.caps.BagCapProvider;
-import tschipp.buildersbag.common.caps.IBagCap;
 
 public class CapHelper
 {

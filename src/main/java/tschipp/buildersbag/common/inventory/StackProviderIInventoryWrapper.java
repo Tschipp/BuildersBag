@@ -6,7 +6,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
-import tschipp.buildersbag.common.caps.IBagCap;
+import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 
 public class StackProviderIInventoryWrapper implements IInventory

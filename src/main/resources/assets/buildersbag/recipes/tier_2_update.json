@@ -1,0 +1,24 @@
+{
+  "result": {
+    "item": "buildersbag:builders_bag_tier_two"
+  },
+  "conditions" : [
+	{
+		"type" : "buildersbag:enable_update_recipes"
+	}
+  ],
+  "pattern": [
+    "d",
+    "b"
+  ],
+  "type": "buildersbag:bag_upgrading",
+  "key": {
+	 "d": {
+      "ore": "dustRedstone",
+      "type": "forge:ore_dict"
+    },
+    "b": {
+      "item" : "buildersbag:builders_bag_tier_two"
+    }
+  }
+}

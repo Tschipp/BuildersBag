@@ -1,0 +1,28 @@
+{
+  "result": {
+    "item": "buildersbag:builders_bag_tier_two"
+  },
+  "pattern": [
+    " l ",
+    "lbl",
+    "slw"
+  ],
+  "type": "buildersbag:bag_upgrading",
+  "key": {
+    "w": {
+      "ore": "ingotGold",
+      "type": "forge:ore_dict"
+    },
+    "s": {
+      "ore": "ingotIron",
+      "type": "forge:ore_dict"
+    },
+    "b": {
+      "item" : "buildersbag:builders_bag_tier_one"
+    }, 
+    "l": {
+      "ore": "leather",
+	  "type": "forge:ore_dict"
+    }
+  }
+}

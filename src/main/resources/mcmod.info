@@ -1,14 +1,14 @@
 [
 {
   "modid": "buildersbag",
-  "name": "${modname_long}",
-  "description": "Builder's bag provides a unifying bag for many building mods",
+  "name": "Builder's Bag",
+  "description": "Builder's Bag provides a useful bag which unifies many building mods.",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "",
   "updateUrl": "",
   "authorList": ["Tschipp"],
-  "logoFile": "",
+  "logoFile": "assets/buildersbag/textures/logo.png",
   "screenshots": [],
   "dependencies": []
 }

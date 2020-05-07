@@ -1,15 +1,34 @@
 package tschipp.buildersbag.common.modules;
 
+import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import mod.chiselsandbits.chiseledblock.data.BitLocation;
+import mod.chiselsandbits.chiseledblock.data.VoxelBlob;
+import mod.chiselsandbits.chiseledblock.iterators.ChiselIterator;
+import mod.chiselsandbits.chiseledblock.iterators.ChiselTypeIterator;
+import mod.chiselsandbits.core.ClientSide;
+import mod.chiselsandbits.helpers.ActingPlayer;
+import mod.chiselsandbits.helpers.BitOperation;
+import mod.chiselsandbits.helpers.ContinousBits;
+import mod.chiselsandbits.helpers.IContinuousInventory;
+import mod.chiselsandbits.helpers.VoxelRegionSrc;
+import mod.chiselsandbits.items.ItemChiseledBit;
+import mod.chiselsandbits.modes.ChiselMode;
+import mod.chiselsandbits.network.packets.PacketChisel;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 import team.chisel.api.IChiselItem;
@@ -17,7 +36,7 @@ import team.chisel.api.carving.CarvingUtils;
 import team.chisel.api.carving.ICarvingGroup;
 import team.chisel.api.carving.ICarvingVariation;
 import tschipp.buildersbag.api.AbstractBagModule;
-import tschipp.buildersbag.common.caps.IBagCap;
+import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.inventory.ItemHandlerWithPredicate;
 
@@ -27,6 +46,7 @@ public class ChiselModule extends AbstractBagModule
 	private ItemHandlerWithPredicate handler = new ItemHandlerWithPredicate(1, (stack, slot) -> stack.getItem() instanceof IChiselItem);
 	private static final ItemStack DISPLAY = new ItemStack(Item.getByNameOrId("chisel:chisel_iron"));
 
+	
 	public ChiselModule()
 	{
 		super("buildersbag:chisel");
@@ -63,12 +83,6 @@ public class ChiselModule extends AbstractBagModule
 		}
 
 		return list;
-	}
-
-	@Override
-	public String[] getModDependencies()
-	{
-		return new String[] { "chisel" };
 	}
 
 	@Override
@@ -118,7 +132,7 @@ public class ChiselModule extends AbstractBagModule
 		ItemStack chisel = handler.getStackInSlot(0);
 		if (chisel.isEmpty())
 			return ItemStack.EMPTY;
-		
+
 		NonNullList<ItemStack> availableBlocks = InventoryHelper.getStacks(bag.getBlockInventory());
 
 		for (ICarvingVariation variant : group)
@@ -126,13 +140,13 @@ public class ChiselModule extends AbstractBagModule
 			ItemStack provided = InventoryHelper.containsStack(variant.getStack(), availableBlocks);
 
 			if (!provided.isEmpty())
-			{		
+			{
 				if (!player.world.isRemote)
 				{
 					if (chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
 						chisel.shrink(1);
 				}
-				
+
 				provided.shrink(1);
 				return ItemHandlerHelper.copyStackWithSize(stack, 1);
 			}
@@ -149,7 +163,7 @@ public class ChiselModule extends AbstractBagModule
 					if (chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
 						chisel.shrink(1);
 				}
-				
+
 				provided.shrink(1);
 				return ItemHandlerHelper.copyStackWithSize(stack, 1);
 			}
@@ -157,4 +171,7 @@ public class ChiselModule extends AbstractBagModule
 
 		return ItemStack.EMPTY;
 	}
+
+	
+
 }

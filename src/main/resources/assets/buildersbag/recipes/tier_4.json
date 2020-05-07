@@ -1,0 +1,35 @@
+{
+  "result": {
+    "item": "buildersbag:builders_bag_tier_four"
+  },
+  "pattern": [
+    " d ",
+    "lbl",
+    "scw"
+  ],
+  "type": "buildersbag:bag_upgrading",
+  "key": {
+    "w": {
+      "ore": "enderpearl",
+      "type": "forge:ore_dict"
+    },
+    "s": {
+      "ore": "gemPrismarine",
+      "type": "forge:ore_dict"
+    },
+	 "d": {
+      "item" : "minecraft:crafting_table"
+    },
+	"c": {
+       "ore": "chestWood",
+      "type": "forge:ore_dict"
+    },
+    "b": {
+      "item" : "buildersbag:builders_bag_tier_three"
+    }, 
+    "l": {
+      "ore": "leather",
+	  "type": "forge:ore_dict"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "result": {
+    "item": "buildersbag:builders_bag_tier_five"
+  },
+  "pattern": [
+    " d ",
+    "lbl",
+    "scw"
+  ],
+  "type": "buildersbag:bag_upgrading",
+  "key": {
+    "w": {
+      "item" : "minecraft:dispenser"
+    },
+    "s": {
+      "item" : "minecraft:hopper"
+    },
+	 "d": {
+      "ore": "blockDiamond",
+      "type": "forge:ore_dict"
+    },
+	"c": {
+       "ore": "chestEnder",
+      "type": "forge:ore_dict"
+    },
+    "b": {
+      "item" : "buildersbag:builders_bag_tier_four"
+    }, 
+    "l": {
+      "ore": "leather",
+	  "type": "forge:ore_dict"
+    }
+  }
+}

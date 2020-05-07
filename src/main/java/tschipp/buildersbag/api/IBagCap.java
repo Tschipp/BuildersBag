@@ -1,7 +1,6 @@
-package tschipp.buildersbag.common.caps;
+package tschipp.buildersbag.api;
 
 import net.minecraftforge.items.ItemStackHandler;
-import tschipp.buildersbag.api.IBagModule;
 
 public interface IBagCap
 {
@@ -20,4 +19,6 @@ public interface IBagCap
 	
 	public boolean hasModuleAndEnabled(String name);
 	
+	public void transferDataFromCap(IBagCap from);
+
 }

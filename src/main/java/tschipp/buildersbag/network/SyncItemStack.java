@@ -36,6 +36,8 @@ public class SyncItemStack implements IMessage, IMessageHandler<SyncItemStack, I
 			
 			EntityPlayer player = ctx.getServerHandler().player;
 			ItemStack stack = message.right ? player.getHeldItemMainhand() : player.getHeldItemOffhand();
+			
+			stack.deserializeNBT(message.stack.serializeNBT());
 //			((ContainerBag)player.openContainer).processUpdate(stack);
 			
 		});

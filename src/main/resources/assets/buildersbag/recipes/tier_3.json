@@ -1,0 +1,32 @@
+{
+  "result": {
+    "item": "buildersbag:builders_bag_tier_three"
+  },
+  "pattern": [
+    " d ",
+    "lbl",
+    "slw"
+  ],
+  "type": "buildersbag:bag_upgrading",
+  "key": {
+    "w": {
+      "ore": "blockGold",
+      "type": "forge:ore_dict"
+    },
+    "s": {
+      "ore": "blockIron",
+      "type": "forge:ore_dict"
+    },
+	 "d": {
+      "ore": "gemDiamond",
+      "type": "forge:ore_dict"
+    },
+    "b": {
+      "item" : "buildersbag:builders_bag_tier_two"
+    }, 
+    "l": {
+      "ore": "leather",
+	  "type": "forge:ore_dict"
+    }
+  }
+}

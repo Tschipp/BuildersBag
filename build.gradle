@@ -13,11 +13,23 @@ plugins {
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'maven-publish'
 
+apply from: 'https://raw.githubusercontent.com/MinecraftModDevelopment/Gradle-Collection/22e7d543a18cd30675277fbfa3669e3d9e206010/generic/secrets.gradle'
 
+import groovy.json.JsonOutput
 
-group = "tschipp.buildersbag" // 
-archivesBaseName = "buildersbag"
+if (project.hasProperty('secretFile')) {
+    loadSecrets(new File((String) findProperty('secretFile')))
+}
+
+group = "tschipp.buildersbag" 
+archivesBaseName = "buildersbag-${minecraft_version}"
+version = "${version}"
+
+if (System.getenv('BUILD_NUMBER') != null) {
+    version += "." + System.getenv('BUILD_NUMBER')
+}
 
 sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
 compileJava {
@@ -28,6 +40,8 @@ minecraft {
     version = "${minecraft_version}-${forge_version}"
     runDir = "run"
     mappings = mcp_mappings
+	
+	replace 'GRADLE:VERSION', version
 }
 
 repositories {
@@ -36,30 +50,33 @@ repositories {
         name 'tterrag maven'
         url "https://maven.tterrag.com/"
     }
+	
+	maven {
+		url "http://maven.blamejared.com/"
+	}
 }
 
 dependencies {
     
 	deobfCompile "team.chisel.ctm:CTM:${ctm_version}" //CTM
 	deobfCompile "team.chisel:Chisel:${chisel_version}" //Chisel
-	compile "curse.maven:chisels-bits:${chisels_and_bits_version}" //C & B
-	compile "curse.maven:linear:${linear_version}" //Linear
-	//compile "curse.maven:littletiles:${littletiles_version}" //LT
+	compile "curse.maven:littletiles:${littletiles_version}" //LT
 	compile "curse.maven:creativecore:${creativecore_version}" //Creative Core
-
+	compile "curse.maven:chisels-bits:${chisels_and_bits_version}" //C & B
+	deobfCompile "tschipp.linear:linear-1.12.2:${linear_version}" //Linear
 }
 
 processResources {
     // this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+    inputs.property "mcversion", project.minecraft_version
 
     // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
                 
         // replace version and mcversion
-        expand 'version':project.version, 'mcversion':project.minecraft.version
+        expand 'version':project.version, 'mcversion':project.minecraft_version
     }
         
     // copy everything else except the mcmod.info
@@ -67,3 +84,96 @@ processResources {
         exclude 'mcmod.info'
     }
 }
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    description = 'Creates a JAR containing the source code.'
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    description = 'Creates a JAR containing the JavaDocs.'
+    from javadoc.destinationDir
+    classifier = 'javadoc'
+}
+
+task deobfJar(type: Jar) {
+    description = 'Creates a JAR containing the non-obfuscated compiled code.'
+    from sourceSets.main.output
+    classifier = "deobf"
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+    archives deobfJar
+}
+
+publishing {
+
+    publications {
+
+        mavenJava(MavenPublication) {
+
+            groupId project.group
+            artifactId project.archivesBaseName
+            version project.version
+            from components.java
+
+            // Allows the maven pom file to be modified.
+            pom.withXml {
+
+                // Go through all the dependencies.
+                asNode().dependencies.dependency.each { dep ->
+
+                    println 'Surpressing artifact ' + dep.artifactId.last().value().last() + ' from maven dependencies.'
+                    assert dep.parent().remove(dep)
+                }
+            }
+
+            artifact sourcesJar {
+
+                classifier 'sources'
+            }
+            artifact javadocJar {
+
+                classifier 'javadoc'
+            }
+            artifact deobfJar {
+
+                classifier 'deobf'
+            }
+        }
+    }
+
+    repositories {
+
+        maven {
+
+            url "file://" + System.getenv("local_maven")
+        }
+    }
+}
+
+task signJar(type: SignJar, dependsOn: reobfJar) {
+
+    // Skips if the keyStore property is missing.
+    onlyIf {
+        project.hasProperty('modkeyStore')
+    }
+
+    // findProperty allows us to reference the property without it existing. 
+    // Using project.propName would cause the script to fail validation if 
+    // the property did not exist. 
+    keyStore = project.findProperty('modkeyStore')
+    alias = project.findProperty('modkeyStoreAlias')
+    storePass = project.findProperty('modkeyStorePass')
+    keyPass = project.findProperty('modkeyStoreKeyPass')
+    inputFile = jar.archivePath
+    outputFile = jar.archivePath
+}
+
+// Runs this task automatically when build is ran. 
+build.dependsOn signJar
+
+

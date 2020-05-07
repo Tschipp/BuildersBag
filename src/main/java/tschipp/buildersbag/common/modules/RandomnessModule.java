@@ -1,14 +1,16 @@
 package tschipp.buildersbag.common.modules;
 
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.AbstractBagModule;
-import tschipp.buildersbag.common.caps.IBagCap;
+import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 
 public class RandomnessModule extends AbstractBagModule
@@ -35,7 +37,13 @@ public class RandomnessModule extends AbstractBagModule
 		Random rand = new Random();
 		NonNullList<ItemStack> list = InventoryHelper.getAllAvailableStacks(bag);
 		
-		ItemStack stack =  list.get(rand.nextInt(list.size()));		
+		NonNullList<ItemStack> blocks = NonNullList.create();
+		blocks.addAll(list.stream().filter(stack -> stack.getItem() instanceof ItemBlock).collect(Collectors.toList()));
+		
+		if(blocks.isEmpty())
+			return ItemStack.EMPTY;
+		
+		ItemStack stack =  blocks.get(rand.nextInt(blocks.size()));		
 		return stack;
 	}
 
@@ -49,12 +57,6 @@ public class RandomnessModule extends AbstractBagModule
 	public boolean doesntUseOwnInventory()
 	{
 		return true;
-	}
-
-	@Override
-	public String[] getModDependencies()
-	{
-		return new String[0];
 	}
 
 	@Override

@@ -7,7 +7,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.AbstractBagModule;
-import tschipp.buildersbag.common.caps.IBagCap;
+import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 
 public class SupplierModule extends AbstractBagModule
@@ -36,12 +36,6 @@ public class SupplierModule extends AbstractBagModule
 	public boolean doesntUseOwnInventory()
 	{
 		return true;
-	}
-
-	@Override
-	public String[] getModDependencies()
-	{
-		return new String[0];
 	}
 
 	@Override

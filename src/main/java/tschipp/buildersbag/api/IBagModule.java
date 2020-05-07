@@ -6,7 +6,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.items.ItemStackHandler;
-import tschipp.buildersbag.common.caps.IBagCap;
 
 public interface IBagModule extends INBTSerializable<NBTTagCompound>
 {
@@ -33,9 +32,7 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 	public boolean isExpanded();
 	
 	public void setExpanded(boolean bool);
-	
-	public String[] getModDependencies();
-	
+		
 	public ItemStackHandler getInventory();
 	
 	public ItemStack getDisplayItem();

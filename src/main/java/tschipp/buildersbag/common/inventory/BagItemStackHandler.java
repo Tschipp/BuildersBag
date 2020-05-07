@@ -1,5 +1,6 @@
 package tschipp.buildersbag.common.inventory;
 
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -8,44 +9,15 @@ import net.minecraftforge.items.ItemStackHandler;
 public class BagItemStackHandler extends ItemStackHandler
 {
 
-	private int limit;
 	
-	public BagItemStackHandler(int slots, int stackSize)
+	public BagItemStackHandler(int slots)
 	{
 		super(slots);
-		this.limit = stackSize;
 	}
 	
 	@Override
 	public boolean isItemValid(int slot, ItemStack stack)
 	{
-		return stack.getItem() instanceof ItemBlock;
-	}
-	
-	@Override
-	public int getSlotLimit(int slot)
-	{
-		return limit;
-	}
-	
-	@Override
-	protected int getStackLimit(int slot, ItemStack stack)
-	{
-		return getSlotLimit(slot);
-	}
-	
-	@Override
-	public NBTTagCompound serializeNBT()
-	{
-		NBTTagCompound tag = super.serializeNBT();
-		tag.setInteger("StackLimit", limit);
-		return tag;
-	}
-	
-	@Override
-	public void deserializeNBT(NBTTagCompound nbt)
-	{
-		super.deserializeNBT(nbt);
-		limit = nbt.getInteger("StackLimit");
+		return stack.getItem() instanceof ItemBlock || stack.getItem() == Item.getByNameOrId("littletiles:blockingredient");
 	}
 }

@@ -6,6 +6,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import tschipp.buildersbag.api.IBagCap;
 
 public class BagCapProvider implements ICapabilitySerializable {
 

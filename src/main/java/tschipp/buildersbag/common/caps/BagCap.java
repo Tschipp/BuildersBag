@@ -1,12 +1,14 @@
 package tschipp.buildersbag.common.caps;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.items.ItemStackHandler;
+import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.RegistryHandler;
 import tschipp.buildersbag.common.config.BuildersBagConfig;
@@ -30,25 +32,28 @@ public class BagCap implements IBagCap
 		{
 		case 1:
 			initModules(BuildersBagConfig.Settings.tier1Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier1Slots, BuildersBagConfig.Settings.tier1StackSize);
+			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier1Slots);
 			break;
 		case 2:
 			initModules(BuildersBagConfig.Settings.tier2Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier2Slots, BuildersBagConfig.Settings.tier2StackSize);
+			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier2Slots);
 			break;
 		case 3:
 			initModules(BuildersBagConfig.Settings.tier3Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier3Slots, BuildersBagConfig.Settings.tier3StackSize);
+			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier3Slots);
 			break;
 		case 4:
 			initModules(BuildersBagConfig.Settings.tier4Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier4Slots, BuildersBagConfig.Settings.tier4StackSize);
+			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier4Slots);
 			break;
 		case 5:
 			initModules(BuildersBagConfig.Settings.tier5Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier5Slots, BuildersBagConfig.Settings.tier5StackSize);
+			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier5Slots);
 			break;
 		}
+	
+		List<Integer> list = Collections.EMPTY_LIST;
+		
 	}
 	
 	private void initModules(String[] modules)
@@ -105,6 +110,36 @@ public class BagCap implements IBagCap
 			if(m.getName().equals(name) && m.isEnabled())
 				return true;
 		return false;
+	}
+
+	@Override
+	public void transferDataFromCap(IBagCap from)
+	{
+		this.selected = from.getSelectedInventory();
+		ItemStackHandler oldInv = from.getBlockInventory();
+		
+		for(int i = 0; i < oldInv.getSlots(); i++)
+		{
+			if(i < inv.getSlots())
+			{
+				inv.setStackInSlot(i, oldInv.getStackInSlot(i));
+			}
+		}
+		
+		for(int i = 0; i < modules.length; i++)
+		{
+			IBagModule module = modules[i];
+			
+			for(IBagModule fromModule : from.getModules())
+			{
+				if(module.getName().equals(fromModule.getName()))
+				{
+					modules[i] = fromModule;
+					break;
+				}
+			}
+		}
+		
 	}
 
 }

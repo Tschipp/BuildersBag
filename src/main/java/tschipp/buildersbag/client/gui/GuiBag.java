@@ -23,7 +23,10 @@ import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.common.helper.CapHelper;
+import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.inventory.ContainerBag;
+import tschipp.buildersbag.network.SyncItemStack;
 import tschipp.buildersbag.network.SyncModuleState;
 
 public class GuiBag extends GuiContainer
@@ -36,7 +39,8 @@ public class GuiBag extends GuiContainer
 
 	private int mainWidth;
 	private int mainHeight;
-
+	private int leftOffset;
+	
 	public GuiBag(ContainerBag container, EntityPlayer player, ItemStack bag, EnumHand hand)
 	{
 		super(container);
@@ -45,10 +49,12 @@ public class GuiBag extends GuiContainer
 		this.bag = bag;
 		this.hand = hand;
 
-		this.mainWidth = getTotalWidth();
+		this.mainWidth = getTotalWidth() ;
 		this.mainHeight = getTotalHeight(container.invSize);
 
-		this.xSize = mainWidth;
+		this.leftOffset = Math.max(InventoryHelper.getBagExtraLeft(CapHelper.getBagCap(bag)),InventoryHelper.getBagExtraRight(CapHelper.getBagCap(bag)));
+		
+		this.xSize = mainWidth + leftOffset * 2;
 		this.ySize = mainHeight;
 	}
 
@@ -89,8 +95,8 @@ public class GuiBag extends GuiContainer
 		GlStateManager.pushMatrix();
 		mc.getTextureManager().bindTexture(new ResourceLocation(BuildersBag.MODID + ":textures/gui/bag.png"));
 
-		drawBackground(0, 0, mainWidth, mainHeight);
-		drawBackground(72, -32, 32, 32, 16);
+		drawBackground(0 + leftOffset, 0, mainWidth, mainHeight);
+		drawBackground(72  + leftOffset, -32, 32, 32, 16);
 
 		container.modules.forEach((module, triple) -> {
 			int x = triple.getLeft();
@@ -116,8 +122,8 @@ public class GuiBag extends GuiContainer
 
 		drawSlotBackgrounds();
 
-		this.fontRenderer.drawString(container.name, this.guiLeft + 7, this.guiTop + 6, 4210752);
-		this.fontRenderer.drawString(player.inventory.getDisplayName().getUnformattedText(), this.guiLeft + 7, this.guiTop + 6 + getBagRows(container.invSize) * 18 + 14, 4210752);
+		this.fontRenderer.drawString(container.name, this.guiLeft + 7 + this.leftOffset, this.guiTop + 6, 4210752);
+		this.fontRenderer.drawString(player.inventory.getDisplayName().getUnformattedText(), this.guiLeft + 7 + this.leftOffset, this.guiTop + 6 + getBagRows(container.invSize) * 18 + 14, 4210752);
 
 		GlStateManager.popMatrix();
 
@@ -159,6 +165,13 @@ public class GuiBag extends GuiContainer
 
 		});
 
+	}
+	
+	@Override
+	public void onGuiClosed()
+	{
+		super.onGuiClosed();
+		BuildersBag.network.sendToServer(new SyncItemStack(bag, hand));
 	}
 
 	private void drawSlotBackgrounds()
