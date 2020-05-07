@@ -1,5 +1,5 @@
 
-# Builder's Bag [![](http://cf.way2muchnoise.eu/buildersbag.svg)](https://minecraft.curseforge.com/projects/buildersbag) [![](http://cf.way2muchnoise.eu/versions/buildersbag.svg)](https://minecraft.curseforge.com/projects/buildersbag)
+# Builder's Bag [![](http://cf.way2muchnoise.eu/builders-bag.svg)](https://minecraft.curseforge.com/projects/builders-bag) [![](http://cf.way2muchnoise.eu/versions/builders-bag.svg)](https://minecraft.curseforge.com/projects/builders-bag)
 
 To use Builder's Bag in your projects, include this in your build.gradle:
 ```
