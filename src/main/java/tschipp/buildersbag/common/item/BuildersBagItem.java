@@ -9,6 +9,7 @@ import com.creativemd.littletiles.common.util.ingredient.LittleInventory;
 import com.mojang.realmsclient.gui.ChatFormatting;
 
 import net.minecraft.block.Block;
+import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -31,6 +32,8 @@ import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.Optional.Interface;
 import net.minecraftforge.fml.common.Optional.InterfaceList;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
@@ -56,7 +59,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 		this.setCreativeTab(CreativeTabs.TOOLS);
 		this.setMaxStackSize(1);
 		this.tier = tier;
-		this.setTileEntityItemStackRenderer(new BagItemStackRenderer());
+		BuildersBag.proxy.setTEISR(this);
 		ForgeRegistries.ITEMS.register(this);
 	}
 

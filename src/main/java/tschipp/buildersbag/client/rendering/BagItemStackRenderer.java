@@ -18,13 +18,14 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.relauncher.Side;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.item.BuildersBagItem;
 
-@EventBusSubscriber(modid = BuildersBag.MODID)
+@EventBusSubscriber(modid = BuildersBag.MODID, value = Side.CLIENT)
 public class BagItemStackRenderer extends TileEntityItemStackRenderer
 {
 	public static TransformType transform;

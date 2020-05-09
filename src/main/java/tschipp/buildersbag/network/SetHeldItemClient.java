@@ -1,24 +1,17 @@
 package tschipp.buildersbag.network;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import tschipp.buildersbag.common.inventory.ContainerBag;
 
-public class SetHeldItemClient implements IMessage, IMessageHandler<SetHeldItemClient, IMessage>
+public class SetHeldItemClient implements IMessage
 {
 
-	private ItemStack stack;
-	private boolean right;
-	private String bag;
+	public ItemStack stack;
+	public boolean right;
+	public String bag;
 	
 	public SetHeldItemClient()
 	{
@@ -29,23 +22,6 @@ public class SetHeldItemClient implements IMessage, IMessageHandler<SetHeldItemC
 		this.stack = stack;
 		this.bag = stack.getItem().getRegistryName().toString();
 		this.right = hand == EnumHand.MAIN_HAND;
-	}
-	
-	@Override
-	public IMessage onMessage(SetHeldItemClient message, MessageContext ctx)
-	{
-		final IThreadListener mainThread = Minecraft.getMinecraft();
-		
-		mainThread.addScheduledTask(() -> {
-			
-			EntityPlayer player = Minecraft.getMinecraft().player;
-			EnumHand hand = message.right ? EnumHand.MAIN_HAND : EnumHand.OFF_HAND;
-			
-			player.setHeldItem(hand, message.stack);
-			
-		});
-		
-		return null;
 	}
 
 	@Override

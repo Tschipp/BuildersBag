@@ -2,6 +2,8 @@ package tschipp.buildersbag;
 
 import java.lang.reflect.Field;
 
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.Item;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -19,8 +21,9 @@ import tschipp.buildersbag.common.inventory.BagGuiHandler;
 import tschipp.buildersbag.compat.chisel.ChiselEvents;
 import tschipp.buildersbag.compat.linear.LinearCompatManager;
 import tschipp.buildersbag.network.SetHeldItemClient;
+import tschipp.buildersbag.network.SetHeldItemClientHandler;
 import tschipp.buildersbag.network.SyncBagCapClient;
-import tschipp.buildersbag.network.SyncBagClient;
+import tschipp.buildersbag.network.SyncBagCapClientHandler;
 import tschipp.buildersbag.network.SyncItemStack;
 import tschipp.buildersbag.network.SyncModuleState;
 
@@ -40,9 +43,8 @@ public class CommonProxy
 		BuildersBag.network = NetworkRegistry.INSTANCE.newSimpleChannel(BuildersBag.MODID);
 		BuildersBag.network.registerMessage(SyncItemStack.class, SyncItemStack.class, 0, Side.SERVER);
 		BuildersBag.network.registerMessage(SyncModuleState.class, SyncModuleState.class, 1, Side.SERVER);
-		BuildersBag.network.registerMessage(SyncBagClient.class, SyncBagClient.class, 2, Side.CLIENT);
-		BuildersBag.network.registerMessage(SyncBagCapClient.class, SyncBagCapClient.class, 3, Side.CLIENT);
-		BuildersBag.network.registerMessage(SetHeldItemClient.class, SetHeldItemClient.class, 4, Side.CLIENT);
+		BuildersBag.network.registerMessage(SyncBagCapClientHandler.class, SyncBagCapClient.class, 2, Side.CLIENT);
+		BuildersBag.network.registerMessage(SetHeldItemClientHandler.class, SetHeldItemClient.class, 3, Side.CLIENT);
 
 		NetworkRegistry.INSTANCE.registerGuiHandler(BuildersBag.instance, new BagGuiHandler());
 		BuildersBagRegistry.registerModules();
@@ -78,6 +80,16 @@ public class CommonProxy
 		if(Loader.isModLoaded("linear"))
 			LinearCompatManager.register();
 
+	}
+	
+	public EntityPlayer getPlayer()
+	{
+		return null;
+	}
+	
+	public void setTEISR(Item item)
+	{
+		
 	}
 
 }
