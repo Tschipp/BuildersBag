@@ -22,6 +22,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
+import tschipp.buildersbag.common.config.BuildersBagConfig;
 
 @EventBusSubscriber
 @Mod(modid = BuildersBag.MODID, name = BuildersBag.NAME, version = BuildersBag.VERSION, dependencies = BuildersBag.DEPENDENCIES, acceptedMinecraftVersions = BuildersBag.ACCEPTED_VERSIONS, guiFactory = "tschipp.buildersbag.client.gui.GuiFactoryBuildersBag", certificateFingerprint = BuildersBag.CERTIFICATE)
@@ -47,14 +48,24 @@ public class BuildersBag
 
 	public static boolean FINGERPRINT_VIOLATED = false;
 
-	public static File seenModsFile = new File("seen_buildersbag_addons.txt");
+	private static final File configFile = new File("config/buildersbag.cfg");
+	public static final File seenModsFile = new File("seen_buildersbag_addons.txt");
 	private static final List<String> seenMods = new ArrayList<String>();
+	public static boolean isNewlyGenerated = false;
 
+	public BuildersBag()
+	{
+		if(!configFile.exists())
+		{
+			isNewlyGenerated = true;
+		}
+	}
+	
 	@EventHandler
 	public void construction(FMLConstructionEvent event)
 	{
 		try
-		{
+		{	
 			if (seenModsFile.exists())
 			{
 				seenMods.addAll(Files.readAllLines(seenModsFile.toPath()));
@@ -80,8 +91,8 @@ public class BuildersBag
 
 	@EventHandler
 	public void postInit(FMLPostInitializationEvent event)
-	{
-		BuildersBag.proxy.postInit(event);
+	{		
+		BuildersBag.proxy.postInit(event);		
 	}
 
 	@EventHandler

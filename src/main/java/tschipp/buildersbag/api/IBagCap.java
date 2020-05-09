@@ -21,4 +21,5 @@ public interface IBagCap
 	
 	public void transferDataFromCap(IBagCap from);
 
+	public void reInit(int tier);
 }

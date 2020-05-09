@@ -63,9 +63,9 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 	@Override
 	public ICapabilityProvider initCapabilities(ItemStack stack, NBTTagCompound nbt)
 	{
-		return new BagCapProvider(((BuildersBagItem) stack.getItem()).getTier());
+		return new BagCapProvider(this.getTier());
 	}
-
+	
 	@Override
 	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand)
 	{

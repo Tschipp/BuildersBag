@@ -23,7 +23,7 @@ import tschipp.buildersbag.common.helper.ReflectionUtil;
 
 @Config(modid = BuildersBag.MODID)
 public class BuildersBagConfig
-{
+{	
 
 	@Config.LangKey(BuildersBag.MODID)
 	@Config.Comment("General Mod Settings")
@@ -84,11 +84,16 @@ public class BuildersBagConfig
 			if (event.getModID().equals(BuildersBag.MODID))
 				ConfigManager.load(BuildersBag.MODID, Config.Type.INSTANCE);
 		}
+		
+		
 
 	}
 
 	public static void addToCurrentConfig(String modid)
 	{
+		if(BuildersBag.isNewlyGenerated)
+			return;
+		
 		Configuration config = EventHandler.getConfiguration();
 		List<ResourceLocation> modules = BuildersBagRegistry.getModulesFromMod(modid);
 		
@@ -97,25 +102,7 @@ public class BuildersBagConfig
 			List<Integer> tiers = BuildersBagRegistry.getTiersForModule(module);
 			for(int tier : tiers)
 			{
-				Property prop = null;
-				switch(tier)
-				{
-				case 1:
-					prop = config.get("general.settings", "tier1Modules", BuildersBagRegistry.getDefaultModulesForTier(tier));
-					break;
-				case 2:
-					prop = config.get("general.settings", "tier2Modules", BuildersBagRegistry.getDefaultModulesForTier(tier));
-					break;
-				case 3:
-					prop = config.get("general.settings", "tier3Modules", BuildersBagRegistry.getDefaultModulesForTier(tier));
-					break;
-				case 4:
-					prop = config.get("general.settings", "tier4Modules", BuildersBagRegistry.getDefaultModulesForTier(tier));
-					break;
-				case 5:
-					prop = config.get("general.settings", "tier5Modules", BuildersBagRegistry.getDefaultModulesForTier(tier));
-					break;
-				}
+				Property prop = config.get("general.settings", "tier" + tier + "Modules", BuildersBagRegistry.getDefaultModulesForTier(tier));
 				
 				if(prop != null)
 				{
@@ -128,6 +115,23 @@ public class BuildersBagConfig
 		}
 		
 		config.save();
+		ConfigManager.load(BuildersBag.MODID, Config.Type.INSTANCE);
 	}
 
+	public static void setDefaultsOnFirstLoad()
+	{
+		if(BuildersBag.isNewlyGenerated)
+		{
+			Configuration config = EventHandler.getConfiguration();
+			for(int i = 1; i <= 5; i++)
+			{
+				Property prop = config.get("general.settings", "tier" + i + "Modules", BuildersBagRegistry.getDefaultModulesForTier(i));
+				prop.setDefaultValues(BuildersBagRegistry.getDefaultModulesForTier(i));
+				prop.set(BuildersBagRegistry.getDefaultModulesForTier(i));
+			}
+			config.save();
+			ConfigManager.load(BuildersBag.MODID, Config.Type.INSTANCE);
+		}
+	}
+	
 }

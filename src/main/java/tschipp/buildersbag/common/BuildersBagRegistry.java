@@ -79,7 +79,10 @@ public class BuildersBagRegistry
 		if (Loader.isModLoaded("chiselsandbits"))
 			addModule(new ResourceLocation(BuildersBag.MODID, "chiselsandbits"), ChiselsBitsModule::new, 3, 4, 5);
 	
-		ModuleRegistry.registerModule("test", new ResourceLocation("test", "test"), RandomnessModule::new, 1, 2, 4, 5);
+		ModuleRegistry.registerModule("tes2t", new ResourceLocation("tes2t", "test"), RandomnessModule::new, 1, 2, 4, 5);
+		ModuleRegistry.registerModule("yote", new ResourceLocation("yote", "yeet"), RandomnessModule::new, 1, 2, 3, 4, 5);
+		ModuleRegistry.registerModule("test2", new ResourceLocation("test2", "test2"), RandomnessModule::new, 1, 2, 3, 4, 5);
+		ModuleRegistry.registerModule("tes3", new ResourceLocation("tes3", "test2"), ChiselModule::new, 1, 2, 3, 4, 5);
 
 	}
 

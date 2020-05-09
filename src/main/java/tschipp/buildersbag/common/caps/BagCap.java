@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.items.ItemStackHandler;
+import scala.actors.threadpool.Arrays;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.BuildersBagRegistry;
@@ -59,7 +60,7 @@ public class BagCap implements IBagCap
 	private void initModules(String[] modules)
 	{
 		List<IBagModule> moduleList = new ArrayList<IBagModule>();
-		Lists.newArrayList(modules).stream().distinct().forEach(s -> {
+		Lists.newArrayList(modules).stream().distinct().sorted().forEach(s -> {
 			IBagModule module = BuildersBagRegistry.getModule(new ResourceLocation(s));
 			if (module != null)
 				moduleList.add(module);
@@ -140,6 +141,35 @@ public class BagCap implements IBagCap
 			}
 		}
 		
+	}
+
+	@Override
+	public void reInit(int tier)
+	{
+		modules = null;
+		switch (tier)
+		{
+		case 1:
+			initModules(BuildersBagConfig.Settings.tier1Modules);
+			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier1Slots);
+			break;
+		case 2:
+			initModules(BuildersBagConfig.Settings.tier2Modules);
+			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier2Slots);
+			break;
+		case 3:
+			initModules(BuildersBagConfig.Settings.tier3Modules);
+			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier3Slots);
+			break;
+		case 4:
+			initModules(BuildersBagConfig.Settings.tier4Modules);
+			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier4Slots);
+			break;
+		case 5:
+			initModules(BuildersBagConfig.Settings.tier5Modules);
+			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier5Slots);
+			break;
+		}
 	}
 
 }

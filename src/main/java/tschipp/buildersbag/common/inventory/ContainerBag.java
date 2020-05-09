@@ -147,7 +147,7 @@ public class ContainerBag extends Container
 			if (rightModuleCount == moduleCount)
 				break;
 
-			processedModules = i + 1;
+			processedModules++;
 
 			IBagModule module = bagCap.getModules()[i];
 
@@ -169,7 +169,7 @@ public class ContainerBag extends Container
 
 		}
 
-		y = 7;
+		y = 8;
 		x = -41;
 
 		for (int i = processedModules; i < bagCap.getModules().length; i++)
@@ -187,7 +187,7 @@ public class ContainerBag extends Container
 					addSlotToContainer(new ToggleableSlot(handler, slotIndex++, x - j * 18 - 16 + leftOffset, y).setEnabled(module.isExpanded()));
 				}
 			} else
-				continue;
+				
 
 			x = -41;
 			y += 34;

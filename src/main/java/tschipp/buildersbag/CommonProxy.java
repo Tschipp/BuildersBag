@@ -13,6 +13,7 @@ import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import tschipp.buildersbag.common.BuildersBagRegistry;
+import tschipp.buildersbag.common.config.BuildersBagConfig;
 import tschipp.buildersbag.common.crafting.CraftingHandler;
 import tschipp.buildersbag.common.inventory.BagGuiHandler;
 import tschipp.buildersbag.compat.chisel.ChiselEvents;
@@ -44,9 +45,12 @@ public class CommonProxy
 		BuildersBag.network.registerMessage(SetHeldItemClient.class, SetHeldItemClient.class, 4, Side.CLIENT);
 
 		NetworkRegistry.INSTANCE.registerGuiHandler(BuildersBag.instance, new BagGuiHandler());
+		BuildersBagRegistry.registerModules();
+
+		BuildersBagConfig.setDefaultsOnFirstLoad();
+		
 		BuildersBagRegistry.registerCapabilities();
 		BuildersBagRegistry.registerItems();
-		BuildersBagRegistry.registerModules();
 	}
 
 	public void init(FMLInitializationEvent event)

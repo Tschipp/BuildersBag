@@ -17,7 +17,7 @@ public class BagCapProvider implements ICapabilitySerializable {
 	
 	public BagCapProvider(int tier)
 	{
-		instance = new BagCap(tier);
+		this.instance.reInit(tier);
 	}
 	
 	@Override
