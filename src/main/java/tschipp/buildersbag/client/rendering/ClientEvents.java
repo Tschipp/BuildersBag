@@ -9,7 +9,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import tschipp.buildersbag.BuildersBag;
-import tschipp.buildersbag.common.RegistryHandler;
+import tschipp.buildersbag.common.BuildersBagRegistry;
 
 @EventBusSubscriber(modid = BuildersBag.MODID)
 public class ClientEvents
@@ -18,7 +18,7 @@ public class ClientEvents
 	@SideOnly(Side.CLIENT)
 	public static void onModelBake(ModelBakeEvent event)
 	{
-		for (Item item : RegistryHandler.items)
+		for (Item item : BuildersBagRegistry.items)
 		{
 			IBakedModel model = event.getModelRegistry().getObject(new ModelResourceLocation(item.getRegistryName(), "inventory"));
 			if (model != null)

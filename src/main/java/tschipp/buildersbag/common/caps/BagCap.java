@@ -10,7 +10,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
-import tschipp.buildersbag.common.RegistryHandler;
+import tschipp.buildersbag.common.BuildersBagRegistry;
 import tschipp.buildersbag.common.config.BuildersBagConfig;
 import tschipp.buildersbag.common.inventory.BagItemStackHandler;
 import tschipp.buildersbag.common.inventory.SelectedBlockHandler;
@@ -60,7 +60,7 @@ public class BagCap implements IBagCap
 	{
 		List<IBagModule> moduleList = new ArrayList<IBagModule>();
 		Lists.newArrayList(modules).stream().distinct().forEach(s -> {
-			IBagModule module = RegistryHandler.getModule(new ResourceLocation(s));
+			IBagModule module = BuildersBagRegistry.getModule(new ResourceLocation(s));
 			if (module != null)
 				moduleList.add(module);
 		});

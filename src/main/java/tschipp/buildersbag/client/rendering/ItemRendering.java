@@ -3,17 +3,17 @@ package tschipp.buildersbag.client.rendering;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
 import net.minecraftforge.client.model.ModelLoader;
-import tschipp.buildersbag.common.RegistryHandler;
+import tschipp.buildersbag.common.BuildersBagRegistry;
 
 public class ItemRendering
 {
 	public static void regItemRenders()
 	{
-		register(RegistryHandler.tier1);
-		register(RegistryHandler.tier2);
-		register(RegistryHandler.tier3);
-		register(RegistryHandler.tier4);
-		register(RegistryHandler.tier5);
+		register(BuildersBagRegistry.tier1);
+		register(BuildersBagRegistry.tier2);
+		register(BuildersBagRegistry.tier3);
+		register(BuildersBagRegistry.tier4);
+		register(BuildersBagRegistry.tier5);
 	}
 	
 	

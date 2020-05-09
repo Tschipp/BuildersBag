@@ -12,7 +12,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.Capability.IStorage;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
-import tschipp.buildersbag.common.RegistryHandler;
+import tschipp.buildersbag.common.BuildersBagRegistry;
 import tschipp.buildersbag.common.inventory.BagItemStackHandler;
 import tschipp.buildersbag.common.inventory.SelectedBlockHandler;
 
@@ -60,7 +60,7 @@ public class BagCapStorage implements IStorage<IBagCap>
 		for(int i = 0; i < modules.tagCount(); i++)
 		{
 			NBTTagCompound module = modules.getCompoundTagAt(i);
-			IBagModule mod = RegistryHandler.getModule(new ResourceLocation(module.getString("name")));
+			IBagModule mod = BuildersBagRegistry.getModule(new ResourceLocation(module.getString("name")));
 			if(mod != null)
 			{
 				mod.deserializeNBT(module);

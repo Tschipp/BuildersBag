@@ -1,5 +1,13 @@
 package tschipp.buildersbag;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -8,6 +16,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLConstructionEvent;
 import net.minecraftforge.fml.common.event.FMLFingerprintViolationEvent;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -38,6 +47,25 @@ public class BuildersBag
 
 	public static boolean FINGERPRINT_VIOLATED = false;
 
+	public static File seenModsFile = new File("seen_buildersbag_addons.txt");
+	private static final List<String> seenMods = new ArrayList<String>();
+
+	@EventHandler
+	public void construction(FMLConstructionEvent event)
+	{
+		try
+		{
+			if (seenModsFile.exists())
+			{
+				seenMods.addAll(Files.readAllLines(seenModsFile.toPath()));
+			} else
+				seenModsFile.createNewFile();
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event)
 	{
@@ -62,5 +90,10 @@ public class BuildersBag
 
 		LOGGER.error("WARNING! Invalid fingerprint detected! The file " + event.getSource().getName() + " may have been tampered with! If you didn't download the file from https://minecraft.curseforge.com/projects/buildersbag or through any kind of mod launcher, immediately delete the file and re-download it from https://minecraft.curseforge.com/projects/buildersbag");
 		FINGERPRINT_VIOLATED = true;
+	}
+
+	public static Set<String> getSeenMods()
+	{
+		return new HashSet<String>(seenMods);
 	}
 }
