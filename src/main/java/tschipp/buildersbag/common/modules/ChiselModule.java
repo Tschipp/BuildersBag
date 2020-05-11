@@ -53,9 +53,9 @@ public class ChiselModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag)
+	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
 	{
-		NonNullList<ItemStack> providedSacks = InventoryHelper.getAllAvailableStacksExcept(bag, this);
+		NonNullList<ItemStack> providedSacks = InventoryHelper.getAllAvailableStacksExcept(bag, player, this);
 		NonNullList<ItemStack> list = NonNullList.create();
 
 		ItemStack chisel = handler.getStackInSlot(0);
@@ -133,7 +133,7 @@ public class ChiselModule extends AbstractBagModule
 		if (chisel.isEmpty())
 			return ItemStack.EMPTY;
 
-		NonNullList<ItemStack> availableBlocks = InventoryHelper.getStacks(bag.getBlockInventory());
+		NonNullList<ItemStack> availableBlocks = InventoryHelper.getInventoryStacks(bag, player);
 
 		for (ICarvingVariation variant : group)
 		{

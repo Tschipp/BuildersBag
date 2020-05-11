@@ -26,8 +26,8 @@ import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.inventory.ContainerBag;
-import tschipp.buildersbag.network.SyncItemStack;
-import tschipp.buildersbag.network.SyncModuleState;
+import tschipp.buildersbag.network.SyncItemStackServer;
+import tschipp.buildersbag.network.SyncModuleStateServer;
 
 public class GuiBag extends GuiContainer
 {
@@ -37,18 +37,24 @@ public class GuiBag extends GuiContainer
 	private ItemStack bag;
 	private EnumHand hand;
 
+	private boolean isBauble = false;
+	private int baubleSlot = 0;
+	
 	private int mainWidth;
 	private int mainHeight;
 	private int leftOffset;
 	
-	public GuiBag(ContainerBag container, EntityPlayer player, ItemStack bag, EnumHand hand)
+	public GuiBag(ContainerBag container, EntityPlayer player)
 	{
 		super(container);
 		this.container = container;
 		this.player = player;
-		this.bag = bag;
-		this.hand = hand;
+		this.bag = container.bag;
+		this.hand = container.hand;
 
+		this.isBauble = container.isBauble;
+		this.baubleSlot = container.baubleSlot;
+		
 		this.mainWidth = getTotalWidth() ;
 		this.mainHeight = getTotalHeight(container.invSize);
 
@@ -171,7 +177,7 @@ public class GuiBag extends GuiContainer
 	public void onGuiClosed()
 	{
 		super.onGuiClosed();
-		BuildersBag.network.sendToServer(new SyncItemStack(bag, hand));
+//		BuildersBag.network.sendToServer(new SyncItemStack(bag, hand));
 	}
 
 	private void drawSlotBackgrounds()
@@ -268,7 +274,7 @@ public class GuiBag extends GuiContainer
 
 	private void sendUpdate(IBagModule module)
 	{
-		BuildersBag.network.sendToServer(new SyncModuleState(module.getName(), module));
+		BuildersBag.network.sendToServer(new SyncModuleStateServer(module.getName(), module));
 	}
 
 }

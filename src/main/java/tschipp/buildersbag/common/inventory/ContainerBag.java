@@ -17,9 +17,9 @@ import org.apache.commons.lang3.tuple.Triple;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
+import baubles.api.BaublesApi;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
@@ -27,6 +27,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.text.translation.I18n;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 import tschipp.buildersbag.BuildersBag;
@@ -35,14 +36,18 @@ import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.network.SyncBagCapClient;
+import tschipp.buildersbag.network.SyncBagCapInventoryClient;
 
 public class ContainerBag extends Container
 {
-	private ItemStack bag;
-	private IBagCap bagCap;
+	public ItemStack bag;
+	public IBagCap bagCap;
 	private EntityPlayer player;
-	private EnumHand hand;
+	public EnumHand hand;
 	private ItemStackHandler inv;
+
+	public boolean isBauble = false;
+	public int baubleSlot;
 
 	private List<Slot> inventoryBagSlots = new ArrayList<Slot>();
 
@@ -54,9 +59,29 @@ public class ContainerBag extends Container
 
 	public ContainerBag(EntityPlayer player, ItemStack bag, EnumHand hand)
 	{
+		this(player, bag);
+		this.hand = hand;
+	}
+
+	public ContainerBag(EntityPlayer player, ItemStack bag, int baubleSlot)
+	{
+		this(player, bag);
+		this.baubleSlot = baubleSlot;
+		this.isBauble = true;
+		
+		if (!player.world.isRemote)
+		{
+			if (isBauble)
+				BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, baubleSlot, true), (EntityPlayerMP) player);
+			else
+				BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (EntityPlayerMP) player);
+		}
+	}
+
+	private ContainerBag(EntityPlayer player, ItemStack bag)
+	{
 		this.player = player;
 		this.bag = bag;
-		this.hand = hand;
 		this.bagCap = CapHelper.getBagCap(bag);
 		this.inv = bagCap.getBlockInventory();
 		this.invSize = inv.getSlots();
@@ -187,9 +212,8 @@ public class ContainerBag extends Container
 					addSlotToContainer(new ToggleableSlot(handler, slotIndex++, x - j * 18 - 16 + leftOffset, y).setEnabled(module.isExpanded()));
 				}
 			} else
-				
 
-			x = -41;
+				x = -41;
 			y += 34;
 		}
 
@@ -212,7 +236,7 @@ public class ContainerBag extends Container
 			if (!this.mergeItemStack(stack, 36, 36 + invSize, false))
 				if (!this.mergeItemStack(stack, 36 + invSize + 1, this.inventorySlots.size(), false))
 					return ItemStack.EMPTY;
-			
+
 		} else if (index >= 9 * 4 && index < 9 * (4 + rows))
 		{
 			// Item is in bag inventory
@@ -227,152 +251,143 @@ public class ContainerBag extends Container
 
 		return itemstack;
 	}
-	
-	 protected boolean mergeItemStack(ItemStack stack, int startIndex, int endIndex, boolean reverseDirection)
-	    {
-	        boolean flag = false;
-	        int i = startIndex;
 
-	        if (reverseDirection)
-	        {
-	            i = endIndex - 1;
-	        }
+	protected boolean mergeItemStack(ItemStack stack, int startIndex, int endIndex, boolean reverseDirection)
+	{
+		boolean flag = false;
+		int i = startIndex;
 
-	        if (stack.isStackable())
-	        {
-	            while (!stack.isEmpty())
-	            {
-	                if (reverseDirection)
-	                {
-	                    if (i < startIndex)
-	                    {
-	                        break;
-	                    }
-	                }
-	                else if (i >= endIndex)
-	                {
-	                    break;
-	                }
+		if (reverseDirection)
+		{
+			i = endIndex - 1;
+		}
 
-	                Slot slot = this.inventorySlots.get(i);
-	                ItemStack itemstack = slot.getStack();
+		if (stack.isStackable())
+		{
+			while (!stack.isEmpty())
+			{
+				if (reverseDirection)
+				{
+					if (i < startIndex)
+					{
+						break;
+					}
+				} else if (i >= endIndex)
+				{
+					break;
+				}
 
-	                if(!slot.isEnabled())
-	                {
-	                	if(reverseDirection)
-	                		i--;
-	                	else
-	                		i++;
-	                	continue;
-	                }
-	                
-	                if (!itemstack.isEmpty() && itemstack.getItem() == stack.getItem() && (!stack.getHasSubtypes() || stack.getMetadata() == itemstack.getMetadata()) && ItemStack.areItemStackTagsEqual(stack, itemstack))
-	                {
-	                    int j = itemstack.getCount() + stack.getCount();
-	                    int maxSize = Math.min(slot.getSlotStackLimit(), stack.getMaxStackSize());
+				Slot slot = this.inventorySlots.get(i);
+				ItemStack itemstack = slot.getStack();
 
-	                    if (j <= maxSize)
-	                    {
-	                        stack.setCount(0);
-	                        itemstack.setCount(j);
-	                        slot.onSlotChanged();
-	                        flag = true;
-	                    }
-	                    else if (itemstack.getCount() < maxSize)
-	                    {
-	                        stack.shrink(maxSize - itemstack.getCount());
-	                        itemstack.setCount(maxSize);
-	                        slot.onSlotChanged();
-	                        flag = true;
-	                    }
-	                }
+				if (!slot.isEnabled())
+				{
+					if (reverseDirection)
+						i--;
+					else
+						i++;
+					continue;
+				}
 
-	                if (reverseDirection)
-	                {
-	                    --i;
-	                }
-	                else
-	                {
-	                    ++i;
-	                }
-	            }
-	        }
+				if (!itemstack.isEmpty() && itemstack.getItem() == stack.getItem() && (!stack.getHasSubtypes() || stack.getMetadata() == itemstack.getMetadata()) && ItemStack.areItemStackTagsEqual(stack, itemstack))
+				{
+					int j = itemstack.getCount() + stack.getCount();
+					int maxSize = Math.min(slot.getSlotStackLimit(), stack.getMaxStackSize());
 
-	        if (!stack.isEmpty())
-	        {
-	            if (reverseDirection)
-	            {
-	                i = endIndex - 1;
-	            }
-	            else
-	            {
-	                i = startIndex;
-	            }
+					if (j <= maxSize)
+					{
+						stack.setCount(0);
+						itemstack.setCount(j);
+						slot.onSlotChanged();
+						flag = true;
+					} else if (itemstack.getCount() < maxSize)
+					{
+						stack.shrink(maxSize - itemstack.getCount());
+						itemstack.setCount(maxSize);
+						slot.onSlotChanged();
+						flag = true;
+					}
+				}
 
-	            while (true)
-	            {
-	                if (reverseDirection)
-	                {
-	                    if (i < startIndex)
-	                    {
-	                        break;
-	                    }
-	                }
-	                else if (i >= endIndex)
-	                {
-	                    break;
-	                }
+				if (reverseDirection)
+				{
+					--i;
+				} else
+				{
+					++i;
+				}
+			}
+		}
 
-	                Slot slot1 = this.inventorySlots.get(i);
-	                
-	                if(!slot1.isEnabled())
-	                {
-	                	if(reverseDirection)
-	                		i--;
-	                	else
-	                		i++;
-	                	continue;
-	                }
-	                
-	                ItemStack itemstack1 = slot1.getStack();
+		if (!stack.isEmpty())
+		{
+			if (reverseDirection)
+			{
+				i = endIndex - 1;
+			} else
+			{
+				i = startIndex;
+			}
 
-	                if (itemstack1.isEmpty() && slot1.isItemValid(stack))
-	                {
-	                    if (stack.getCount() > slot1.getSlotStackLimit())
-	                    {
-	                        slot1.putStack(stack.splitStack(slot1.getSlotStackLimit()));
-	                    }
-	                    else
-	                    {
-	                        slot1.putStack(stack.splitStack(stack.getCount()));
-	                    }
+			while (true)
+			{
+				if (reverseDirection)
+				{
+					if (i < startIndex)
+					{
+						break;
+					}
+				} else if (i >= endIndex)
+				{
+					break;
+				}
 
-	                    slot1.onSlotChanged();
-	                    flag = true;
-	                    break;
-	                }
+				Slot slot1 = this.inventorySlots.get(i);
 
-	                if (reverseDirection)
-	                {
-	                    --i;
-	                }
-	                else
-	                {
-	                    ++i;
-	                }
-	            }
-	        }
+				if (!slot1.isEnabled())
+				{
+					if (reverseDirection)
+						i--;
+					else
+						i++;
+					continue;
+				}
 
-	        return flag;
-	    }
-	
-	
+				ItemStack itemstack1 = slot1.getStack();
+
+				if (itemstack1.isEmpty() && slot1.isItemValid(stack))
+				{
+					if (stack.getCount() > slot1.getSlotStackLimit())
+					{
+						slot1.putStack(stack.splitStack(slot1.getSlotStackLimit()));
+					} else
+					{
+						slot1.putStack(stack.splitStack(stack.getCount()));
+					}
+
+					slot1.onSlotChanged();
+					flag = true;
+					break;
+				}
+
+				if (reverseDirection)
+				{
+					--i;
+				} else
+				{
+					++i;
+				}
+			}
+		}
+
+		return flag;
+	}
+
 	@Override
 	public boolean canDragIntoSlot(Slot slot)
 	{
 		return !(slot instanceof SelectedBlockSlot);
 	}
-	
 
 	public void updateModule(String name, NBTTagCompound nbt)
 	{
@@ -397,6 +412,10 @@ public class ContainerBag extends Container
 	@Override
 	public boolean canInteractWith(EntityPlayer player)
 	{
+		if (Loader.isModLoaded("baubles"))
+		{
+			return isBauble ? BaublesApi.getBaubles(player).getStackInSlot(this.baubleSlot) == bag : player.getHeldItem(hand) == bag;
+		}
 		return player.getHeldItem(hand) == bag;
 	}
 
@@ -404,12 +423,15 @@ public class ContainerBag extends Container
 	public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player)
 	{
 		ItemStack ret = super.slotClick(slotId, dragType, clickTypeIn, player);
-		
+
 		if (!player.world.isRemote)
 		{
-			BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (EntityPlayerMP) player);
+			if (isBauble)
+				BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, baubleSlot, true), (EntityPlayerMP) player);
+			else
+				BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (EntityPlayerMP) player);
 		}
-		
+
 		return ret;
 	}
 
@@ -420,7 +442,10 @@ public class ContainerBag extends Container
 
 		if (!player.world.isRemote)
 		{
-			BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (EntityPlayerMP) player);
+			if (isBauble)
+				BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, baubleSlot, true), (EntityPlayerMP) player);
+			else
+				BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (EntityPlayerMP) player);
 		}
 	}
 

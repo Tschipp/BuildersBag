@@ -13,24 +13,24 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.inventory.ContainerBag;
 
-public class SyncModuleState implements IMessage, IMessageHandler<SyncModuleState, IMessage>
+public class SyncModuleStateServer implements IMessage, IMessageHandler<SyncModuleStateServer, IMessage>
 {
 
 	private NBTTagCompound tag;
 	private String name;
 	
-	public SyncModuleState()
+	public SyncModuleStateServer()
 	{
 	}
 	
-	public SyncModuleState(String name, IBagModule module)
+	public SyncModuleStateServer(String name, IBagModule module)
 	{
 		this.name = name;
 		this.tag = module.serializeNBT();
 	}
 	
 	@Override
-	public IMessage onMessage(SyncModuleState message, MessageContext ctx)
+	public IMessage onMessage(SyncModuleStateServer message, MessageContext ctx)
 	{
 		final IThreadListener mainThread = (IThreadListener)ctx.getServerHandler().player.world;
 		

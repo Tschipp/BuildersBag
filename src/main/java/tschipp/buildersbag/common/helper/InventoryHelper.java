@@ -5,19 +5,24 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import baubles.api.BaublesApi;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.api.IBlockSource;
 import tschipp.buildersbag.common.config.BuildersBagConfig;
-import tschipp.buildersbag.common.config.Configs;
 import tschipp.buildersbag.common.item.BuildersBagItem;
+import tschipp.buildersbag.compat.blocksourceadapter.BlockSourceAdapterHandler;
+import tschipp.buildersbag.compat.botania.BotaniaCompat;
 
 public class InventoryHelper
 {
@@ -116,9 +121,9 @@ public class InventoryHelper
 		return maximum;
 	}
 
-	public static int getAllAvailableStacksCount(IBagCap bag)
+	public static int getAllAvailableStacksCount(IBagCap bag, EntityPlayer player)
 	{
-		NonNullList<ItemStack> list = getAllAvailableStacks(bag);
+		NonNullList<ItemStack> list = getAllAvailableStacks(bag, player);
 
 		int count = 0;
 
@@ -128,27 +133,45 @@ public class InventoryHelper
 		return count;
 	}
 
-	public static NonNullList<ItemStack> getAllAvailableStacks(IBagCap bag)
+	public static NonNullList<ItemStack> getAllAvailableStacks(IBagCap bag, EntityPlayer player)
+	{
+		return getAllAvailableStacksExcept(bag, player, null);
+	}
+
+	public static NonNullList<ItemStack> getAllAvailableStacksExcept(IBagCap bag, EntityPlayer player, @Nullable IBagModule exclude)
 	{
 		NonNullList<ItemStack> list = NonNullList.create();
-		list.addAll(getStacks(bag.getBlockInventory()));
+
+		list.addAll(getInventoryStacks(bag, player));
+		
 		for (IBagModule module : bag.getModules())
 		{
-			if (module.isEnabled())
-				list.addAll(module.getPossibleStacks(bag));
+			if (module.isEnabled() && module != exclude)
+				list.addAll(module.getPossibleStacks(bag, player));
 		}
 		return list;
 	}
 
-	public static NonNullList<ItemStack> getAllAvailableStacksExcept(IBagCap bag, IBagModule exclude)
+	public static NonNullList<ItemStack> getInventoryStacks(IBagCap bag, EntityPlayer player)
 	{
 		NonNullList<ItemStack> list = NonNullList.create();
 		list.addAll(getStacks(bag.getBlockInventory()));
-		for (IBagModule module : bag.getModules())
+
+		if (player != null) // TODO Remove this check when LittleTiles updates
+							// its library
 		{
-			if (module.isEnabled() && module != exclude)
-				list.addAll(module.getPossibleStacks(bag));
+			for (ItemStack available : list)
+			{
+				if (available.getItem() instanceof IBlockSource)
+				{
+					list.addAll(((IBlockSource) available.getItem()).getCreateableBlocks(available, player));
+				} else if (BlockSourceAdapterHandler.hasAdapter(available))
+				{
+					list.addAll(BlockSourceAdapterHandler.getCreateableBlocks(available, player));
+				}
+			}
 		}
+		
 		return list;
 	}
 
@@ -181,9 +204,9 @@ public class InventoryHelper
 			i = new Integer(0);
 
 		i++;
-		
+
 		recursion_depth.put(player.getUniqueID().toString(), i);
-		
+
 		if (i > BuildersBagConfig.Settings.maximumRecursionDepth)
 		{
 			return false;
@@ -200,29 +223,44 @@ public class InventoryHelper
 	public static ItemStack getOrProvideStack(ItemStack stack, IBagCap bag, EntityPlayer player, @Nullable IBagModule exclude)
 	{
 		ItemStack foundStack = ItemStack.EMPTY;
-		if (!(foundStack = containsStack(stack, getStacks(bag.getBlockInventory()))).isEmpty())
+		NonNullList<ItemStack> availableBlocks = getStacks(bag.getBlockInventory());
+		if (!(foundStack = containsStack(stack, availableBlocks)).isEmpty())
 		{
 			return foundStack.splitStack(1);
 		} else
 		{
-			for (IBagModule module : bag.getModules())
+			for (ItemStack available : availableBlocks)
 			{
-				if (module.isEnabled() && !module.isSupplier() && (exclude == null ? true : exclude != module))
+				if (available.getItem() instanceof IBlockSource)
 				{
-					if (incrementRecursionDepth(player))
-					{
-						ItemStack provided = module.createStack(stack, bag, player);
-						if (ItemStack.areItemsEqual(stack, provided))
-						{
-							resetRecursionDepth(player);
-							return provided;
-						}
-					}
-					else
-						return ItemStack.EMPTY;
+					ItemStack provided = ((IBlockSource) available.getItem()).createBlock(available, stack, player, player.world.isRemote);
+					if (!provided.isEmpty())
+						return provided;
+				} else if (BlockSourceAdapterHandler.hasAdapter(available))
+				{
+					ItemStack provided = BlockSourceAdapterHandler.createBlock(available, stack, player, botaniaCheck(available) ? false : player.world.isRemote);
+					if (!provided.isEmpty())
+						return provided;
 				}
-
 			}
+		}
+
+		for (IBagModule module : bag.getModules())
+		{
+			if (module.isEnabled() && !module.isSupplier() && (exclude == null ? true : exclude != module))
+			{
+				if (incrementRecursionDepth(player))
+				{
+					ItemStack provided = module.createStack(stack, bag, player);
+					if (ItemStack.areItemsEqual(stack, provided))
+					{
+						resetRecursionDepth(player);
+						return provided;
+					}
+				} else
+					return ItemStack.EMPTY;
+			}
+
 		}
 
 		return ItemStack.EMPTY;
@@ -233,7 +271,7 @@ public class InventoryHelper
 	 */
 	public static boolean simulateProvideStack(ItemStack stack, ItemStack bag, EntityPlayer player, @Nullable IBagModule exclude)
 	{
-		return !getOrProvideStack(stack, CapHelper.getBagCap(bag.copy()), new FakePlayer((WorldServer) player.world, player.getGameProfile()), exclude).isEmpty();
+		return !getOrProvideStack(stack, CapHelper.getBagCap(bag.copy()), new FakePlayerCopy((WorldServer) player.world, player.getGameProfile(), player), exclude).isEmpty();
 	}
 
 	/*
@@ -243,6 +281,9 @@ public class InventoryHelper
 	public static NonNullList<ItemStack> getOrProvideStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player, @Nullable IBagModule exclude)
 	{
 		NonNullList<ItemStack> provided = NonNullList.create();
+
+		if (player.world.isRemote)
+			bag = bag.copy();
 
 		for (int i = 0; i < count; i++)
 		{
@@ -276,7 +317,7 @@ public class InventoryHelper
 		{
 			for (int i = 0; i < count; i++)
 			{
-				ItemStack s = InventoryHelper.getOrProvideStack(dominatingModule.getBlock(bag), bag, player, null);
+				ItemStack s = InventoryHelper.getOrProvideStack(dominatingModule.getBlock(bag, player), bag, player, null);
 				if (s.isEmpty())
 					break;
 
@@ -289,7 +330,7 @@ public class InventoryHelper
 
 	public static NonNullList<ItemStack> simulateProvideStackWithCount(ItemStack stack, int count, ItemStack bag, EntityPlayer player, @Nullable IBagModule exclude)
 	{
-		return getOrProvideStackWithCount(stack, count, CapHelper.getBagCap(bag.copy()), new FakePlayer((WorldServer) player.world, player.getGameProfile()), exclude);
+		return getOrProvideStackWithCount(stack, count, CapHelper.getBagCap(bag.copy()), new FakePlayerCopy((WorldServer) player.world, player.getGameProfile(), player), exclude);
 	}
 
 	public static void addStack(ItemStack stack, IBagCap cap, EntityPlayer player)
@@ -370,7 +411,36 @@ public class InventoryHelper
 			}
 		}
 
+		if (Loader.isModLoaded("baubles"))
+		{
+			IInventory baubles = BaublesApi.getBaubles(player);
+			for (int i = 0; i < baubles.getSizeInventory(); i++)
+			{
+				ItemStack s = baubles.getStackInSlot(i);
+				if (s.getItem() instanceof BuildersBagItem)
+					list.add(s);
+			}
+		}
+
 		return list;
+	}
+
+	public static int getSlotForStack(EntityPlayer player, ItemStack stack)
+	{
+		for (int i = 0; i < player.inventory.getSizeInventory(); i++)
+		{
+			if (player.inventory.getStackInSlot(i) == stack)
+				return i;
+		}
+
+		return -1;
+	}
+	
+	private static boolean botaniaCheck(ItemStack stack)
+	{
+		if(Loader.isModLoaded("botania"))
+			return BotaniaCompat.isEnderHand(stack);
+		return false;
 	}
 
 }

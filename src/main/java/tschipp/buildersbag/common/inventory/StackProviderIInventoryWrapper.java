@@ -22,7 +22,7 @@ public class StackProviderIInventoryWrapper implements IInventory
 		this.bag = bag;
 		this.stack = stack;
 		this.player = player;
-		this.availableStacks = InventoryHelper.getAllAvailableStacks(bag);
+		this.availableStacks = InventoryHelper.getAllAvailableStacks(bag, player);
 	}
 
 	@Override
@@ -46,7 +46,7 @@ public class StackProviderIInventoryWrapper implements IInventory
 	@Override
 	public int getSizeInventory()
 	{
-		return InventoryHelper.getAllAvailableStacks(bag).size();
+		return InventoryHelper.getAllAvailableStacks(bag, player).size();
 	}
 
 	@Override
@@ -59,7 +59,7 @@ public class StackProviderIInventoryWrapper implements IInventory
 	public ItemStack getStackInSlot(int index)
 	{
 		ItemStack provided = InventoryHelper.getOrProvideStack(availableStacks.get(index), bag, player, null);
-		this.availableStacks = InventoryHelper.getAllAvailableStacks(bag);
+		this.availableStacks = InventoryHelper.getAllAvailableStacks(bag, player);
 		
 		return provided;
 	}

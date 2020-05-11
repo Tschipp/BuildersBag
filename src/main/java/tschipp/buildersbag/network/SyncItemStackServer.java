@@ -11,24 +11,24 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import tschipp.buildersbag.common.inventory.ContainerBag;
 
-public class SyncItemStack implements IMessage, IMessageHandler<SyncItemStack, IMessage>
+public class SyncItemStackServer implements IMessage, IMessageHandler<SyncItemStackServer, IMessage>
 {
 
 	private ItemStack stack;
 	private boolean right;
 	
-	public SyncItemStack()
+	public SyncItemStackServer()
 	{
 	}
 	
-	public SyncItemStack(ItemStack stack, EnumHand hand)
+	public SyncItemStackServer(ItemStack stack, EnumHand hand)
 	{
 		this.stack = stack;
 		this.right = hand == EnumHand.MAIN_HAND;
 	}
 	
 	@Override
-	public IMessage onMessage(SyncItemStack message, MessageContext ctx)
+	public IMessage onMessage(SyncItemStackServer message, MessageContext ctx)
 	{
 		final IThreadListener mainThread = (IThreadListener)ctx.getServerHandler().player.world;
 		

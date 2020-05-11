@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
@@ -195,7 +196,11 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 			return;
 
 		possibleItems.clear();
-		possibleItems.addAll(InventoryHelper.getAllAvailableStacks(cap));
+		for(ItemStack s : InventoryHelper.getAllAvailableStacks(cap, Minecraft.getMinecraft().player))
+		{
+			if(s.getItem() instanceof ItemBlock)
+				possibleItems.add(s);
+		}
 	}
 
 	@SubscribeEvent

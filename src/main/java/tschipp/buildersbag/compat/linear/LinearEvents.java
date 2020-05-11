@@ -1,5 +1,7 @@
 package tschipp.buildersbag.compat.linear;
 
+import java.util.Random;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityArmorStand;
@@ -29,6 +31,8 @@ import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.item.BuildersBagItem;
 import tschipp.buildersbag.network.SyncBagCapClient;
+import tschipp.buildersbag.network.SyncBagCapInventoryClient;
+import tschipp.buildersbag.network.SyncEnderchestToClient;
 import tschipp.linear.api.LinearBlockStateEvent;
 import tschipp.linear.api.LinearPlaceBlockEvent;
 import tschipp.linear.api.LinearRenderBlockStateEvent;
@@ -38,6 +42,11 @@ import tschipp.linear.common.helper.LinearHelper;
 @EventBusSubscriber(modid = BuildersBag.MODID)
 public class LinearEvents
 {
+//	private static String lastTag = "";
+	private static int lastCount = 0;
+	private static int lastRequested = 0;
+	private static ItemStack lastSelected = ItemStack.EMPTY;
+	private static Random rand = new Random();
 
 	@Method(modid = "linear")
 	@SubscribeEvent(priority = EventPriority.LOW)
@@ -49,6 +58,22 @@ public class LinearEvents
 
 		requested -= event.getProvidedBlocks();
 
+		if(player.world.isRemote && ItemStack.areItemsEqual(lastSelected, stack))
+		{
+			if(lastRequested == requested)
+			{
+				event.setProvidedBlocks(event.getProvidedBlocks() + lastCount);
+				return;
+			}
+			if(rand.nextDouble() < 0.90 && requested - lastRequested == 1)
+			{
+				event.setProvidedBlocks(event.getProvidedBlocks() + lastCount + 1);
+				return;
+			}
+		}
+		
+		lastRequested = requested;
+		
 		NonNullList<ItemStack> bags = InventoryHelper.getBagsInInventory(player);
 
 		int providedBlocks = 0;
@@ -75,8 +100,9 @@ public class LinearEvents
 
 					requested -= provided.size();
 
-					for (ItemStack prov : provided)
-						InventoryHelper.addStack(prov, bagCap, player);
+					if (!player.world.isRemote)
+						for (ItemStack prov : provided)
+							InventoryHelper.addStack(prov, bagCap, player);
 				}
 			}
 		}
@@ -90,7 +116,7 @@ public class LinearEvents
 			{
 				if (module.isEnabled() && module.isDominating())
 				{
-					placementStack = module.getBlock(bagCap);
+					placementStack = module.getBlock(bagCap, player);
 					break;
 				}
 			}
@@ -105,15 +131,14 @@ public class LinearEvents
 
 			NonNullList<ItemStack> provided = NonNullList.create();
 			int newlyProvided = 0;
-			
+
 			if (bagCap.hasModuleAndEnabled("buildersbag:random"))
 			{
 				if (player.world.isRemote)
 				{
-					newlyProvided += InventoryHelper.getAllAvailableStacksCount(bagCap);
+					newlyProvided += InventoryHelper.getAllAvailableStacksCount(bagCap, player);
 					providedBlocks += newlyProvided;
-				}
-				else
+				} else
 					provided = InventoryHelper.getOrProvideStackWithCountDominating(requested, bagCap, player);
 			} else
 				provided = InventoryHelper.getOrProvideStackWithCount(placementStack, requested, bagCap, player, null);
@@ -121,13 +146,17 @@ public class LinearEvents
 			if (!provided.isEmpty())
 				providedBlocks += provided.size();
 
-			for (ItemStack prov : provided)
-				InventoryHelper.addStack(prov, bagCap, player);
+			if (!player.world.isRemote)
+				for (ItemStack prov : provided)
+					InventoryHelper.addStack(prov, bagCap, player);
 
 			requested -= (provided.size() + newlyProvided);
 		}
 
 		event.setProvidedBlocks(event.getProvidedBlocks() + providedBlocks);
+		
+		lastCount = providedBlocks;
+		lastSelected = stack;
 	}
 
 	@Method(modid = "linear")
@@ -157,9 +186,15 @@ public class LinearEvents
 						ItemStack result = InventoryHelper.getOrProvideStack(stack, bag, player, null);
 						if (!result.isEmpty())
 							stack.grow(1);
+						
+						BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, InventoryHelper.getSlotForStack(player, bagStack)), (EntityPlayerMP) player);
+						BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
+
 						return;
 					}
 				}
+				
+				
 
 			} else if (stack.getItem() instanceof BuildersBagItem)
 			{
@@ -167,7 +202,7 @@ public class LinearEvents
 
 				boolean done = false;
 				int i = 0;
-				
+
 				while (!done && i < 15)
 				{
 					ItemStack placementStack = ItemStack.EMPTY;
@@ -176,13 +211,13 @@ public class LinearEvents
 					{
 						if (module.isEnabled() && module.isDominating())
 						{
-							placementStack = module.getBlock(bag);
+							placementStack = module.getBlock(bag, player);
 							break;
 						}
 					}
 
 					i++;
-					
+
 					if (placementStack.isEmpty())
 					{
 						placementStack = bag.getSelectedInventory().getStackInSlot(0).copy();
@@ -190,22 +225,20 @@ public class LinearEvents
 
 					if (placementStack.isEmpty() || !(placementStack.getItem() instanceof ItemBlock))
 						return;
-					
 
 					Block block = Block.getBlockFromItem(placementStack.getItem());
 					boolean canPlace = world.mayPlace(block, world.getBlockState(pos).getBlock().isReplaceable(world, pos) ? pos : pos.offset(facing), false, facing, player);
 					boolean canEdit = player.canPlayerEdit(pos, facing, placementStack);
-					
-					if(!canEdit || !canPlace)
+
+					if (!canEdit || !canPlace)
 						continue;
 
 					ItemStack result = player.isCreative() ? placementStack.copy() : InventoryHelper.getOrProvideStack(placementStack, bag, player, null);
 
-					
 					if (!result.isEmpty())
 					{
 						done = true;
-						
+
 						FakePlayer fake = new FakePlayer((WorldServer) world, player.getGameProfile());
 						fake.rotationPitch = player.rotationPitch;
 						fake.rotationYaw = player.rotationYaw;
@@ -221,6 +254,9 @@ public class LinearEvents
 					}
 				}
 			}
+
+			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
+
 		}
 
 	}
@@ -244,7 +280,7 @@ public class LinearEvents
 				{
 					if (module.isEnabled() && module.isDominating())
 					{
-						placementStack = module.getBlock(bag);
+						placementStack = module.getBlock(bag, player);
 						break;
 					}
 				}
@@ -279,7 +315,7 @@ public class LinearEvents
 		ItemStack stack = event.getStack();
 		World world = player.world;
 		EnumHand hand = event.getHand();
-		
+
 		if (stack.getItem() instanceof BuildersBagItem)
 		{
 			IBagCap bag = CapHelper.getBagCap(stack);
@@ -293,13 +329,13 @@ public class LinearEvents
 					{
 						if (module.getName().equals("buildersbag:random"))
 						{
-							NonNullList<ItemStack> available = InventoryHelper.getAllAvailableStacks(bag);
+							NonNullList<ItemStack> available = InventoryHelper.getAllAvailableStacks(bag, player);
 							if (!available.isEmpty())
 							{
 								placementStack = available.get(BagItemStackRenderer.listIndex % available.size());
 							}
 						} else
-							placementStack = module.getBlock(bag);
+							placementStack = module.getBlock(bag, player);
 						break;
 					}
 				}
@@ -324,7 +360,7 @@ public class LinearEvents
 				stand.setPosition(player.posX, player.posY, player.posZ);
 				stand.rotationPitch = player.rotationPitch;
 				stand.rotationYaw = player.rotationYaw;
-				
+
 				float[] hit = LinearHelper.getHitCoords(player);
 				IBlockState state = block.getStateForPlacement(player.world, LinearHelper.getLookPos(player, LinearHelper.canPlaceInMidair(player)), ray.sideHit, hit[0], hit[1], hit[2], stack.getMetadata(), stand, hand);
 

@@ -1,49 +1,29 @@
 package tschipp.buildersbag.common.events;
 
-import com.creativemd.littletiles.common.event.ActionEvent;
-import com.creativemd.littletiles.common.event.ActionEvent.ActionType;
-
-import mod.chiselsandbits.chiseledblock.data.BitLocation;
-import mod.chiselsandbits.chiseledblock.data.VoxelBlob;
-import mod.chiselsandbits.chiseledblock.iterators.ChiselIterator;
-import mod.chiselsandbits.chiseledblock.iterators.ChiselTypeIterator;
-import mod.chiselsandbits.core.ChiselsAndBits;
-import mod.chiselsandbits.core.ClientSide;
-import mod.chiselsandbits.helpers.ActingPlayer;
-import mod.chiselsandbits.helpers.BitOperation;
-import mod.chiselsandbits.helpers.ChiselModeManager;
-import mod.chiselsandbits.helpers.ContinousBits;
-import mod.chiselsandbits.helpers.IContinuousInventory;
-import mod.chiselsandbits.helpers.VoxelRegionSrc;
-import mod.chiselsandbits.items.ItemChiseledBit;
-import mod.chiselsandbits.modes.ChiselMode;
-import mod.chiselsandbits.modes.IToolMode;
 import net.minecraft.block.Block;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.Optional.Method;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent.CustomPacketEvent;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent.ServerCustomPacketEvent;
-import net.minecraftforge.fml.common.network.internal.FMLProxyPacket;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.compat.linear.LinearCompatManager;
-import tschipp.linear.api.LinearHooks;
+import tschipp.buildersbag.network.SyncBagCapInventoryClient;
+import tschipp.buildersbag.network.SyncEnderchestToClient;
 
 @EventBusSubscriber(modid = BuildersBag.MODID)
 public class BlockEvents
@@ -84,6 +64,12 @@ public class BlockEvents
 							if (!provided.isEmpty())
 							{
 								placementItem.grow(1);
+
+								if (!player.world.isRemote)
+								{
+									BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, InventoryHelper.getSlotForStack(player, bag)), (EntityPlayerMP) player);
+									BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
+								}
 								return;
 							}
 						}
@@ -92,6 +78,18 @@ public class BlockEvents
 			}
 		}
 
+	}
+	
+	@SubscribeEvent
+	public static void onLogin(EntityJoinWorldEvent event)
+	{
+		Entity e = event.getEntity();
+		World world = event.getWorld();
+		if(e instanceof EntityPlayer && !world.isRemote)
+		{
+			EntityPlayerMP player = (EntityPlayerMP) e;
+			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
+		}
 	}
 
 }

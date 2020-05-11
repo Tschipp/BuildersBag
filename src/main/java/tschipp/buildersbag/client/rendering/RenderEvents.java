@@ -11,8 +11,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.common.BuildersBagRegistry;
 
-@EventBusSubscriber(modid = BuildersBag.MODID)
-public class ClientEvents
+@EventBusSubscriber(modid = BuildersBag.MODID, value = Side.CLIENT)
+public class RenderEvents
 {
 	@SubscribeEvent
 	@SideOnly(Side.CLIENT)

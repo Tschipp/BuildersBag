@@ -8,9 +8,11 @@ import com.creativemd.littletiles.common.util.ingredient.LittleIngredients;
 import com.creativemd.littletiles.common.util.ingredient.LittleInventory;
 import com.mojang.realmsclient.gui.ChatFormatting;
 
+import baubles.api.BaubleType;
+import baubles.api.IBauble;
 import net.minecraft.block.Block;
-import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
@@ -32,22 +34,23 @@ import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.fml.common.Optional.Interface;
 import net.minecraftforge.fml.common.Optional.InterfaceList;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
-import tschipp.buildersbag.client.rendering.BagItemStackRenderer;
 import tschipp.buildersbag.common.caps.BagCapProvider;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.modules.LittleTilesModule;
+import tschipp.buildersbag.compat.botania.BotaniaCompat;
 import tschipp.buildersbag.compat.linear.LinearCompatManager;
 import tschipp.buildersbag.compat.littletiles.NonModifiableLittleIngredients;
 import tschipp.buildersbag.network.SyncBagCapClient;
+import tschipp.buildersbag.network.SyncBagCapInventoryClient;
+import tschipp.buildersbag.network.SyncEnderchestToClient;
+import vazkii.botania.api.item.IBlockProvider;
 
-@InterfaceList(value = { @Interface(modid = "littletiles", iface = "com.creativemd.littletiles.common.api.ILittleIngredientSupplier"), @Interface(modid = "littletiles", iface = "com.creativemd.littletiles.common.api.ILittleIngredientInventory") })
-public class BuildersBagItem extends Item implements ILittleIngredientSupplier, ILittleIngredientInventory
+@InterfaceList(value = { @Interface(modid = "littletiles", iface = "com.creativemd.littletiles.common.api.ILittleIngredientSupplier"), @Interface(modid = "littletiles", iface = "com.creativemd.littletiles.common.api.ILittleIngredientInventory"), @Interface(modid = "botania", iface = "vazkii.botania.api.item.IBlockProvider"), @Interface(modid = "baubles", iface = "baubles.api.IBauble") })
+public class BuildersBagItem extends Item implements ILittleIngredientSupplier, ILittleIngredientInventory, IBlockProvider, IBauble
 {
 	private int tier;
 
@@ -77,6 +80,9 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 		if (player.isSneaking() && (Loader.isModLoaded("linear") ? LinearCompatManager.doDragCheck(player) : true))
 			player.openGui(BuildersBag.instance, 0, world, hand == EnumHand.MAIN_HAND ? 1 : 0, 0, 0);
 
+		if(!world.isRemote)
+			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
+
 		return new ActionResult<ItemStack>(EnumActionResult.PASS, stack);
 	}
 
@@ -101,7 +107,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			{
 				if (module.isEnabled() && module.isDominating())
 				{
-					placementStack = module.getBlock(bag);
+					placementStack = module.getBlock(bag, player);
 					break;
 				}
 			}
@@ -158,7 +164,8 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 				player.swingArm(hand);
 
 			BuildersBag.network.sendTo(new SyncBagCapClient(bag, hand), (EntityPlayerMP) player);
-
+			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
+			
 			return result;
 
 		} else
@@ -219,4 +226,42 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			}
 		}
 	}
+
+	
+	/*
+	 * BOTANIA COMPAT
+	 */
+	@Optional.Method(modid = "botania")
+	@Override
+	public boolean provideBlock(EntityPlayer player, ItemStack requestor, ItemStack stack, Block block, int meta, boolean doit)
+	{
+		return BotaniaCompat.provideBlock(player, requestor, stack, block, meta, doit);
+	}
+
+	@Optional.Method(modid = "botania")
+	@Override
+	public int getBlockCount(EntityPlayer player, ItemStack requestor, ItemStack stack, Block block, int meta)
+	{
+		return BotaniaCompat.getBlockCount(player, requestor, stack, block, meta);
+	}
+	
+	/*
+	 * BAUBLES COMPAT
+	 */
+	@Optional.Method(modid = "baubles")
+	@Override
+	public BaubleType getBaubleType(ItemStack itemstack)
+	{
+		return BaubleType.BELT;
+	}
+
+	@Optional.Method(modid = "baubles")
+	@Override
+	public void onEquipped(ItemStack itemstack, EntityLivingBase player)
+	{
+		IBagCap cap = CapHelper.getBagCap(itemstack);
+		if(!player.world.isRemote)
+			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(cap, 3, true), (EntityPlayerMP) player);
+	}
+	
 }

@@ -31,9 +31,9 @@ public class CraftingModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag)
+	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
 	{
-		return CraftingHandler.getPossibleBlocks(InventoryHelper.getStacks(bag.getBlockInventory()));
+		return CraftingHandler.getPossibleBlocks(InventoryHelper.getInventoryStacks(bag, player));
 	}
 	
 	@Override
@@ -57,7 +57,7 @@ public class CraftingModule extends AbstractBagModule
 	@Override
 	public ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player)
 	{
-		RecipeTree subTree = CraftingHandler.getSubTree(InventoryHelper.getStacks(bag.getBlockInventory()));
+		RecipeTree subTree = CraftingHandler.getSubTree(InventoryHelper.getInventoryStacks(bag, player));
 		NonNullList<ItemStack> possibleStacks = subTree.getPossibleStacks();
 
 		boolean isPossible = false;
@@ -72,7 +72,7 @@ public class CraftingModule extends AbstractBagModule
 		if (recipes.isEmpty())
 			return ItemStack.EMPTY;
 
-		NonNullList<ItemStack> availableStacks = InventoryHelper.getAllAvailableStacksExcept(bag, this);
+		NonNullList<ItemStack> availableStacks = InventoryHelper.getAllAvailableStacksExcept(bag, player, this);
 
 		Collections.shuffle(recipes);
 

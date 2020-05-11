@@ -16,18 +16,17 @@ import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.caps.BagCapProvider;
 import tschipp.buildersbag.common.helper.CapHelper;
 
-public class SyncBagCapClient implements IMessage, IMessageHandler<SyncBagCapClient, IMessage>
+public class SyncBagCapServer implements IMessage, IMessageHandler<SyncBagCapServer, IMessage>
 {
-
 	private IBagCap bagCap;
 	public boolean right;
 	public NBTTagCompound readTag;
 
-	public SyncBagCapClient()
+	public SyncBagCapServer()
 	{
 	}
 
-	public SyncBagCapClient(IBagCap bagCap, EnumHand hand)
+	public SyncBagCapServer(IBagCap bagCap, EnumHand hand)
 	{
 		this.bagCap = bagCap;
 		this.right = hand == EnumHand.MAIN_HAND;
@@ -48,13 +47,13 @@ public class SyncBagCapClient implements IMessage, IMessageHandler<SyncBagCapCli
 	}
 
 	@Override
-	public IMessage onMessage(SyncBagCapClient message, MessageContext ctx)
+	public IMessage onMessage(SyncBagCapServer message, MessageContext ctx)
 	{
-		final IThreadListener mainThread = Minecraft.getMinecraft();
+		final IThreadListener mainThread =(IThreadListener)ctx.getServerHandler().player.world;
 
 		mainThread.addScheduledTask(() -> {
 
-			EntityPlayer player = BuildersBag.proxy.getPlayer();
+			EntityPlayer player = ctx.getServerHandler().player;
 			ItemStack stack = message.right ? player.getHeldItemMainhand() : player.getHeldItemOffhand();
 
 			IBagCap oldCap = CapHelper.getBagCap(stack);
@@ -65,3 +64,4 @@ public class SyncBagCapClient implements IMessage, IMessageHandler<SyncBagCapCli
 	}
 
 }
+

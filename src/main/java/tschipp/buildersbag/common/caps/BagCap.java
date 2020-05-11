@@ -172,4 +172,25 @@ public class BagCap implements IBagCap
 		}
 	}
 
+	@Override
+	public IBagCap copy()
+	{
+		BagCap newcap = new BagCap();
+		newcap.inv = new ItemStackHandler(this.inv.getSlots());
+		newcap.modules = new IBagModule[this.modules.length];
+		newcap.selected.setStackInSlot(0, this.selected.getStackInSlot(0).copy());
+		
+		for(int i = 0; i < this.inv.getSlots(); i++)
+			newcap.inv.setStackInSlot(i, this.inv.getStackInSlot(i).copy());
+		
+		for(int i = 0; i < this.modules.length; i++)
+		{
+			IBagModule newModule = BuildersBagRegistry.getModule(new ResourceLocation(this.modules[i].getName()));
+			newModule.deserializeNBT(this.modules[i].serializeNBT());
+			newcap.modules[i] = newModule;
+		}
+		
+		return newcap;
+	}
+
 }

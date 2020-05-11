@@ -54,6 +54,11 @@ repositories {
 	maven {
 		url "https://maven.blamejared.com/"
 	}
+	
+	maven {
+        name = "thiakil"
+        url = "http://maven.thiakil.com" //Baubles
+    }
 }
 
 dependencies {
@@ -63,7 +68,11 @@ dependencies {
 	compile "curse.maven:littletiles:${littletiles_version}" //LT
 	compile "curse.maven:creativecore:${creativecore_version}" //Creative Core
 	compile "curse.maven:chisels-bits:${chisels_and_bits_version}" //C & B
+	compile "curse.maven:better-builders-wands:${bbw_version}" //Better Builder's Wands
 	deobfCompile "tschipp.linear:linear-1.12.2:${linear_version}" //Linear
+	deobfCompile "vazkii.botania:Botania:${botania_version}" //Botania
+	deobfCompile "com.azanor.baubles:Baubles:${baubles_version}" //Baubles
+
 }
 
 processResources {

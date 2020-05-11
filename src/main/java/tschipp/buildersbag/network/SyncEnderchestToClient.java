@@ -3,7 +3,9 @@ package tschipp.buildersbag.network;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
+import net.minecraft.inventory.InventoryEnderChest;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -12,52 +14,47 @@ import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import tschipp.buildersbag.BuildersBag;
 
-public class SetHeldItemClient implements IMessage, IMessageHandler<SetHeldItemClient, IMessage>
+public class SyncEnderchestToClient implements IMessage, IMessageHandler<SyncEnderchestToClient, IMessage>
 {
+	private InventoryEnderChest enderchest;
+	private NBTTagList nbt;
 
-	public ItemStack stack;
-	public boolean right;
-	public String bag;
-	
-	public SetHeldItemClient()
+	public SyncEnderchestToClient()
 	{
 	}
-	
-	public SetHeldItemClient(ItemStack stack, EnumHand hand)
+
+	public SyncEnderchestToClient(EntityPlayer player)
 	{
-		this.stack = stack;
-		this.bag = stack.getItem().getRegistryName().toString();
-		this.right = hand == EnumHand.MAIN_HAND;
+		enderchest = player.getInventoryEnderChest();
 	}
 
 	@Override
 	public void fromBytes(ByteBuf buf)
 	{
-		stack = ByteBufUtils.readItemStack(buf);
-		right = buf.readBoolean();
+		NBTTagCompound tag = ByteBufUtils.readTag(buf);
+		nbt = (NBTTagList) tag.getTag("list");
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf)
 	{
-		ByteBufUtils.writeItemStack(buf, stack);
-		buf.writeBoolean(right);
+		NBTTagCompound tag = new NBTTagCompound();
+		tag.setTag("list", enderchest.saveInventoryToNBT());
+		ByteBufUtils.writeTag(buf, tag);
 	}
-	
+
 	@Override
-	public IMessage onMessage(SetHeldItemClient message, MessageContext ctx)
+	public IMessage onMessage(SyncEnderchestToClient message, MessageContext ctx)
 	{
 		final IThreadListener mainThread = Minecraft.getMinecraft();
-		
+
 		mainThread.addScheduledTask(() -> {
-			
+
 			EntityPlayer player = BuildersBag.proxy.getPlayer();
-			EnumHand hand = message.right ? EnumHand.MAIN_HAND : EnumHand.OFF_HAND;
-			
-			player.setHeldItem(hand, message.stack);
-			
+			player.getInventoryEnderChest().loadInventoryFromNBT(message.nbt);
+
 		});
-		
+
 		return null;
 	}
 

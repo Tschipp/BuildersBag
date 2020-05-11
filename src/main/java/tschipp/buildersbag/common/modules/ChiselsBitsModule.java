@@ -84,7 +84,7 @@ public class ChiselsBitsModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag)
+	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
 	{
 		return NonNullList.create();
 	}

@@ -10,7 +10,7 @@ import net.minecraftforge.items.ItemStackHandler;
 public interface IBagModule extends INBTSerializable<NBTTagCompound>
 {
 
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag);
+	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player);
 		
 	
 	/**
@@ -51,7 +51,7 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 	/**
 	 * Selects a block based on some criteria. Only fired on dominating Modules
 	 */
-	default ItemStack getBlock(IBagCap bag)
+	default ItemStack getBlock(IBagCap bag, EntityPlayer player)
 	{
 		return ItemStack.EMPTY;
 	}

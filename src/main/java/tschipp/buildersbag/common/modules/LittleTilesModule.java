@@ -40,7 +40,7 @@ public class LittleTilesModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag)
+	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
 	{
 		return NonNullList.create();
 	}
@@ -173,7 +173,7 @@ public class LittleTilesModule extends AbstractBagModule
 
 		existingIng.setModifiable(true);
 		
-		NonNullList<ItemStack> allAvailable = InventoryHelper.getAllAvailableStacks(CapHelper.getBagCap(bag));
+		NonNullList<ItemStack> allAvailable = InventoryHelper.getAllAvailableStacks(CapHelper.getBagCap(bag), null); //TODO: Get the player
 		BlockIngredient blIng = new BlockIngredient();
 
 		for (ItemStack available : allAvailable)

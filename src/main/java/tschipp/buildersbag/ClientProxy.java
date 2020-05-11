@@ -6,6 +6,7 @@ import net.minecraft.item.Item;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import tschipp.buildersbag.client.BuildersBagKeybinds;
 import tschipp.buildersbag.client.rendering.BagItemStackRenderer;
 import tschipp.buildersbag.client.rendering.ItemRendering;
 
@@ -16,6 +17,7 @@ public class ClientProxy extends CommonProxy
 	public void preInit(FMLPreInitializationEvent event)
 	{
 		super.preInit(event);
+		BuildersBagKeybinds.registerKeybinds();
 		ItemRendering.regItemRenders();
 	}
 	

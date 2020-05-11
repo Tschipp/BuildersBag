@@ -18,14 +18,19 @@ import tschipp.buildersbag.common.BuildersBagRegistry;
 import tschipp.buildersbag.common.config.BuildersBagConfig;
 import tschipp.buildersbag.common.crafting.CraftingHandler;
 import tschipp.buildersbag.common.inventory.BagGuiHandler;
+import tschipp.buildersbag.compat.bbw.BBWCompat;
+import tschipp.buildersbag.compat.botania.BotaniaCompat;
 import tschipp.buildersbag.compat.chisel.ChiselEvents;
 import tschipp.buildersbag.compat.linear.LinearCompatManager;
+import tschipp.buildersbag.network.GrowItemClient;
+import tschipp.buildersbag.network.OpenBaubleBagServer;
 import tschipp.buildersbag.network.SetHeldItemClient;
-import tschipp.buildersbag.network.SetHeldItemClientHandler;
 import tschipp.buildersbag.network.SyncBagCapClient;
-import tschipp.buildersbag.network.SyncBagCapClientHandler;
-import tschipp.buildersbag.network.SyncItemStack;
-import tschipp.buildersbag.network.SyncModuleState;
+import tschipp.buildersbag.network.SyncBagCapInventoryClient;
+import tschipp.buildersbag.network.SyncBagCapServer;
+import tschipp.buildersbag.network.SyncEnderchestToClient;
+import tschipp.buildersbag.network.SyncItemStackServer;
+import tschipp.buildersbag.network.SyncModuleStateServer;
 
 public class CommonProxy
 {
@@ -41,10 +46,15 @@ public class CommonProxy
 	public void preInit(FMLPreInitializationEvent event)
 	{
 		BuildersBag.network = NetworkRegistry.INSTANCE.newSimpleChannel(BuildersBag.MODID);
-		BuildersBag.network.registerMessage(SyncItemStack.class, SyncItemStack.class, 0, Side.SERVER);
-		BuildersBag.network.registerMessage(SyncModuleState.class, SyncModuleState.class, 1, Side.SERVER);
-		BuildersBag.network.registerMessage(SyncBagCapClientHandler.class, SyncBagCapClient.class, 2, Side.CLIENT);
-		BuildersBag.network.registerMessage(SetHeldItemClientHandler.class, SetHeldItemClient.class, 3, Side.CLIENT);
+		BuildersBag.network.registerMessage(SyncItemStackServer.class, SyncItemStackServer.class, 0, Side.SERVER);
+		BuildersBag.network.registerMessage(SyncModuleStateServer.class, SyncModuleStateServer.class, 1, Side.SERVER);
+		BuildersBag.network.registerMessage(SyncBagCapClient.class, SyncBagCapClient.class, 2, Side.CLIENT);
+		BuildersBag.network.registerMessage(SetHeldItemClient.class, SetHeldItemClient.class, 3, Side.CLIENT);
+		BuildersBag.network.registerMessage(SyncBagCapInventoryClient.class, SyncBagCapInventoryClient.class, 4, Side.CLIENT);
+		BuildersBag.network.registerMessage(OpenBaubleBagServer.class, OpenBaubleBagServer.class, 5, Side.SERVER);
+		BuildersBag.network.registerMessage(GrowItemClient.class, GrowItemClient.class, 6, Side.CLIENT);
+		BuildersBag.network.registerMessage(SyncEnderchestToClient.class, SyncEnderchestToClient.class, 7, Side.CLIENT);
+		BuildersBag.network.registerMessage(SyncBagCapServer.class, SyncBagCapServer.class, 8, Side.SERVER);
 
 		NetworkRegistry.INSTANCE.registerGuiHandler(BuildersBag.instance, new BagGuiHandler());
 		BuildersBagRegistry.registerModules();
@@ -57,6 +67,12 @@ public class CommonProxy
 
 	public void init(FMLInitializationEvent event)
 	{
+		if(Loader.isModLoaded("betterbuilderswands"))
+			BBWCompat.register();
+		
+		if(Loader.isModLoaded("botania"))
+			BotaniaCompat.register();
+
 	}
 
 	public void postInit(FMLPostInitializationEvent event)

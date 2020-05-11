@@ -24,7 +24,7 @@ public class RandomnessModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag)
+	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
 	{
 		NonNullList<ItemStack> list = NonNullList.create();
 		
@@ -32,10 +32,10 @@ public class RandomnessModule extends AbstractBagModule
 	}
 
 	@Override
-	public ItemStack getBlock(IBagCap bag)
+	public ItemStack getBlock(IBagCap bag, EntityPlayer player)
 	{
 		Random rand = new Random();
-		NonNullList<ItemStack> list = InventoryHelper.getAllAvailableStacks(bag);
+		NonNullList<ItemStack> list = InventoryHelper.getAllAvailableStacks(bag, player);
 		
 		NonNullList<ItemStack> blocks = NonNullList.create();
 		blocks.addAll(list.stream().filter(stack -> stack.getItem() instanceof ItemBlock).collect(Collectors.toList()));
