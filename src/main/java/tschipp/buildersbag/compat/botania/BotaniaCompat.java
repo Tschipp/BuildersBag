@@ -27,8 +27,8 @@ public class BotaniaCompat
 		ItemStack requestedStack = new ItemStack(block, 1, meta);
 
 		String nbt = stack.serializeNBT().toString();
-//		if (nbt.equals(lastTag) && ItemStack.areItemsEqual(lastSelected, requestedStack) && lastCount != 0)
-//			return lastCount;
+		if (nbt.equals(lastTag) && ItemStack.areItemsEqual(lastSelected, requestedStack) && lastCount != 0)
+			return lastCount;
 
 		if (rand.nextDouble() < 0.9 && ItemStack.areItemsEqual(lastSelected, requestedStack) && lastCount != 0)
 		{

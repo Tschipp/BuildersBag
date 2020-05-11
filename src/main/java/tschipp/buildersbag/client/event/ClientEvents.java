@@ -45,20 +45,6 @@ public class ClientEvents
 	{
 		EntityPlayer player = Minecraft.getMinecraft().player;
 
-		if (Loader.isModLoaded("baubles") && BuildersBagKeybinds.openBaubleBag.isPressed() && FMLClientHandler.instance().getClient().inGameHasFocus)
-		{
-			IInventory baubles = BaublesApi.getBaubles(player);
-			for (int i = 0; i < baubles.getSizeInventory(); i++)
-			{
-				if (baubles.getStackInSlot(i).getItem() instanceof BuildersBagItem)
-				{
-					BuildersBag.network.sendToServer(new OpenBaubleBagServer(i));
-					player.openGui(BuildersBag.instance, 1, player.world, i, 0, 0);
-					return;
-				}
-			}
-		}
-
 		if (Minecraft.getMinecraft().gameSettings.keyBindPickBlock.isActiveAndMatches(event.getButton() - 100))
 		{
 			ItemStack main = player.getHeldItemMainhand();
@@ -105,6 +91,20 @@ public class ClientEvents
 	{
 		EntityPlayer player = Minecraft.getMinecraft().player;
 
+		if (Loader.isModLoaded("baubles") && BuildersBagKeybinds.openBaubleBag.isPressed() && FMLClientHandler.instance().getClient().inGameHasFocus)
+		{
+			IInventory baubles = BaublesApi.getBaubles(player);
+			for (int i = 0; i < baubles.getSizeInventory(); i++)
+			{
+				if (baubles.getStackInSlot(i).getItem() instanceof BuildersBagItem)
+				{
+					BuildersBag.network.sendToServer(new OpenBaubleBagServer(i));
+					player.openGui(BuildersBag.instance, 1, player.world, i, 0, 0);
+					return;
+				}
+			}
+		}
+		
 		if (Minecraft.getMinecraft().gameSettings.keyBindPickBlock.isKeyDown())
 		{
 			ItemStack main = player.getHeldItemMainhand();
