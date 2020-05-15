@@ -1,9 +1,13 @@
 package tschipp.buildersbag.common.helper;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
+
+import com.google.common.collect.Lists;
 
 import baubles.api.BaublesApi;
 import net.minecraft.entity.item.EntityItem;
@@ -12,7 +16,6 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
@@ -20,7 +23,9 @@ import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.api.IBlockSource;
 import tschipp.buildersbag.common.config.BuildersBagConfig;
+import tschipp.buildersbag.common.crafting.RecipeTreeNew;
 import tschipp.buildersbag.common.item.BuildersBagItem;
+import tschipp.buildersbag.common.modules.CraftingModule;
 import tschipp.buildersbag.compat.blocksourceadapter.BlockSourceAdapterHandler;
 import tschipp.buildersbag.compat.botania.BotaniaCompat;
 
@@ -144,7 +149,7 @@ public class InventoryHelper
 
 		list.addAll(getInventoryStacks(bag, player));
 		
-		for (IBagModule module : bag.getModules())
+		for (IBagModule module : getSortedModules(bag))
 		{
 			if (module.isEnabled() && module != exclude)
 				list.addAll(module.getPossibleStacks(bag, player));
@@ -222,6 +227,11 @@ public class InventoryHelper
 
 	public static ItemStack getOrProvideStack(ItemStack stack, IBagCap bag, EntityPlayer player, @Nullable IBagModule exclude)
 	{
+		return getOrProvideStackWithTree(stack, bag, player, exclude, null);
+	}
+	
+	public static ItemStack getOrProvideStackWithTree(ItemStack stack, IBagCap bag, EntityPlayer player, @Nullable IBagModule exclude, @Nullable RecipeTreeNew tree)
+	{
 		ItemStack foundStack = ItemStack.EMPTY;
 		NonNullList<ItemStack> availableBlocks = getStacks(bag.getBlockInventory());
 		if (!(foundStack = containsStack(stack, availableBlocks)).isEmpty())
@@ -245,13 +255,13 @@ public class InventoryHelper
 			}
 		}
 
-		for (IBagModule module : bag.getModules())
+		for (IBagModule module : getSortedModules(bag))
 		{
 			if (module.isEnabled() && !module.isSupplier() && (exclude == null ? true : exclude != module))
 			{
 				if (incrementRecursionDepth(player))
 				{
-					ItemStack provided = module.createStack(stack, bag, player);
+					ItemStack provided = module instanceof CraftingModule ? ((CraftingModule) module).createStackWithRecipeTree(stack, bag, player, tree) : module.createStack(stack, bag, player);
 					if (ItemStack.areItemsEqual(stack, provided))
 					{
 						resetRecursionDepth(player);
@@ -265,6 +275,7 @@ public class InventoryHelper
 
 		return ItemStack.EMPTY;
 	}
+	
 
 	/*
 	 * Returns true if stack can be provided.
@@ -304,7 +315,7 @@ public class InventoryHelper
 
 		IBagModule dominatingModule = null;
 
-		for (IBagModule module : bag.getModules())
+		for (IBagModule module : getSortedModules(bag))
 		{
 			if (module.isEnabled() && module.isDominating())
 			{
@@ -333,6 +344,27 @@ public class InventoryHelper
 		return getOrProvideStackWithCount(stack, count, CapHelper.getBagCap(bag.copy()), new FakePlayerCopy((WorldServer) player.world, player.getGameProfile(), player), exclude);
 	}
 
+	public static void compactStacks(IBagCap cap, EntityPlayer player)
+	{
+		NonNullList<ItemStack> stacks = getStacks(cap.getBlockInventory());
+		
+		for(IBagModule module : getSortedModules(cap))
+		{
+			stacks = module.getCompactedStacks(stacks, player);
+		}
+		
+		for(int i = 0; i < cap.getBlockInventory().getSlots(); i++)
+		{
+			cap.getBlockInventory().setStackInSlot(i, ItemStack.EMPTY);
+		}
+		
+		for(ItemStack s : stacks)
+		{
+			addStack(s, cap, player);
+		}
+	}
+	
+	
 	public static void addStack(ItemStack stack, IBagCap cap, EntityPlayer player)
 	{
 		if (player.isCreative())
@@ -434,6 +466,13 @@ public class InventoryHelper
 		}
 
 		return -1;
+	}
+	
+	public static List<IBagModule> getSortedModules(IBagCap cap)
+	{
+		List<IBagModule> modules = Lists.newArrayList(cap.getModules());
+		modules = modules.stream().sorted((a, b) -> Integer.compare(a.getPriority().getVal(), b.getPriority().getVal())).collect(Collectors.toList());
+		return modules;
 	}
 	
 	private static boolean botaniaCheck(ItemStack stack)

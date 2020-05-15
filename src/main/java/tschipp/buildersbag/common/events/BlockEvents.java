@@ -56,7 +56,7 @@ public class BlockEvents
 				for (ItemStack bag : bags)
 				{
 					IBagCap bagCap = CapHelper.getBagCap(bag);
-					for (IBagModule module : bagCap.getModules())
+					for (IBagModule module : InventoryHelper.getSortedModules(bagCap))
 					{
 						if (module.isEnabled() && module.isSupplier() && (Loader.isModLoaded("linear") ? !LinearCompatManager.isDragging(player) : true))
 						{

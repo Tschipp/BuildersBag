@@ -11,6 +11,7 @@ buildersbag.module.toggle=to toggle slots
 buildersbag.module.to=to 
 buildersbag.module.enable=enable
 buildersbag.module.disable=disable
+buildersbag.sort=Auto-Compact
 
 item.builders_bag_tier_one.name=Beginner Builder's Bag
 item.builders_bag_tier_two.name=Regular Builder's Bag

@@ -4,12 +4,11 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BooleanSupplier;
+import java.util.Set;
 import java.util.stream.Collectors;
-
-import com.google.gson.JsonObject;
 
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
@@ -20,25 +19,20 @@ import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.NBTException;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.crafting.CraftingHelper;
-import net.minecraftforge.common.crafting.IConditionFactory;
-import net.minecraftforge.common.crafting.JsonContext;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import tschipp.buildersbag.BuildersBag;
-import tschipp.buildersbag.common.config.BuildersBagConfig;
+import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.oredict.OreIngredient;
 
 public class CraftingHandler
 {
-	private static Map<String, List<RecipeContainer>> recipes = new HashMap<String, List<RecipeContainer>>();
-
-	private static RecipeTree recipeTree = new RecipeTree();
+	private static final Map<String, List<RecipeContainer>> recipes = new HashMap<String, List<RecipeContainer>>();
+	private static final RecipeTreeNew recipeTree = new RecipeTreeNew();
+	private static final Map<String, Set<String>> alternativeIngredients = new HashMap<String, Set<String>>();
 
 	public static void generateRecipes()
 	{
-		
 		for (IRecipe recipe : ForgeRegistries.RECIPES)
 		{
 			ItemStack output = recipe.getRecipeOutput();
@@ -64,6 +58,23 @@ public class CraftingHandler
 		}
 	}
 
+	public static void addIngredientIfAlternative(Ingredient ing)
+	{
+		if (ing.getMatchingStacks().length > 1 && !(ing instanceof OreIngredient))
+		{
+			String ingString = getIngredientString(ing);
+			for (String s : getIngredientStrings(ing))
+			{
+				Set<String> set = alternativeIngredients.get(s);
+				if (set == null)
+					set = new HashSet<String>();
+
+				set.add(ingString);
+				alternativeIngredients.put(s, set);
+			}
+		}
+	}
+
 	public static List<RecipeContainer> getRecipes(ItemStack stack)
 	{
 		String name = getItemString(stack);
@@ -73,16 +84,16 @@ public class CraftingHandler
 			return recipes.get(name);
 	}
 
-	public static NonNullList<ItemStack> getPossibleItems(NonNullList<ItemStack> available)
+	public static NonNullList<ItemStack> getPossibleItems(NonNullList<ItemStack> available, boolean removeAvailable)
 	{
-		RecipeTree subtree = recipeTree.getSubtree(available);
+		RecipeTreeNew subtree = recipeTree.getSubtree(available);
 
-		return subtree.getPossibleStacks();
+		return subtree.getPossibleStacks(removeAvailable);
 	}
 
-	public static NonNullList<ItemStack> getPossibleBlocks(NonNullList<ItemStack> available)
+	public static NonNullList<ItemStack> getPossibleBlocks(NonNullList<ItemStack> available, boolean removeAvailable)
 	{
-		NonNullList<ItemStack> items = getPossibleItems(available);
+		NonNullList<ItemStack> items = getPossibleItems(available, removeAvailable);
 
 		NonNullList<ItemStack> blocks = NonNullList.create();
 
@@ -91,15 +102,15 @@ public class CraftingHandler
 		return blocks;
 	}
 
-	public static RecipeTree getRecipeTree(ItemStack requested, NonNullList<ItemStack> available)
+	public static RecipeTreeNew getRecipeTree(ItemStack requested, NonNullList<ItemStack> available)
 	{
-		RecipeTree subtree = recipeTree.getSubtree(available);
+		RecipeTreeNew subtree = recipeTree.getSubtree(available);
 		return subtree.getRecipeTree(requested);
 	}
 
-	public static RecipeTree getSubTree(NonNullList<ItemStack> available)
+	public static RecipeTreeNew getSubTree(NonNullList<ItemStack> available)
 	{
-		RecipeTree subtree = recipeTree.getSubtree(available);
+		RecipeTreeNew subtree = recipeTree.getSubtree(available);
 		return subtree;
 	}
 
@@ -133,6 +144,41 @@ public class CraftingHandler
 	{
 		String outputString = output.getItem().getRegistryName().toString() + "@" + output.getMetadata() + "$" + (output.hasTagCompound() ? output.getTagCompound().toString() : "") + ";";
 		return outputString;
+	}
+
+	public static String[] getStackIngredientStrings(ItemStack output, boolean self)
+	{
+		int[] ores = OreDictionary.getOreIDs(output);
+
+		List<String> oredict = new ArrayList<String>();
+		for (int i = 0; i < ores.length; i++)
+		{
+			OreIngredient ore = new OreIngredient(OreDictionary.getOreName(ores[i]));
+			oredict.add(getIngredientString(ore));
+		}
+
+		String itemString = getItemString(output);
+		if (self)
+			oredict.add(itemString);
+
+		if (alternativeIngredients.containsKey(itemString))
+		{
+			oredict.addAll(alternativeIngredients.get(itemString));
+		}
+
+		return oredict.toArray(new String[oredict.size()]);
+	}
+
+	public static String[] getIngredientStrings(Ingredient ing)
+	{
+		String[] strings = new String[ing.getMatchingStacks().length];
+
+		for (int i = 0; i < ing.getMatchingStacks().length; i++)
+		{
+			strings[i] = getItemString(ing.getMatchingStacks()[i]);
+		}
+
+		return strings;
 	}
 
 	public static String getIngredientString(Ingredient ing)

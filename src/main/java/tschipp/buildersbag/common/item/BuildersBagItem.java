@@ -103,7 +103,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 
 			ItemStack placementStack = ItemStack.EMPTY;
 
-			for (IBagModule module : bag.getModules())
+			for (IBagModule module : InventoryHelper.getSortedModules(bag))
 			{
 				if (module.isEnabled() && module.isDominating())
 				{

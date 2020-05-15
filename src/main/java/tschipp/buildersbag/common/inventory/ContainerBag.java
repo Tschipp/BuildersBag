@@ -47,7 +47,7 @@ public class ContainerBag extends Container
 	private ItemStackHandler inv;
 
 	public boolean isBauble = false;
-	public int baubleSlot;
+	public int slot = -1;
 
 	private List<Slot> inventoryBagSlots = new ArrayList<Slot>();
 
@@ -66,7 +66,7 @@ public class ContainerBag extends Container
 	public ContainerBag(EntityPlayer player, ItemStack bag, int baubleSlot)
 	{
 		this(player, bag);
-		this.baubleSlot = baubleSlot;
+		this.slot = baubleSlot;
 		this.isBauble = true;
 		
 		if (!player.world.isRemote)
@@ -85,7 +85,8 @@ public class ContainerBag extends Container
 		this.bagCap = CapHelper.getBagCap(bag);
 		this.inv = bagCap.getBlockInventory();
 		this.invSize = inv.getSlots();
-
+		this.slot = InventoryHelper.getSlotForStack(player, bag);
+		
 		this.leftOffset = Math.max(InventoryHelper.getBagExtraLeft(CapHelper.getBagCap(bag)), InventoryHelper.getBagExtraRight(CapHelper.getBagCap(bag)));
 
 		if (bag.hasDisplayName())
@@ -195,7 +196,7 @@ public class ContainerBag extends Container
 		}
 
 		y = 8;
-		x = -41;
+		x = -40;
 
 		for (int i = processedModules; i < bagCap.getModules().length; i++)
 		{
@@ -289,7 +290,7 @@ public class ContainerBag extends Container
 					continue;
 				}
 
-				if (!itemstack.isEmpty() && itemstack.getItem() == stack.getItem() && (!stack.getHasSubtypes() || stack.getMetadata() == itemstack.getMetadata()) && ItemStack.areItemStackTagsEqual(stack, itemstack))
+				if (!itemstack.isEmpty() && itemstack.getItem() == stack.getItem() && (!stack.getHasSubtypes() || stack.getMetadata() == itemstack.getMetadata()) && ItemStack.areItemStackTagsEqual(stack, itemstack) && slot.isItemValid(stack))
 				{
 					int j = itemstack.getCount() + stack.getCount();
 					int maxSize = Math.min(slot.getSlotStackLimit(), stack.getMaxStackSize());
@@ -414,9 +415,9 @@ public class ContainerBag extends Container
 	{
 		if (Loader.isModLoaded("baubles"))
 		{
-			return isBauble ? BaublesApi.getBaubles(player).getStackInSlot(this.baubleSlot) == bag : player.getHeldItem(hand) == bag;
+			return isBauble ? BaublesApi.getBaubles(player).getStackInSlot(this.slot) == bag : !player.getHeldItem(hand).isEmpty() && player.getHeldItem(hand) == bag;
 		}
-		return player.getHeldItem(hand) == bag;
+		return !player.getHeldItem(hand).isEmpty() && player.getHeldItem(hand) == bag;
 	}
 
 	@Override
@@ -427,7 +428,7 @@ public class ContainerBag extends Container
 		if (!player.world.isRemote)
 		{
 			if (isBauble)
-				BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, baubleSlot, true), (EntityPlayerMP) player);
+				BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, slot, true), (EntityPlayerMP) player);
 			else
 				BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (EntityPlayerMP) player);
 		}
@@ -443,7 +444,7 @@ public class ContainerBag extends Container
 		if (!player.world.isRemote)
 		{
 			if (isBauble)
-				BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, baubleSlot, true), (EntityPlayerMP) player);
+				BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, slot, true), (EntityPlayerMP) player);
 			else
 				BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (EntityPlayerMP) player);
 		}

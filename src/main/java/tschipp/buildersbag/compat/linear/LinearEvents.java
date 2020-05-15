@@ -112,7 +112,7 @@ public class LinearEvents
 			IBagCap bagCap = CapHelper.getBagCap(stack);
 
 			ItemStack placementStack = ItemStack.EMPTY;
-			for (IBagModule module : bagCap.getModules())
+			for (IBagModule module : InventoryHelper.getSortedModules(bagCap))
 			{
 				if (module.isEnabled() && module.isDominating())
 				{
@@ -207,7 +207,7 @@ public class LinearEvents
 				{
 					ItemStack placementStack = ItemStack.EMPTY;
 
-					for (IBagModule module : bag.getModules())
+					for (IBagModule module : InventoryHelper.getSortedModules(bag))
 					{
 						if (module.isEnabled() && module.isDominating())
 						{
@@ -276,7 +276,7 @@ public class LinearEvents
 
 			for (int i = 0; i < 10; i++)
 			{
-				for (IBagModule module : bag.getModules())
+				for (IBagModule module : InventoryHelper.getSortedModules(bag))
 				{
 					if (module.isEnabled() && module.isDominating())
 					{
@@ -323,7 +323,7 @@ public class LinearEvents
 
 			for (int i = 0; i < 10; i++)
 			{
-				for (IBagModule module : bag.getModules())
+				for (IBagModule module : InventoryHelper.getSortedModules(bag))
 				{
 					if (module.isEnabled() && module.isDominating())
 					{
@@ -362,7 +362,7 @@ public class LinearEvents
 				stand.rotationYaw = player.rotationYaw;
 
 				float[] hit = LinearHelper.getHitCoords(player);
-				IBlockState state = block.getStateForPlacement(player.world, LinearHelper.getLookPos(player, LinearHelper.canPlaceInMidair(player)), ray.sideHit, hit[0], hit[1], hit[2], stack.getMetadata(), stand, hand);
+				IBlockState state = block.getStateForPlacement(player.world, LinearHelper.getLookPos(player, LinearHelper.canPlaceInMidair(player)), ray.sideHit, hit[0], hit[1], hit[2], placementStack.getMetadata(), stand, hand);
 
 				if (state != null)
 					event.setState(state);

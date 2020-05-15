@@ -286,4 +286,36 @@ public class LittleTilesModule extends AbstractBagModule
 		if (newStack)
 			InventoryHelper.addStack(tileItemStack, bag, player);
 	}
+	
+	@Override
+	public NonNullList<ItemStack> getCompactedStacks(NonNullList<ItemStack> toCompact, EntityPlayer player)
+	{
+		if(!this.isEnabled())
+			return toCompact;
+			
+		NonNullList<ItemStack> stacks = NonNullList.create();
+		
+		BlockIngredient ing = new BlockIngredient();
+		
+		for(ItemStack s : toCompact)
+		{
+			if(s.getItem() instanceof ItemBlockIngredient)
+			{
+				ing.add(ItemBlockIngredient.loadIngredient(s));
+			}
+			else
+				stacks.add(s);
+		}
+		
+		for(BlockIngredientEntry entry : ing)
+		{
+			ItemStack ingStack = new ItemStack(LittleTiles.blockIngredient);
+			ingStack.setTagCompound(new NBTTagCompound());
+			ItemBlockIngredient.saveIngredient(ingStack, entry);
+			stacks.add(ingStack);
+		}
+		
+		return stacks;
+		
+	}
 }

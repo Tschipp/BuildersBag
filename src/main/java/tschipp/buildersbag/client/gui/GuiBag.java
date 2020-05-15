@@ -13,6 +13,7 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
@@ -26,7 +27,7 @@ import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.inventory.ContainerBag;
-import tschipp.buildersbag.network.SyncItemStackServer;
+import tschipp.buildersbag.network.CompactBagServer;
 import tschipp.buildersbag.network.SyncModuleStateServer;
 
 public class GuiBag extends GuiContainer
@@ -38,11 +39,17 @@ public class GuiBag extends GuiContainer
 	private EnumHand hand;
 
 	private boolean isBauble = false;
-	private int baubleSlot = 0;
+	private int slot = 0;
 	
 	private int mainWidth;
 	private int mainHeight;
 	private int leftOffset;
+	
+	private int compactButtonX;
+	private int compactButtonY;
+
+	private static int TEX_HEIGHT = 60;
+	private static int TEX_WIDTH = 54;
 	
 	public GuiBag(ContainerBag container, EntityPlayer player)
 	{
@@ -53,7 +60,7 @@ public class GuiBag extends GuiContainer
 		this.hand = container.hand;
 
 		this.isBauble = container.isBauble;
-		this.baubleSlot = container.baubleSlot;
+		this.slot = container.slot;
 		
 		this.mainWidth = getTotalWidth() ;
 		this.mainHeight = getTotalHeight(container.invSize);
@@ -62,6 +69,9 @@ public class GuiBag extends GuiContainer
 		
 		this.xSize = mainWidth + leftOffset * 2;
 		this.ySize = mainHeight;
+		
+		this.compactButtonX = this.leftOffset + 72;
+		this.compactButtonY = mainHeight;
 	}
 
 	@Override
@@ -73,6 +83,15 @@ public class GuiBag extends GuiContainer
 		int mX = mouseX - guiLeft;
 		int mY = mouseY - guiTop;
 
+		if(mX >= this.compactButtonX && mX <= this.compactButtonX + 32 && mY >= this.compactButtonY && mY <= this.compactButtonY + 32)
+		{
+			List<String> tooltip = new ArrayList<String>();
+			tooltip.add(TextFormatting.BOLD + I18n.translateToLocal("buildersbag.sort"));
+			tooltip.add(TextFormatting.GOLD + I18n.translateToLocal("buildersbag.module.left") + TextFormatting.RESET +  I18n.translateToLocal("buildersbag.module.to") + I18n.translateToLocal("buildersbag.sort"));
+		
+			this.drawHoveringText(tooltip, mouseX, mouseY);
+		}
+		
 		container.modules.forEach((module, triple) -> {
 
 			int x = triple.getLeft();
@@ -101,9 +120,17 @@ public class GuiBag extends GuiContainer
 		GlStateManager.pushMatrix();
 		mc.getTextureManager().bindTexture(new ResourceLocation(BuildersBag.MODID + ":textures/gui/bag.png"));
 
-		drawBackground(0 + leftOffset, 0, mainWidth, mainHeight);
-		drawBackground(72  + leftOffset, -32, 32, 32, 16);
+		drawBackground(0 + leftOffset, 0, mainWidth, mainHeight); //Draw inventories
+		drawBackground(72  + leftOffset, -32, 32, 32, 16); //Draw golden slot
+		
+		drawHoverableBackground(this.compactButtonX, this.compactButtonY, 32, 32, mouseX, mouseY, 28, 32); //Draw compact button
+	
+		RenderHelper.enableGUIStandardItemLighting();
+		itemRender.renderItemAndEffectIntoGUI(new ItemStack(Blocks.CHEST), this.compactButtonX + 8 + guiLeft, this.compactButtonY + 8 + guiTop);
+		RenderHelper.disableStandardItemLighting();
 
+		mc.getTextureManager().bindTexture(new ResourceLocation(BuildersBag.MODID + ":textures/gui/bag.png"));
+		
 		container.modules.forEach((module, triple) -> {
 			int x = triple.getLeft();
 			int y = triple.getMiddle();
@@ -143,6 +170,14 @@ public class GuiBag extends GuiContainer
 		int mousePosX = mouseX - guiLeft;
 		int mousePosY = mouseY - guiTop;
 
+		if(mousePosX >= this.compactButtonX && mousePosX <= this.compactButtonX + 32 && mousePosY >= this.compactButtonY && mousePosY <= this.compactButtonY + 32)
+		{
+			player.playSound(SoundEvents.UI_BUTTON_CLICK, 1.0F, 1.0f);
+			InventoryHelper.compactStacks(CapHelper.getBagCap(bag), player);
+			BuildersBag.network.sendToServer(new CompactBagServer(container.slot, container.isBauble));
+			container.update();
+		}
+		
 		container.modules.forEach((module, triple) -> {
 
 			int x = triple.getLeft();
@@ -185,19 +220,19 @@ public class GuiBag extends GuiContainer
 		for (Slot slot : container.inventorySlots)
 		{
 			if (slot.isEnabled())
-				drawModalRectWithCustomSizedTexture(this.guiLeft + slot.xPos - 1, this.guiTop + slot.yPos - 1, 36, 0, 18, 18, 54, 33);
+				drawModalRectWithCustomSizedTexture(this.guiLeft + slot.xPos - 1, this.guiTop + slot.yPos - 1, 36, 0, 18, 18, TEX_WIDTH, TEX_HEIGHT);
 		}
 	}
 
-	private void drawHoverableBackground(int x, int y, int width, int height, int mouseX, int mouseY)
+	private void drawHoverableBackground(int x, int y, int width, int height, int mouseX, int mouseY, int texVNormal, int texVHovered)
 	{
 		mouseX -= this.guiLeft;
 		mouseY -= this.guiTop;
 
 		if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height)
-			drawBackground(x, y, width, height, 4);
+			drawBackground(x, y, width, height, texVHovered);
 		else
-			drawBackground(x, y, width, height, 0);
+			drawBackground(x, y, width, height, texVNormal);
 	}
 
 	private void drawHoverableBackgroundToggleable(int x, int y, int width, int height, int mouseX, int mouseY, boolean enabled)
@@ -234,41 +269,41 @@ public class GuiBag extends GuiContainer
 		int oldY = y;
 
 		// Draw First line
-		drawModalRectWithCustomSizedTexture(x, y, 0, 0 + offset, 4, 4, 54, 33);
+		drawModalRectWithCustomSizedTexture(x, y, 0, 0 + offset, 4, 4, TEX_WIDTH, TEX_HEIGHT);
 		x += 4;
 		for (int i = 0; i < drawWidth; i++)
 		{
-			drawModalRectWithCustomSizedTexture(x, y, 4, 0 + offset, 4, 4, 54, 33);
+			drawModalRectWithCustomSizedTexture(x, y, 4, 0 + offset, 4, 4, TEX_WIDTH, TEX_HEIGHT);
 			x += 4;
 		}
-		drawModalRectWithCustomSizedTexture(x, y, 16, 0 + offset, 4, 4, 54, 33);
+		drawModalRectWithCustomSizedTexture(x, y, 16, 0 + offset, 4, 4, TEX_WIDTH, TEX_HEIGHT);
 
 		// Draw main part
 		x = oldX;
 		y += 4;
 		for (int i = 0; i < drawHeight; i++)
 		{
-			drawModalRectWithCustomSizedTexture(x, y, 8, 0 + offset, 4, 4, 54, 33);
+			drawModalRectWithCustomSizedTexture(x, y, 8, 0 + offset, 4, 4, TEX_WIDTH, TEX_HEIGHT);
 			x += 4;
 			for (int j = 0; j < drawWidth; j++)
 			{
-				drawModalRectWithCustomSizedTexture(x, y, 12, 0 + offset, 4, 4, 54, 33);
+				drawModalRectWithCustomSizedTexture(x, y, 12, 0 + offset, 4, 4, TEX_WIDTH, TEX_HEIGHT);
 				x += 4;
 			}
-			drawModalRectWithCustomSizedTexture(x, y, 20, 0 + offset, 4, 4, 54, 33);
+			drawModalRectWithCustomSizedTexture(x, y, 20, 0 + offset, 4, 4, TEX_WIDTH, TEX_HEIGHT);
 			y += 4;
 			x = oldX;
 		}
 
 		// Draw last line
-		drawModalRectWithCustomSizedTexture(x, y, 32, 0 + offset, 4, 4, 54, 33);
+		drawModalRectWithCustomSizedTexture(x, y, 32, 0 + offset, 4, 4, TEX_WIDTH, TEX_HEIGHT);
 		x += 4;
 		for (int i = 0; i < drawWidth; i++)
 		{
-			drawModalRectWithCustomSizedTexture(x, y, 28, 0 + offset, 4, 4, 54, 33);
+			drawModalRectWithCustomSizedTexture(x, y, 28, 0 + offset, 4, 4, TEX_WIDTH, TEX_HEIGHT);
 			x += 4;
 		}
-		drawModalRectWithCustomSizedTexture(x, y, 24, 0 + offset, 4, 4, 54, 33);
+		drawModalRectWithCustomSizedTexture(x, y, 24, 0 + offset, 4, 4, TEX_WIDTH, TEX_HEIGHT);
 
 	}
 

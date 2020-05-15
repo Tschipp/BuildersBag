@@ -10,6 +10,13 @@ import net.minecraftforge.items.ItemStackHandler;
 public interface IBagModule extends INBTSerializable<NBTTagCompound>
 {
 
+	/**
+	 * Gets a list of all stacks that this module can create using all other stacks,
+	 * so most of the time {@link tschipp.buildersbag.common.helper.InventoryHelper#getAllAvailableStacksExcept} is used to find the stacks of all other modules first.
+	 * @param bag
+	 * @param player
+	 * @return
+	 */
 	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player);
 		
 	
@@ -23,20 +30,50 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 	 */
 	public ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player);
 	
+	/**
+	 * Toggles this module
+	 */
 	public void toggle();
 	
+	/**
+	 * If this module *shouldn't* have its own inventory, this should be true
+	 * @return
+	 */
 	public boolean doesntUseOwnInventory();
 	
+	/**
+	 * If this module is enabled
+	 * @return
+	 */
 	public boolean isEnabled();
 	
+	/**
+	 * Check if the internal inventory is expanded
+	 * @return
+	 */
 	public boolean isExpanded();
 	
+	/**
+	 * Sets the module's expanded state
+	 * @param bool
+	 */
 	public void setExpanded(boolean bool);
-		
+	
+	/**
+	 * @return This module's ItemStackHandler, or null if it doesn't have one
+	 */
 	public ItemStackHandler getInventory();
 	
+	/**
+	 * Gets a display stack for the icon. Should be a static final stack, because this gets called every frame.
+	 * @return
+	 */
 	public ItemStack getDisplayItem();
 	
+	/**
+	 * The name of the module, mostly the same as the registry name
+	 * @return
+	 */
 	public String getName();
 	
 	/**
@@ -56,9 +93,32 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 		return ItemStack.EMPTY;
 	}
 	
+	/**
+	 * If the module acts as a supplier
+	 * @return
+	 */
 	default boolean isSupplier()
 	{
 		return false;
+	}
+	
+	/**
+	 * Compacts the stacks using some method. 
+	 * @param toCompact
+	 * @return a new, compacted list, or <code>toCompact</code> if it does nothing
+	 */
+	default NonNullList<ItemStack> getCompactedStacks(NonNullList<ItemStack> toCompact, EntityPlayer player)
+	{
+		return toCompact;
+	}
+	
+	/**
+	 * Returns the module Priority when providing stacks. Higher priority modules get checked first.
+	 * @return
+	 */
+	default ModulePriority getPriority()
+	{
+		return ModulePriority.NORMAL;
 	}
 	
 }

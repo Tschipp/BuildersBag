@@ -1,5 +1,9 @@
 package tschipp.buildersbag.common.crafting;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,6 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.NonNullList;
+import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.common.helper.Tuple;
 
 public class RecipeTree
@@ -70,17 +75,21 @@ public class RecipeTree
 
 		for (ItemStack stack : stacks)
 		{
-			if (!stacks.isEmpty())
+			if (!stack.isEmpty())
 			{
 				Set<RecipeNode> nodes = getNodes(CraftingHandler.getItemString(stack));
 				for (RecipeNode node : nodes)
 				{
+					BuildersBag.LOGGER.info("Adding to availability list: " + node.id);
 					subtree.stackAvailableNodes.put(node.id, node);
 					subtree.putNode(node.id, node);
 					subtree.addNodesRecursively(node, this);
 				}
 			}
 		}
+		
+		BuildersBag.LOGGER.info("Subtree before removal of illegals: " + subtree.nodes);
+
 
 		// Do this 6 times, so that it's pretty certain that all illegal blocks
 		// are removed
@@ -99,15 +108,53 @@ public class RecipeTree
 				{
 					boolean containsAll = true;
 
+					Map<RecipeContainer, Boolean> validRecipeMap = new HashMap<RecipeContainer, Boolean>();
+					
+					parentcheck:
 					for (Tuple<RecipeNode, RecipeContainer> parent : node.parentNodes)
 					{
 						RecipeNode parentNode = parent.getFirst();
-
+						RecipeContainer recipe = parent.getSecond();
+						
+						Boolean prev = validRecipeMap.get(recipe);
+						if(prev != null && !prev)
+							continue parentcheck;
+						
+						validRecipeMap.put(recipe, true);
+						
+						for(Ingredient recipeIngredient : recipe.getIngredients())
+						{
+							String ingId = CraftingHandler.getIngredientString(recipeIngredient);
+							
+							boolean hasAny = false;
+							String[] split = node.id.split(";");
+							for (String spl : split)
+							{
+								if (subtree.nodes.get(spl + ";") != null)
+								{
+									hasAny = true;
+									break;
+								}
+							}
+							
+							if(!hasAny)
+							{
+								validRecipeMap.put(recipe, false);
+								continue parentcheck;
+							}
+							
+						}
+							
 						if (subtree.nodes.get(parentNode.id) == null && !availableStacks.contains(node.id))
 						{
 							containsAll = false;
 							break;
 						}
+					}
+					
+					for(boolean b : validRecipeMap.values())
+					{
+						containsAll |= b;
 					}
 
 					if (node.parentNodes.isEmpty())
@@ -153,14 +200,21 @@ public class RecipeTree
 	{
 		NonNullList<ItemStack> stacks = NonNullList.create();
 
+		BuildersBag.LOGGER.info("stackAvailableNodes: " + stackAvailableNodes.keySet());
+		BuildersBag.LOGGER.info("nodes in subtree: " + nodes);
+
 		for (Set<RecipeNode> nodeSet : nodes.values())
 		{
 			for (RecipeNode node : nodeSet)
 			{
+				BuildersBag.LOGGER.info("testing availablilty for : " + node.id);
+
 				if (stackAvailableNodes.get(node.id) == null)
 				{
 					String[] split = node.id.split(";");
 
+					BuildersBag.LOGGER.info("doing the test for : " + node.id);
+					
 					if (split.length <= 1)
 						stacks.add(CraftingHandler.getItemFromString(node.id));
 				}
@@ -210,6 +264,7 @@ public class RecipeTree
 				}
 			}
 		}
+		
 	}
 
 	public RecipeNode getNodeExact(ItemStack stack)
@@ -277,6 +332,64 @@ public class RecipeTree
 		{
 			this.adjacentNodes.add(new Tuple<RecipeNode, RecipeContainer>(n, c));
 			n.parentNodes.add(new Tuple<RecipeNode, RecipeContainer>(this, c));
+		}
+		
+		@Override
+		public String toString()
+		{
+			return id;
+		}
+	}
+
+	/**
+	 * Only used to debug
+	 */
+	public void visualize()
+	{
+		File output = new File("recipetree.txt");
+		try
+		{
+			FileWriter writer = new FileWriter(output);
+			writer.write("digraph G {\n");
+			writer.write("graph [ dpi = 75 ];");
+			writer.write("ranksep = 1\n");
+
+			top: for (Set<RecipeNode> nodeSet : nodes.values())
+			{
+				for (RecipeNode node : nodeSet)
+				{
+					for (Tuple<RecipeNode, RecipeContainer> adj : node.adjacentNodes)
+					{
+						int semi = 0;
+						for (char c : node.id.toCharArray())
+						{
+							if (c == ';')
+							{
+								semi++;
+								if(semi >= 2)
+									continue top;
+							}
+						}
+
+//						if (node.id.contains("chiselsandbits") || adj.getFirst().id.contains("chiselsandbits"))
+//							continue top;
+
+						if(this.nodes.get(adj.getFirst().id) == null)
+							continue;
+						
+						writer.write("\"" + node.id + "\" -> \"" + adj.getFirst().id + "\"\n");
+					}
+				}
+
+			}
+
+			writer.write("}");
+
+			writer.close();
+
+		} catch (IOException e)
+		{
+			e.printStackTrace();
 		}
 	}
 

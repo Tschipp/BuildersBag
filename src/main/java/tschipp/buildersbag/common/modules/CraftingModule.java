@@ -4,21 +4,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemStackHandler;
+import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.AbstractBagModule;
 import tschipp.buildersbag.api.IBagCap;
+import tschipp.buildersbag.api.ModulePriority;
 import tschipp.buildersbag.common.crafting.CraftingHandler;
 import tschipp.buildersbag.common.crafting.RecipeContainer;
-import tschipp.buildersbag.common.crafting.RecipeTree;
-import tschipp.buildersbag.common.crafting.RecipeTree.RecipeNode;
+import tschipp.buildersbag.common.crafting.RecipeTreeNew;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.helper.StageHelper;
-import tschipp.buildersbag.common.helper.Tuple;
 
 public class CraftingModule extends AbstractBagModule
 {
@@ -33,9 +35,9 @@ public class CraftingModule extends AbstractBagModule
 	@Override
 	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
 	{
-		return CraftingHandler.getPossibleBlocks(InventoryHelper.getInventoryStacks(bag, player));
+		return CraftingHandler.getPossibleBlocks(InventoryHelper.getInventoryStacks(bag, player), true);
 	}
-	
+
 	@Override
 	public ItemStackHandler getInventory()
 	{
@@ -57,8 +59,14 @@ public class CraftingModule extends AbstractBagModule
 	@Override
 	public ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player)
 	{
-		RecipeTree subTree = CraftingHandler.getSubTree(InventoryHelper.getInventoryStacks(bag, player));
-		NonNullList<ItemStack> possibleStacks = subTree.getPossibleStacks();
+		 return createStackWithRecipeTree(stack, bag, player, null);
+	}
+
+	public ItemStack createStackWithRecipeTree(ItemStack stack, IBagCap bag, EntityPlayer player, @Nullable RecipeTreeNew subTree)
+	{
+		if (subTree == null)
+			subTree = CraftingHandler.getSubTree(InventoryHelper.getInventoryStacks(bag, player)); 
+		NonNullList<ItemStack> possibleStacks = subTree.getPossibleStacks(false);
 
 		boolean isPossible = false;
 		for (ItemStack possible : possibleStacks)
@@ -66,16 +74,19 @@ public class CraftingModule extends AbstractBagModule
 				isPossible = true;
 
 		if (!isPossible)
+		{
 			return ItemStack.EMPTY;
+		}
 
 		List<RecipeContainer> recipes = CraftingHandler.getRecipes(stack);
 		if (recipes.isEmpty())
+		{
 			return ItemStack.EMPTY;
-
-		NonNullList<ItemStack> availableStacks = InventoryHelper.getAllAvailableStacksExcept(bag, player, this);
+		}
 
 		Collections.shuffle(recipes);
 
+		recipes:
 		for (RecipeContainer container : recipes)
 		{
 			String stage = container.getStage();
@@ -93,9 +104,20 @@ public class CraftingModule extends AbstractBagModule
 
 				for (ItemStack ingStack : ing.getMatchingStacks())
 				{
-					ItemStack provided = InventoryHelper.getOrProvideStack(ingStack, bag, player, null);
+					if(ingStack.isEmpty())
+						continue;
+					
+					ItemStack provided = InventoryHelper.getOrProvideStackWithTree(ingStack, bag, player, null, subTree);
 					if (!provided.isEmpty())
 					{
+						if(ItemStack.areItemsEqual(provided, stack))
+						{
+							ItemStack split = provided.splitStack(1);
+							InventoryHelper.addStack(provided, bag, player);
+
+							return split;
+						}			
+						
 						InventoryHelper.addStack(provided, bag, player);
 						hasMatchingStack = true;
 						continue top;
@@ -121,18 +143,32 @@ public class CraftingModule extends AbstractBagModule
 
 				for (ItemStack ingStack : ing.getMatchingStacks())
 				{
-					ItemStack provided = InventoryHelper.getOrProvideStack(ingStack, bag, player, null);
+					ItemStack provided = InventoryHelper.getOrProvideStackWithTree(ingStack, bag, player, null, subTree);
 					if (!provided.isEmpty())
 					{
+						if(ItemStack.areItemsEqual(provided, stack))
+						{
+							ItemStack split = provided.splitStack(1);
+							InventoryHelper.addStack(provided, bag, player);
+
+							for (ItemStack s : consumed)
+								InventoryHelper.addStack(s, bag, player);
+							
+							return split;
+						}		
+						
 						consumed.add(provided.splitStack(1));
 						continue top;
 					}
 				}
 
 				for (ItemStack s : consumed)
-					InventoryHelper.addStack(s, bag, player);
+					InventoryHelper.addStack(s, bag, player); // Add back the
+																// stacks that
+																// were used in
+																// crafting.
 
-				return ItemStack.EMPTY;
+				continue recipes;
 			}
 
 			ItemStack output = container.getOutput();
@@ -142,91 +178,13 @@ public class CraftingModule extends AbstractBagModule
 			return split;
 		}
 
-		// RecipeTree subTree =
-		// CraftingHandler.getSubTree(InventoryHelper.getStacks(bag.getBlockInventory()));
-		// NonNullList<ItemStack> possibleStacks = subTree.getPossibleStacks();
-		//
-		// boolean isPossible = false;
-		// for (ItemStack possible : possibleStacks)
-		// if (ItemStack.areItemsEqual(possible, stack))
-		// isPossible = true;
-		//
-		// if (!isPossible)
-		// return ItemStack.EMPTY;
-		//
-		// RecipeTree recipeTree = subTree.getRecipeTree(stack);
-		// RecipeNode node = recipeTree.getNodeExact(stack);
-		//
-		// for (Tuple<RecipeNode, RecipeContainer> parentTuple :
-		// node.parentNodes)
-		// {
-		// RecipeNode parent = parentTuple.getFirst();
-		// RecipeContainer recipe = parentTuple.getSecond();
-		//
-		// String stage = recipe.getStage();
-		// if (!stage.isEmpty() && !StageHelper.hasStage(player, stage))
-		// continue;
-		//
-		// boolean containsAll = true;
-		//
-		// for (Ingredient ing : recipe.getIngredients())
-		// {
-		// boolean hasMatchingStack = false;
-		//
-		// if (ing.getMatchingStacks().length == 0)
-		// continue;
-		//
-		// for (ItemStack ingStack : ing.getMatchingStacks())
-		// {
-		// ItemStack provided = InventoryHelper.getOrProvideStack(ingStack, bag,
-		// player, null);
-		// if (!provided.isEmpty())
-		// {
-		// InventoryHelper.addStack(provided, bag, player);
-		// hasMatchingStack = true;
-		// continue;
-		// }
-		// }
-		//
-		// if (!hasMatchingStack)
-		// {
-		// containsAll = false;
-		// break;
-		// }
-		// }
-		//
-		// List<ItemStack> consumed = new ArrayList<ItemStack>();
-		//
-		// top: for (Ingredient ing : recipe.getIngredients())
-		// {
-		// if (ing.getMatchingStacks().length == 0)
-		// continue;
-		//
-		// for (ItemStack ingStack : ing.getMatchingStacks())
-		// {
-		// ItemStack provided = InventoryHelper.getOrProvideStack(ingStack, bag,
-		// player, null);
-		// if (!provided.isEmpty())
-		// {
-		// consumed.add(provided.splitStack(1));
-		// continue top;
-		// }
-		// }
-		//
-		// for (ItemStack s : consumed)
-		// InventoryHelper.addStack(s, bag, player);
-		//
-		// return ItemStack.EMPTY;
-		// }
-		//
-		// ItemStack output = recipe.getOutput();
-		// ItemStack split = output.splitStack(1);
-		// InventoryHelper.addStack(output, bag, player);
-		//
-		// return split;
-		// }
-
 		return ItemStack.EMPTY;
+	}
+	
+	@Override
+	public ModulePriority getPriority()
+	{
+		return ModulePriority.LOW;
 	}
 
 }

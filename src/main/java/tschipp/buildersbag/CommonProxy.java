@@ -27,6 +27,7 @@ import tschipp.buildersbag.network.OpenBaubleBagServer;
 import tschipp.buildersbag.network.SetHeldItemClient;
 import tschipp.buildersbag.network.SyncBagCapClient;
 import tschipp.buildersbag.network.SyncBagCapInventoryClient;
+import tschipp.buildersbag.network.CompactBagServer;
 import tschipp.buildersbag.network.SyncBagCapServer;
 import tschipp.buildersbag.network.SyncEnderchestToClient;
 import tschipp.buildersbag.network.SyncItemStackServer;
@@ -55,6 +56,7 @@ public class CommonProxy
 		BuildersBag.network.registerMessage(GrowItemClient.class, GrowItemClient.class, 6, Side.CLIENT);
 		BuildersBag.network.registerMessage(SyncEnderchestToClient.class, SyncEnderchestToClient.class, 7, Side.CLIENT);
 		BuildersBag.network.registerMessage(SyncBagCapServer.class, SyncBagCapServer.class, 8, Side.SERVER);
+		BuildersBag.network.registerMessage(CompactBagServer.class, CompactBagServer.class, 9, Side.SERVER);
 
 		NetworkRegistry.INSTANCE.registerGuiHandler(BuildersBag.instance, new BagGuiHandler());
 		BuildersBagRegistry.registerModules();

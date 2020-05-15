@@ -1,34 +1,20 @@
 package tschipp.buildersbag.common.modules;
 
-import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
-import mod.chiselsandbits.chiseledblock.data.BitLocation;
-import mod.chiselsandbits.chiseledblock.data.VoxelBlob;
-import mod.chiselsandbits.chiseledblock.iterators.ChiselIterator;
-import mod.chiselsandbits.chiseledblock.iterators.ChiselTypeIterator;
-import mod.chiselsandbits.core.ClientSide;
-import mod.chiselsandbits.helpers.ActingPlayer;
-import mod.chiselsandbits.helpers.BitOperation;
-import mod.chiselsandbits.helpers.ContinousBits;
-import mod.chiselsandbits.helpers.IContinuousInventory;
-import mod.chiselsandbits.helpers.VoxelRegionSrc;
-import mod.chiselsandbits.items.ItemChiseledBit;
-import mod.chiselsandbits.modes.ChiselMode;
-import mod.chiselsandbits.network.packets.PacketChisel;
+import com.google.common.collect.Maps;
+
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
 import team.chisel.api.IChiselItem;
@@ -46,7 +32,6 @@ public class ChiselModule extends AbstractBagModule
 	private ItemHandlerWithPredicate handler = new ItemHandlerWithPredicate(1, (stack, slot) -> stack.getItem() instanceof IChiselItem);
 	private static final ItemStack DISPLAY = new ItemStack(Item.getByNameOrId("chisel:chisel_iron"));
 
-	
 	public ChiselModule()
 	{
 		super("buildersbag:chisel");
@@ -121,10 +106,6 @@ public class ChiselModule extends AbstractBagModule
 	@Override
 	public ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player)
 	{
-		// if (InventoryHelper.containsStack(stack,
-		// this.getPossibleStacks(bag)).isEmpty())
-		// return ItemStack.EMPTY;
-
 		ICarvingGroup group = CarvingUtils.getChiselRegistry().getGroup(stack);
 		if (group == null)
 			return ItemStack.EMPTY;
@@ -172,6 +153,144 @@ public class ChiselModule extends AbstractBagModule
 		return ItemStack.EMPTY;
 	}
 
-	
+	@Override
+	public NonNullList<ItemStack> getCompactedStacks(NonNullList<ItemStack> toCompact, EntityPlayer player)
+	{
+		if (!isEnabled())
+			return toCompact;
+
+		ItemStack chisel = handler.getStackInSlot(0);
+		if (chisel.isEmpty())
+			return toCompact;
+
+		NonNullList<ItemStack> compacted = NonNullList.create();
+
+		Map<ICarvingGroup, Map<ICarvingVariation, Integer>> variations = new HashMap<ICarvingGroup, Map<ICarvingVariation, Integer>>();
+
+		for (ItemStack stack : toCompact)
+		{
+			ICarvingVariation vari = CarvingUtils.getChiselRegistry().getVariation(stack);
+			ICarvingGroup group = CarvingUtils.getChiselRegistry().getGroup(stack);
+			if (vari == null)
+			{
+				compacted.add(stack);
+				continue;
+			}
+
+			if (variations.get(group) != null)
+			{
+				if (variations.get(group).get(vari) != null)
+				{
+					variations.get(group).put(vari, variations.get(group).get(vari) + stack.getCount());
+				} else
+				{
+					variations.get(group).put(vari, stack.getCount());
+				}
+			} else
+			{
+				Map<ICarvingVariation, Integer> map = new HashMap<ICarvingVariation, Integer>();
+				map.put(vari, stack.getCount());
+				variations.put(group, map);
+			}
+		}
+
+		for (Entry<ICarvingGroup, Map<ICarvingVariation, Integer>> entry : variations.entrySet())
+		{
+			Map<ICarvingVariation, Integer> map = entry.getValue();
+
+			ICarvingVariation maxVari = null;
+			int maxCount = 0;
+			int totalCount = 0;
+
+			for (Entry<ICarvingVariation, Integer> mapEntry : map.entrySet())
+			{
+				if (mapEntry.getValue() > maxCount)
+				{
+					maxCount = mapEntry.getValue();
+					maxVari = mapEntry.getKey();
+				}
+
+				totalCount += mapEntry.getValue();
+			}
+
+			int usedBlocks = 0;
+			boolean chiselEmpty = false;
+
+			if (maxVari != null && totalCount > 0)
+			{
+				int stackCount = totalCount / 64;
+				for (int i = 0; i < stackCount; i++)
+				{
+					if (!chisel.isEmpty())
+					{
+						ItemStack s = maxVari.getStack();
+						s.setCount(64);
+						compacted.add(s);
+
+						if (!player.world.isRemote)
+						{
+							if (chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
+								chisel.shrink(1);
+						}
+
+						usedBlocks += 64;
+					} else
+						chiselEmpty = true;
+				}
+
+				if (!chisel.isEmpty())
+				{
+					ItemStack s = maxVari.getStack();
+					s.setCount(totalCount % 64);
+
+					if (!s.isEmpty())
+					{
+						compacted.add(s);
+						usedBlocks += s.getCount();
+
+						if (!player.world.isRemote)
+						{
+							if (chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
+								chisel.shrink(1);
+						}
+					}
+				} else
+					chiselEmpty = true;
+
+				if (chiselEmpty) //Chisel was destroyed during the process, so we need to readd the other materials.
+				{
+					for (Entry<ICarvingVariation, Integer> mapEntry : map.entrySet())
+					{
+						int amount = mapEntry.getValue();
+						if (amount <= usedBlocks)
+						{
+							mapEntry.setValue(0);
+							usedBlocks -= amount;
+						} else
+						{
+							mapEntry.setValue(amount - usedBlocks);
+							amount -= usedBlocks;
+							usedBlocks = 0;
+
+							int leftoverStackCountCount = amount / 64;
+							for (int i = 0; i < leftoverStackCountCount; i++)
+							{
+								ItemStack s = mapEntry.getKey().getStack();
+								s.setCount(64);
+								compacted.add(s);
+							}
+
+							ItemStack s = mapEntry.getKey().getStack();
+							s.setCount(amount % 64);
+							if (!s.isEmpty())
+								compacted.add(s);
+						}
+					}
+				}
+			}
+		}
+
+		return compacted;
+	}
 
 }

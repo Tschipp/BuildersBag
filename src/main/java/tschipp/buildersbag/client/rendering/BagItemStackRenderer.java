@@ -2,6 +2,11 @@ package tschipp.buildersbag.client.rendering;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.Lists;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
@@ -12,7 +17,6 @@ import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.client.ForgeHooksClient;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -31,11 +35,12 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 {
 	public static TransformType transform;
 
-	private NonNullList<ItemStack> possibleItems = NonNullList.create();
-	private String renderStack = "";
+	private Map<Integer, List<ItemStack>> possibleItems = new HashMap<Integer, List<ItemStack>>();
+	private Map<Integer, String> renderStack = new HashMap<Integer, String>();
 	public static int listIndex;
 	private static int renderTimer = 0;
-
+	private static int renderTotal = 0;
+	
 	private static Method renderModelF;
 
 	static
@@ -54,10 +59,17 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 		RenderItem render = mc.getRenderItem();
 
 		String serialized = stack.serializeNBT().toString();
+		int hash = stack.hashCode();
 		
-		if(!serialized.equals(renderStack))
+		if(renderStack.get(hash) == null)
 		{
-			renderStack = serialized;
+			renderStack.put(hash, serialized);
+			regenerateAvailablityList(stack);
+		}
+		
+		if(renderStack.get(hash) != null && !renderStack.get(hash).equals(serialized))
+		{
+			renderStack.put(hash, serialized);
 			regenerateAvailablityList(stack);
 		}
 
@@ -65,6 +77,8 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 
 		boolean random = bag.hasModuleAndEnabled("buildersbag:random");
 
+		List<ItemStack> possibleItems = this.possibleItems.get(hash);
+		
 		ItemStack selected = random ? (possibleItems.size() > 0 ? possibleItems.get(listIndex % possibleItems.size()) : ItemStack.EMPTY) : bag.getSelectedInventory().getStackInSlot(0);
 
 		IBakedModel selectedModel = render.getItemModelWithOverrides(selected, mc.world, mc.player);
@@ -190,23 +204,38 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 		if (!(bagStack.getItem() instanceof BuildersBagItem))
 			return;
 
+		if(renderTotal >= 10000)
+		{
+			this.possibleItems.clear();
+			this.renderStack.clear();
+			this.renderTotal = 0;
+		}
+		
+		
+		List<ItemStack> list = possibleItems.get(bagStack.hashCode());
+		if(list == null)
+			list = Lists.newArrayList();
+		
 		IBagCap cap = CapHelper.getBagCap(bagStack);
 
 		if (!cap.hasModuleAndEnabled("buildersbag:random"))
 			return;
 
-		possibleItems.clear();
+		list.clear();
 		for(ItemStack s : InventoryHelper.getAllAvailableStacks(cap, Minecraft.getMinecraft().player))
 		{
 			if(s.getItem() instanceof ItemBlock)
-				possibleItems.add(s);
+				list.add(s);
 		}
+		
+		possibleItems.put(bagStack.hashCode(), list);
 	}
 
 	@SubscribeEvent
 	public static void onClientTick(ClientTickEvent event)
 	{
 		renderTimer += 1;
+		renderTotal++;
 		if (renderTimer >= 60)
 		{
 			listIndex++;
