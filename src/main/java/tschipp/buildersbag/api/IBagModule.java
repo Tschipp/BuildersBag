@@ -12,10 +12,10 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 
 	/**
 	 * Gets a list of all stacks that this module can create using all other stacks,
-	 * so most of the time {@link tschipp.buildersbag.common.helper.InventoryHelper#getAllAvailableStacksExcept} is used to find the stacks of all other modules first.
+	 * so most of the time {@link tschipp.buildersbag.common.helper.BagHelper#getAllAvailableStacksExcept} is used to find the stacks of all other modules first.
 	 * @param bag
 	 * @param player
-	 * @return
+	 * @return the possible stacks with size 1, or an empty list.
 	 */
 	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player);
 		
@@ -54,25 +54,21 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 	
 	/**
 	 * If this module *shouldn't* have its own inventory, this should be true
-	 * @return
 	 */
 	public boolean doesntUseOwnInventory();
 	
 	/**
 	 * If this module is enabled
-	 * @return
 	 */
 	public boolean isEnabled();
 	
 	/**
 	 * Check if the internal inventory is expanded
-	 * @return
 	 */
 	public boolean isExpanded();
 	
 	/**
 	 * Sets the module's expanded state
-	 * @param bool
 	 */
 	public void setExpanded(boolean bool);
 	
@@ -83,13 +79,11 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 	
 	/**
 	 * Gets a display stack for the icon. Should be a static final stack, because this gets called every frame.
-	 * @return
 	 */
 	public ItemStack getDisplayItem();
 	
 	/**
 	 * The name of the module, mostly the same as the registry name
-	 * @return
 	 */
 	public String getName();
 	
@@ -112,7 +106,6 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 	
 	/**
 	 * If the module acts as a supplier
-	 * @return
 	 */
 	default boolean isSupplier()
 	{
@@ -131,7 +124,6 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 	
 	/**
 	 * Returns the module Priority when providing stacks. Higher priority modules get checked first.
-	 * @return
 	 */
 	default ModulePriority getPriority()
 	{

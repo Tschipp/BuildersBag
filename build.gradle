@@ -78,7 +78,7 @@ dependencies {
 	deobfCompile "vazkii.botania:Botania:${botania_version}" //Botania
 	deobfCompile "com.azanor.baubles:Baubles:${baubles_version}" //Baubles
    	compile "CraftTweaker2:CraftTweaker2-MC1120-Main:${ct_version}"
-   	compile "CraftTweaker2:CraftTweaker2-MC1120-Mod-JEI:${ct_version}"
+   	runtime "CraftTweaker2:CraftTweaker2-MC1120-Mod-JEI:${ct_version}"
 
 }
 
