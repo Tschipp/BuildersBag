@@ -3,6 +3,7 @@ package tschipp.buildersbag.common.caps;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import com.google.common.collect.Lists;
 
@@ -21,10 +22,13 @@ public class BagCap implements IBagCap
 	private IBagModule[] modules = new IBagModule[0];
 	private ItemStackHandler inv = new ItemStackHandler(0);
 	private ItemStackHandler selected = new SelectedBlockHandler(1);
-
+	private String uuid;
+	
 	public BagCap()
 	{
 		this(1);
+		
+		this.uuid = "";
 	}
 	
 	public BagCap(int tier)
@@ -191,6 +195,18 @@ public class BagCap implements IBagCap
 		}
 		
 		return newcap;
+	}
+
+	@Override
+	public String getUUID()
+	{
+		return uuid;
+	}
+
+	@Override
+	public void setUUID(String uuid)
+	{
+		this.uuid = uuid;
 	}
 
 }

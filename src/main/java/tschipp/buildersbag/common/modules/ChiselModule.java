@@ -7,8 +7,6 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
-import com.google.common.collect.Maps;
-
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
@@ -23,12 +21,13 @@ import team.chisel.api.carving.ICarvingGroup;
 import team.chisel.api.carving.ICarvingVariation;
 import tschipp.buildersbag.api.AbstractBagModule;
 import tschipp.buildersbag.api.IBagCap;
+import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
+import tschipp.buildersbag.common.helper.ItemHelper;
 import tschipp.buildersbag.common.inventory.ItemHandlerWithPredicate;
 
 public class ChiselModule extends AbstractBagModule
 {
-
 	private ItemHandlerWithPredicate handler = new ItemHandlerWithPredicate(1, (stack, slot) -> stack.getItem() instanceof IChiselItem);
 	private static final ItemStack DISPLAY = new ItemStack(Item.getByNameOrId("chisel:chisel_iron"));
 
@@ -40,7 +39,7 @@ public class ChiselModule extends AbstractBagModule
 	@Override
 	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
 	{
-		NonNullList<ItemStack> providedSacks = InventoryHelper.getAllAvailableStacksExcept(bag, player, this);
+		NonNullList<ItemStack> providedSacks = BagHelper.getAllAvailableStacksExcept(bag, player, this);
 		NonNullList<ItemStack> list = NonNullList.create();
 
 		ItemStack chisel = handler.getStackInSlot(0);
@@ -104,53 +103,74 @@ public class ChiselModule extends AbstractBagModule
 	}
 
 	@Override
-	public ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player)
+	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player)
 	{
+		NonNullList list = NonNullList.create();
+
 		ICarvingGroup group = CarvingUtils.getChiselRegistry().getGroup(stack);
 		if (group == null)
-			return ItemStack.EMPTY;
+			return list;
 
 		ItemStack chisel = handler.getStackInSlot(0);
 		if (chisel.isEmpty())
-			return ItemStack.EMPTY;
+			return list;
 
 		NonNullList<ItemStack> availableBlocks = InventoryHelper.getInventoryStacks(bag, player);
 
-		for (ICarvingVariation variant : group)
-		{
-			ItemStack provided = InventoryHelper.containsStack(variant.getStack(), availableBlocks);
+		NonNullList<ItemStack> providedVariants = NonNullList.create();
 
-			if (!provided.isEmpty())
-			{
-				if (!player.world.isRemote)
-				{
-					if (chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
-						chisel.shrink(1);
-				}
-
-				provided.shrink(1);
-				return ItemHandlerHelper.copyStackWithSize(stack, 1);
-			}
-		}
 
 		for (ICarvingVariation variant : group)
 		{
-			ItemStack provided = InventoryHelper.getOrProvideStack(variant.getStack(), bag, player, this);
-
-			if (!provided.isEmpty())
+			while (providedVariants.size() < count)
 			{
-				if (!ItemStack.areItemsEqual(provided, stack) && !player.world.isRemote)
+				ItemStack available = ItemStack.EMPTY;
+				if (!(available = ItemHelper.containsStack(variant.getStack(), availableBlocks)).isEmpty())
 				{
-					if (chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
-						chisel.shrink(1);
+					available.shrink(1);
+					providedVariants.add(available);
 				}
-
-				provided.shrink(1);
-				return ItemHandlerHelper.copyStackWithSize(stack, 1);
+				else
+					break;
 			}
 		}
+		
+		for (ICarvingVariation variant : group)
+		{
+			if(providedVariants.size() < count)
+			{
+				NonNullList<ItemStack> provided = BagHelper.getOrProvideStackWithCount(variant.getStack(), count - providedVariants.size(), bag, player, this);
+				providedVariants.addAll(provided);
+			}
+		}
+		
+		if (!providedVariants.isEmpty())
+		{
+			if (!player.world.isRemote)
+			{
+				for (int i = 0; i < providedVariants.size(); i++)
+				{
+					if (chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
+					{
+						list.add(stack.copy());
+						chisel.shrink(1);
+						
+						for(int j = i; j < providedVariants.size(); j++)
+						{
+							BagHelper.addStack(providedVariants.get(j), bag, player);
+						}
+						
+						break;
+					}
+					else
+						list.add(stack.copy());
+				}
+			}
+			
+			return list;
+		}
 
-		return ItemStack.EMPTY;
+		return NonNullList.create();
 	}
 
 	@Override
@@ -182,11 +202,13 @@ public class ChiselModule extends AbstractBagModule
 				if (variations.get(group).get(vari) != null)
 				{
 					variations.get(group).put(vari, variations.get(group).get(vari) + stack.getCount());
-				} else
+				}
+				else
 				{
 					variations.get(group).put(vari, stack.getCount());
 				}
-			} else
+			}
+			else
 			{
 				Map<ICarvingVariation, Integer> map = new HashMap<ICarvingVariation, Integer>();
 				map.put(vari, stack.getCount());
@@ -234,7 +256,8 @@ public class ChiselModule extends AbstractBagModule
 						}
 
 						usedBlocks += 64;
-					} else
+					}
+					else
 						chiselEmpty = true;
 				}
 
@@ -254,10 +277,11 @@ public class ChiselModule extends AbstractBagModule
 								chisel.shrink(1);
 						}
 					}
-				} else
+				}
+				else
 					chiselEmpty = true;
 
-				if (chiselEmpty) //Chisel was destroyed during the process, so we need to readd the other materials.
+				if (chiselEmpty) // Chisel was destroyed during the process, so we need to readd the other materials.
 				{
 					for (Entry<ICarvingVariation, Integer> mapEntry : map.entrySet())
 					{
@@ -266,7 +290,8 @@ public class ChiselModule extends AbstractBagModule
 						{
 							mapEntry.setValue(0);
 							usedBlocks -= amount;
-						} else
+						}
+						else
 						{
 							mapEntry.setValue(amount - usedBlocks);
 							amount -= usedBlocks;

@@ -3,33 +3,41 @@ package tschipp.buildersbag.common.crafting;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
+import java.util.Stack;
 
-import com.google.common.collect.Lists;
+import javax.annotation.Nullable;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.NonNullList;
-import tschipp.buildersbag.BuildersBag;
-import tschipp.buildersbag.common.helper.Tuple;
+import tschipp.buildersbag.api.IBagCap;
+import tschipp.buildersbag.common.data.Tuple;
+import tschipp.buildersbag.common.helper.InventoryHelper;
 
 //Don't touch this class, just hope that it works
 public class RecipeTreeNew
 {
 	private Map<String, RecipeNode> nodes = new HashMap<String, RecipeNode>();
-	private Map<String, RecipeNode> stackAvailableNodes = new HashMap<String, RecipeNode>();
+	private Map<String, RecipeNode> rootNodes = new HashMap<String, RecipeNode>();
 	private Map<String, Boolean> markedNodes = new HashMap<String, Boolean>();
 	private Map<String, Boolean> validatedNodes = new HashMap<String, Boolean>();
 	private Map<String, Boolean> invalidatedNodes = new HashMap<String, Boolean>();
-
+	private Stack<String> callStack = new Stack();
+	private boolean aborted = false;
+	
+	public Set<RecipeContainer> blacklistedRecipes = new HashSet<RecipeContainer>();
+	
+	
 	public void add(IRecipe recipe)
 	{
 		ItemStack output = recipe.getRecipeOutput();
@@ -45,6 +53,14 @@ public class RecipeTreeNew
 			{
 				outputNode = new RecipeNode(outputString);
 				nodes.put(outputString, outputNode);
+			}
+
+			String oreOutputString = CraftingHandler.getStackIngredientString(output, false);
+			RecipeNode altOutputNode = nodes.get(oreOutputString);
+			if (altOutputNode == null)
+			{
+				altOutputNode = new RecipeNode(outputString);
+				nodes.put(oreOutputString, altOutputNode);
 			}
 
 			for (Ingredient ing : ingredients)
@@ -63,8 +79,203 @@ public class RecipeTreeNew
 					nodes.put(ingString, node);
 				}
 				node.add(outputNode, cont);
+				node.add(altOutputNode, cont);
 			}
 		}
+	}
+
+	@Nullable
+	public RecipeRequirementList generateRequirementList(ItemStack toCreate, @Nullable RecipeRequirementList reqList, EntityPlayer player, IBagCap cap)
+	{
+		String name = CraftingHandler.getItemString(toCreate);
+		RecipeNode toCreateNode = this.nodes.get(name);
+		RecipeNode parentNode = null;
+		RecipeContainer fastestRecipe = null;
+				
+		if(aborted)
+			return reqList;
+		
+		if(reqList == null)
+		{
+			validatedNodes.clear();
+			invalidatedNodes.clear();
+			callStack.clear();
+			this.aborted = false;
+		}
+		
+		if (toCreateNode == null)
+			return reqList;
+
+		if (this.invalidatedNodes.containsKey(toCreateNode.id))
+			return reqList;
+
+		markedNodes.clear();
+
+		Queue<RecipeNode> bfsqueue = new ArrayDeque<RecipeNode>();
+		bfsqueue.add(toCreateNode);
+
+		markedNodes.put(toCreateNode.id, true);
+		
+		while (!bfsqueue.isEmpty()) // Go up the tree until we find the furthest parent
+		{
+			RecipeNode current = bfsqueue.poll();
+			for (Tuple<RecipeNode, RecipeContainer> parent : current.parentNodes)
+			{
+				if(this.blacklistedRecipes.contains(parent.getSecond()))
+					continue;
+				
+				RecipeNode p = parent.getFirst();
+				if (!markedNodes.containsKey(p.id))
+				{
+					if (this.rootNodes.containsKey(p.id))
+					{	
+						parentNode = p;
+					}
+					bfsqueue.add(p);
+					markedNodes.put(p.id, true);
+				}
+			}
+		}
+
+		if(parentNode == null)
+			return reqList;
+		
+		bfsqueue.clear();
+		bfsqueue.add(parentNode);
+		invalidatedNodes.put(parentNode.id, true);
+		markedNodes.clear();
+
+		findcreate: while (!bfsqueue.isEmpty()) // Go down the tree until we find the requested node
+		{
+			RecipeNode current = bfsqueue.poll();
+			for (Tuple<RecipeNode, RecipeContainer> child : current.adjacentNodes)
+			{
+				if(this.blacklistedRecipes.contains(child.getSecond()))
+					continue;
+				
+				RecipeNode c = child.getFirst();
+
+				if (!markedNodes.containsKey(c.id))
+				{
+					if (toCreateNode.id.equals(c.id))
+					{
+						fastestRecipe = child.getSecond();
+						break findcreate;
+					}
+					bfsqueue.add(c);
+					markedNodes.put(c.id, true);
+				}
+			}
+		}
+
+		if (fastestRecipe == null)
+			return null;
+
+		int creationCount = fastestRecipe.getOutput().getCount();
+
+		boolean isRoot = reqList == null;
+
+		if (reqList == null)
+			reqList = new RecipeRequirementList(this, toCreate, creationCount, fastestRecipe);
+
+		if(isRoot)
+			validatedNodes.clear();
+		
+		reqList.setCreationRecipe(toCreate, fastestRecipe);
+
+		top: for (Tuple<RecipeNode, RecipeContainer> parent : toCreateNode.parentNodes) // Generate the required item amounts (excluding roots)
+		{
+			if (parent.getSecond() == fastestRecipe)
+			{
+				boolean isRootElement = this.rootNodes.containsKey(parent.getFirst().id);
+
+				// if (!isRootElement)
+				//
+				// {
+				String[] split = parent.getFirst().id.split(";");
+				for (String str : split)
+				{
+					RecipeNode n = this.nodes.get(str + ";");
+					if (n != null)
+					{
+						ItemStack stack = CraftingHandler.getItemFromString(str + ";");
+
+						double ingCount = 0;
+						for (Ingredient ing : parent.getSecond().getIngredients())
+						{
+							if (ing.test(stack))
+							{
+								ingCount += 1;
+							}
+						}
+
+						reqList.addItemRequirement(toCreate, stack, ingCount / creationCount, isRoot);
+
+						boolean wasValidated = this.validatedNodes.containsKey(parent.getFirst().id);
+						boolean inQueue = this.callStack.contains(parent.getFirst().id);
+						
+						if(inQueue)
+						{
+//							this.blacklistedRecipes.add(fastestRecipe);
+//							this.aborted = true;
+//							return reqList;
+							reqList.removeItemRequirement(stack);
+							continue top;
+						}
+						
+						callStack.add(parent.getFirst().id);
+						
+						if (!wasValidated)
+							this.generateRequirementList(stack, reqList, player, cap);
+						
+						callStack.pop();
+
+						this.validatedNodes.put(parent.getFirst().id, true);
+						
+						continue top;
+					}
+				}
+
+				// }
+			}
+		}
+
+		if(isRoot && aborted)
+		{
+			this.aborted = false;
+			reqList = this.generateRequirementList(toCreate, null, player, cap);
+		}
+		
+		
+		if (isRoot && reqList != null)
+			reqList.finalizeRequirements(player, cap);
+
+		return reqList;
+	}
+
+	private boolean hasEnoughMaterialsForRoot(RecipeNode p, RecipeContainer recipeContainer, EntityPlayer player, IBagCap cap)
+	{
+		String[] split = p.id.split(";");
+		for (String str : split)
+		{
+			ItemStack stack = CraftingHandler.getItemFromString(str + ";");
+
+			double ingCount = 0;
+			for (Ingredient ing : recipeContainer.getIngredients())
+			{
+				if (ing.test(stack))
+				{
+					ingCount += 1;
+				}
+			}
+
+			int provided = InventoryHelper.getMatchingStacksWithSizeOne(stack, InventoryHelper.getInventoryStacks(cap, player)).size();
+
+			if (provided >= ingCount)
+				return true;
+		}
+
+		return false;
 	}
 
 	public RecipeTreeNew getSubtree(NonNullList<ItemStack> stacks)
@@ -79,13 +290,17 @@ public class RecipeTreeNew
 			{
 				String[] names = CraftingHandler.getStackIngredientStrings(stack, true);
 
+				RecipeNode n = this.nodes.get(CraftingHandler.getItemString(stack));
+				if (n != null)
+					subtree.rootNodes.put(n.id, n);
+
 				for (String name : names)
 				{
 					RecipeNode node = this.nodes.get(name);
 
 					if (node != null && !subtree.nodes.containsKey(node.id))
 					{
-						subtree.stackAvailableNodes.put(node.id, node);
+						subtree.rootNodes.put(node.id, node);
 						subtree.nodes.put(name, node);
 						subtree.addNodesRecursively(node, this);
 
@@ -101,7 +316,7 @@ public class RecipeTreeNew
 		time = System.currentTimeMillis();
 
 		int lastNodeSize = 0;
-		
+
 		// Do this 6 times or less, so that it's pretty certain that all illegal blocks are removed
 		for (int i = 0; i < 6; i++)
 		{
@@ -109,7 +324,7 @@ public class RecipeTreeNew
 			nodeCopy.addAll(subtree.nodes.values());
 
 			for (RecipeNode node : nodeCopy)
-			{				
+			{
 				if (!node.parentNodes.isEmpty())
 				{
 					subtree.checkDependenciesRecursively(node, null, new ArrayList<RecipeContainer>());
@@ -140,19 +355,16 @@ public class RecipeTreeNew
 			lastNodeSize = subtree.nodes.size();
 		}
 
-//		subtree.visualize();
-
 		return subtree;
 	}
 
 	public NonNullList<ItemStack> getPossibleStacks(boolean removeAvailable) // RemoveAvailable just means that it should not show blocks that already exist in this list
-
 	{
 		NonNullList<ItemStack> stacks = NonNullList.create();
 
 		for (RecipeNode node : nodes.values())
 		{
-			if (removeAvailable ? stackAvailableNodes.get(node.id) == null : true)
+			if (removeAvailable ? rootNodes.get(node.id) == null : true)
 			{
 				String[] split = node.id.split(";");
 
@@ -195,21 +407,21 @@ public class RecipeTreeNew
 		if (node == null)
 			return false;
 
-		if (this.invalidatedNodes.containsKey(node.id)) //Node has been confirmed to be invalidated
+		if (this.invalidatedNodes.containsKey(node.id)) // Node has been confirmed to be invalidated
 			return false;
-		
+
 		if (this.validatedNodes.containsKey(node.id)) // If we have already checked this node, return true
 			return true;
 
-		if (this.stackAvailableNodes.containsKey(node.id)) // If this node is a provided root, return true
+		if (this.rootNodes.containsKey(node.id)) // If this node is a provided root, return true
 			return true;
 
 		if (this.markedNodes.containsKey(node.id)) // If this node is marked, which means that is is part of the recursion stack, return false.
 		{
 			excludeRecipes.add(callingRecipe);
-			if(checkRecipes(node, excludeRecipes))
+			if (checkRecipes(node, excludeRecipes))
 			{
-				this.validatedNodes.put(node.id, true); 
+				this.validatedNodes.put(node.id, true);
 				excludeRecipes.clear();
 				return true;
 			}
@@ -233,28 +445,28 @@ public class RecipeTreeNew
 		this.validatedNodes.put(node.id, true); // There is a valid recipe, so mark this node as valid.
 		return true;
 	}
-	
+
 	private boolean checkRecipes(RecipeNode node, List<RecipeContainer> exclude)
 	{
-		if (this.invalidatedNodes.containsKey(node.id)) //Node has been confirmed to be invalidated
+		if (this.invalidatedNodes.containsKey(node.id)) // Node has been confirmed to be invalidated
 			return false;
-		
+
 		if (this.validatedNodes.containsKey(node.id)) // If we have already checked this node, return true
 			return true;
-		
-		if (this.stackAvailableNodes.containsKey(node.id)) // If this node is a provided root, return true
+
+		if (this.rootNodes.containsKey(node.id)) // If this node is a provided root, return true
 			return true;
-		
+
 		Map<RecipeContainer, Boolean> validRecipeMap = new HashMap<RecipeContainer, Boolean>();
 
 		for (Tuple<RecipeNode, RecipeContainer> parent : node.parentNodes)
 		{
 			RecipeNode parentNode = parent.getFirst();
 			RecipeContainer parentRecipe = parent.getSecond();
-			
-			if(exclude.contains(parentRecipe))
+
+			if (exclude.contains(parentRecipe))
 				continue;
-			
+
 			Boolean prevRecipeVal = validRecipeMap.get(parentRecipe);
 			if (prevRecipeVal == null)
 				validRecipeMap.put(parent.getSecond(), true);
@@ -284,7 +496,7 @@ public class RecipeTreeNew
 		{
 			hasValidRecipe |= b;
 		}
-		
+
 		return hasValidRecipe;
 	}
 
@@ -364,8 +576,7 @@ public class RecipeTreeNew
 	}
 
 	/**
-	 * Only used to debug
-	 * I hope I never have to debug this shit again.
+	 * Only used to debug I hope I never have to debug this shit again.
 	 */
 	public void visualize()
 	{

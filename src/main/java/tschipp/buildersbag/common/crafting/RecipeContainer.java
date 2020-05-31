@@ -34,6 +34,12 @@ public class RecipeContainer
 	}
 
 	@Override
+	public String toString()
+	{
+		return output.toString();
+	}
+	
+	@Override
 	public int hashCode()
 	{
 		final int prime = 31;

@@ -1,4 +1,4 @@
-package tschipp.buildersbag.network;
+package tschipp.buildersbag.network.server;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;

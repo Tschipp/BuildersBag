@@ -17,7 +17,7 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.NonNullList;
 import tschipp.buildersbag.BuildersBag;
-import tschipp.buildersbag.common.helper.Tuple;
+import tschipp.buildersbag.common.data.Tuple;
 
 public class RecipeTree
 {

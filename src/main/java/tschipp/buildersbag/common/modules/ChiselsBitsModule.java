@@ -44,10 +44,11 @@ import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.AbstractBagModule;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.inventory.ItemHandlerWithPredicate;
-import tschipp.buildersbag.network.SetHeldItemClient;
+import tschipp.buildersbag.network.client.SetHeldItemClient;
 
 public class ChiselsBitsModule extends AbstractBagModule
 {
@@ -87,12 +88,6 @@ public class ChiselsBitsModule extends AbstractBagModule
 	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
 	{
 		return NonNullList.create();
-	}
-
-	@Override
-	public ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player)
-	{
-		return ItemStack.EMPTY;
 	}
 
 	@Override
@@ -242,13 +237,13 @@ public class ChiselsBitsModule extends AbstractBagModule
 						IBagCap cap = CapHelper.getBagCap(bag);
 						if (cap.hasModuleAndEnabled("buildersbag:chiselsandbits"))
 						{
-							IBagModule chiselModule = InventoryHelper.getModule("buildersbag:chiselsandbits", cap);
+							IBagModule chiselModule = BagHelper.getModule("buildersbag:chiselsandbits", cap);
 							ItemStackHandler inv = chiselModule.getInventory();
 							ItemStack chisel = inv.getStackInSlot(0);
 
 							if (!chisel.isEmpty())
 							{
-								NonNullList<ItemStack> provided = InventoryHelper.getOrProvideStackWithCount(required, rounded, cap, player, null);
+								NonNullList<ItemStack> provided = BagHelper.getOrProvideStackWithCount(required, rounded, cap, player, null);
 								rounded -= provided.size();
 
 								if (chisel.attemptDamageItem(provided.size() * 16 * 16 * 16, new Random(), (EntityPlayerMP) player))
@@ -319,6 +314,12 @@ public class ChiselsBitsModule extends AbstractBagModule
 		}
 
 		return ChiselTypeIterator.create(VoxelBlob.dim, from.bitX, from.bitY, from.bitZ, vb, mode, side, place.usePlacementOffset());
+	}
+
+	@Override
+	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player)
+	{
+		return NonNullList.create();
 	}
 
 }

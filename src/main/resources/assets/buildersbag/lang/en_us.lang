@@ -24,3 +24,6 @@ buildersbag.name=Builder's Bag
 buildersbag.noblock=No block selected!
 buildersbag.cantplace=Can't place %s here!
 buildersbag.nomaterials=Not enough materials to place %s!
+buildersbag.bagprovides=Can be provided by the Builder's Bag
+
+keybind.openBaubleBag=Open Bag in Bauble Slot

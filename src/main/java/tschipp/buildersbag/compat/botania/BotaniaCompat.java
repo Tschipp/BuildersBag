@@ -9,10 +9,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
+import tschipp.buildersbag.common.cache.BagCache;
+import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.compat.blocksourceadapter.BlockSourceAdapterHandler;
-import tschipp.buildersbag.network.SyncBagCapInventoryClient;
+import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
 import vazkii.botania.common.item.ItemEnderHand;
 
 public class BotaniaCompat
@@ -30,7 +32,7 @@ public class BotaniaCompat
 		if (nbt.equals(lastTag) && ItemStack.areItemsEqual(lastSelected, requestedStack) && lastCount != 0)
 			return lastCount;
 
-		if (rand.nextDouble() < 0.9 && ItemStack.areItemsEqual(lastSelected, requestedStack) && lastCount != 0)
+		if (player.world.isRemote || (rand.nextDouble() < 1 && ItemStack.areItemsEqual(lastSelected, requestedStack) && lastCount != 0))
 		{
 			if (lastCount != 0)
 				lastCount--;
@@ -45,9 +47,13 @@ public class BotaniaCompat
 		NonNullList<ItemStack> provided = null;
 
 		if (player.world.isRemote)
-			provided = InventoryHelper.getOrProvideStackWithCount(requestedStack, 500, bag, player, null);
+		{
+			BagCache.startSimulation(stack);
+			provided = BagHelper.getOrProvideStackWithCount(requestedStack, 500, bag, player, null);
+			BagCache.startSimulation(stack);
+		}
 		else
-			provided = InventoryHelper.simulateProvideStackWithCount(requestedStack, 500, stack, player, null);
+			provided = BagHelper.simulateProvideStackWithCount(requestedStack, 500, stack, player, null);
 
 		lastTag = nbt;
 		lastCount = provided.size();
@@ -62,8 +68,8 @@ public class BotaniaCompat
 
 		if (doit)
 		{
-			ItemStack provided = InventoryHelper.getOrProvideStack(requestedStack, bag, player, null);
-			InventoryHelper.resetRecursionDepth(player);
+			ItemStack provided = BagHelper.getOrProvideStack(requestedStack, bag, player, null);
+			BagHelper.resetRecursionDepth(player);
 
 			if (provided.isEmpty())
 				return false;
@@ -73,8 +79,8 @@ public class BotaniaCompat
 		} else
 		{
 			if (player.world.isRemote)
-				return InventoryHelper.getOrProvideStack(requestedStack, bag, player, null).isEmpty();
-			return InventoryHelper.simulateProvideStack(requestedStack, stack, player, null);
+				return BagHelper.getOrProvideStack(requestedStack, bag, player, null).isEmpty();
+			return BagHelper.simulateProvideStack(requestedStack, stack, player, null);
 		}
 	}
 	

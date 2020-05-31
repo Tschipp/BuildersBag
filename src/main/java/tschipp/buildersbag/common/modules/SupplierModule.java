@@ -7,6 +7,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.AbstractBagModule;
 import tschipp.buildersbag.api.IBagCap;
+import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 
 public class SupplierModule extends AbstractBagModule
@@ -23,12 +24,6 @@ public class SupplierModule extends AbstractBagModule
 	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
 	{
 		return NonNullList.create();
-	}
-
-	@Override
-	public ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player)
-	{
-		return InventoryHelper.getOrProvideStack(stack, bag, player, this);
 	}
 
 	@Override
@@ -53,5 +48,11 @@ public class SupplierModule extends AbstractBagModule
 	public boolean isSupplier()
 	{
 		return true;
+	}
+
+	@Override
+	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player)
+	{
+		return BagHelper.getOrProvideStackWithCount(stack, count, bag, player, this);
 	}
 }

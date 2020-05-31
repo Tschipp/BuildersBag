@@ -33,10 +33,11 @@ import net.minecraftforge.items.SlotItemHandler;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.common.cache.BagCache;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
-import tschipp.buildersbag.network.SyncBagCapClient;
-import tschipp.buildersbag.network.SyncBagCapInventoryClient;
+import tschipp.buildersbag.network.client.SyncBagCapClient;
+import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
 
 public class ContainerBag extends Container
 {
@@ -61,6 +62,8 @@ public class ContainerBag extends Container
 	{
 		this(player, bag);
 		this.hand = hand;
+		
+		sync();
 	}
 
 	public ContainerBag(EntityPlayer player, ItemStack bag, int baubleSlot)
@@ -69,14 +72,9 @@ public class ContainerBag extends Container
 		this.slot = baubleSlot;
 		this.isBauble = true;
 		
-		if (!player.world.isRemote)
-		{
-			if (isBauble)
-				BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, baubleSlot, true), (EntityPlayerMP) player);
-			else
-				BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (EntityPlayerMP) player);
-		}
+		sync();
 	}
+	
 
 	private ContainerBag(EntityPlayer player, ItemStack bag)
 	{
@@ -97,11 +95,13 @@ public class ContainerBag extends Container
 		setupInventories();
 	}
 
+	
+	
 	private void setupInventories()
 	{
 		setupPlayerInventory();
 		setupBagInventory();
-		setupModuleInventories();
+		setupModuleInventories();		
 	}
 
 	private void setupBagInventory()
@@ -185,7 +185,7 @@ public class ContainerBag extends Container
 				ItemStackHandler handler = module.getInventory();
 				for (int j = 0; j < handler.getSlots(); j++)
 				{
-					addSlotToContainer(new ToggleableSlot(handler, slotIndex++, x + j * 18 + leftOffset, y).setEnabled(module.isExpanded()));
+					addSlotToContainer(new ToggleableSlot(handler, slotIndex++, x + j * 18 + leftOffset, y).setSlotEnabled(module.isExpanded()));
 				}
 			}
 
@@ -210,7 +210,7 @@ public class ContainerBag extends Container
 				ItemStackHandler handler = module.getInventory();
 				for (int j = 0; j < handler.getSlots(); j++)
 				{
-					addSlotToContainer(new ToggleableSlot(handler, slotIndex++, x - j * 18 - 16 + leftOffset, y).setEnabled(module.isExpanded()));
+					addSlotToContainer(new ToggleableSlot(handler, slotIndex++, x - j * 18 - 16 + leftOffset, y).setSlotEnabled(module.isExpanded()));
 				}
 			} else
 
@@ -281,7 +281,7 @@ public class ContainerBag extends Container
 				Slot slot = this.inventorySlots.get(i);
 				ItemStack itemstack = slot.getStack();
 
-				if (!slot.isEnabled())
+				if (slot instanceof ToggleableSlot && !((ToggleableSlot) slot).isSlotEnabled())
 				{
 					if (reverseDirection)
 						i--;
@@ -345,7 +345,7 @@ public class ContainerBag extends Container
 
 				Slot slot1 = this.inventorySlots.get(i);
 
-				if (!slot1.isEnabled())
+				if (slot1 instanceof ToggleableSlot && !((ToggleableSlot) slot1).isSlotEnabled())
 				{
 					if (reverseDirection)
 						i--;
@@ -410,9 +410,20 @@ public class ContainerBag extends Container
 		setupInventories();
 	}
 
+	public void sync()
+	{
+		if (!player.world.isRemote)
+		{
+			if (isBauble)
+				BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, slot, true), (EntityPlayerMP) player);
+			else
+				BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (EntityPlayerMP) player);
+		}
+	}
+	
 	@Override
 	public boolean canInteractWith(EntityPlayer player)
-	{
+	{		
 		if (Loader.isModLoaded("baubles"))
 		{
 			return isBauble ? BaublesApi.getBaubles(player).getStackInSlot(this.slot) == bag : !player.getHeldItem(hand).isEmpty() && player.getHeldItem(hand) == bag;
@@ -425,13 +436,7 @@ public class ContainerBag extends Container
 	{
 		ItemStack ret = super.slotClick(slotId, dragType, clickTypeIn, player);
 
-		if (!player.world.isRemote)
-		{
-			if (isBauble)
-				BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, slot, true), (EntityPlayerMP) player);
-			else
-				BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (EntityPlayerMP) player);
-		}
+		sync();
 
 		return ret;
 	}
@@ -440,14 +445,10 @@ public class ContainerBag extends Container
 	public void onContainerClosed(EntityPlayer playerIn)
 	{
 		super.onContainerClosed(playerIn);
-
-		if (!player.world.isRemote)
-		{
-			if (isBauble)
-				BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, slot, true), (EntityPlayerMP) player);
-			else
-				BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (EntityPlayerMP) player);
-		}
+		
+		sync();
+		
+		BagCache.clearBagCache(bag);
 	}
 
 }

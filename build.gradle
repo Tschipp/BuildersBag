@@ -56,6 +56,10 @@ repositories {
 	}
 	
 	maven {
+		url "https://dvs1.progwml6.com/files/maven/"
+	}
+	
+	maven {
         name = "thiakil"
         url = "http://maven.thiakil.com" //Baubles
     }
@@ -69,9 +73,12 @@ dependencies {
 	compile "curse.maven:creativecore:${creativecore_version}" //Creative Core
 	compile "curse.maven:chisels-bits:${chisels_and_bits_version}" //C & B
 	compile "curse.maven:better-builders-wands:${bbw_version}" //Better Builder's Wands
+	compile "curse.maven:building-gadgets:${buildinggadgets_version}" //Building Gadgets
 	deobfCompile "tschipp.linear:linear-1.12.2:${linear_version}" //Linear
 	deobfCompile "vazkii.botania:Botania:${botania_version}" //Botania
 	deobfCompile "com.azanor.baubles:Baubles:${baubles_version}" //Baubles
+   	compile "CraftTweaker2:CraftTweaker2-MC1120-Main:${ct_version}"
+   	compile "CraftTweaker2:CraftTweaker2-MC1120-Mod-JEI:${ct_version}"
 
 }
 

@@ -1,4 +1,4 @@
-package tschipp.buildersbag.network;
+package tschipp.buildersbag.network.client;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;

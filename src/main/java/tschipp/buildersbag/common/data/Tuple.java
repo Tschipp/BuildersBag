@@ -1,4 +1,4 @@
-package tschipp.buildersbag.common.helper;
+package tschipp.buildersbag.common.data;
 
 public class Tuple<A, B>
 {

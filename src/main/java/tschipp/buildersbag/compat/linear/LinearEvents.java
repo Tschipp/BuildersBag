@@ -27,12 +27,14 @@ import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.client.rendering.BagItemStackRenderer;
+import tschipp.buildersbag.common.cache.BagCache;
+import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.item.BuildersBagItem;
-import tschipp.buildersbag.network.SyncBagCapClient;
-import tschipp.buildersbag.network.SyncBagCapInventoryClient;
-import tschipp.buildersbag.network.SyncEnderchestToClient;
+import tschipp.buildersbag.network.client.SyncBagCapClient;
+import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
+import tschipp.buildersbag.network.client.SyncEnderchestToClient;
 import tschipp.linear.api.LinearBlockStateEvent;
 import tschipp.linear.api.LinearPlaceBlockEvent;
 import tschipp.linear.api.LinearRenderBlockStateEvent;
@@ -42,7 +44,7 @@ import tschipp.linear.common.helper.LinearHelper;
 @EventBusSubscriber(modid = BuildersBag.MODID)
 public class LinearEvents
 {
-//	private static String lastTag = "";
+	// private static String lastTag = "";
 	private static int lastCount = 0;
 	private static int lastRequested = 0;
 	private static ItemStack lastSelected = ItemStack.EMPTY;
@@ -58,22 +60,22 @@ public class LinearEvents
 
 		requested -= event.getProvidedBlocks();
 
-		if(player.world.isRemote && ItemStack.areItemsEqual(lastSelected, stack))
-		{
-			if(lastRequested == requested)
-			{
-				event.setProvidedBlocks(event.getProvidedBlocks() + lastCount);
-				return;
-			}
-			if(rand.nextDouble() < 0.90 && requested - lastRequested == 1)
-			{
-				event.setProvidedBlocks(event.getProvidedBlocks() + lastCount + 1);
-				return;
-			}
-		}
-		
-		lastRequested = requested;
-		
+		// if(player.world.isRemote && ItemStack.areItemsEqual(lastSelected, stack))
+		// {
+		// if(lastRequested == requested)
+		// {
+		// event.setProvidedBlocks(event.getProvidedBlocks() + lastCount);
+		// return;
+		// }
+		// if(rand.nextDouble() < 0.90 && requested - lastRequested == 1)
+		// {
+		// event.setProvidedBlocks(event.getProvidedBlocks() + lastCount + 1);
+		// return;
+		// }
+		// }
+
+		// lastRequested = requested;
+
 		NonNullList<ItemStack> bags = InventoryHelper.getBagsInInventory(player);
 
 		int providedBlocks = 0;
@@ -89,22 +91,29 @@ public class LinearEvents
 			if (requested <= 0)
 				break;
 
+			if (player.world.isRemote)
+				BagCache.startSimulation(bag);
+
 			IBagCap bagCap = CapHelper.getBagCap(bag);
 			if (stack.getItem() instanceof ItemBlock)
 			{
 				if (bagCap.hasModuleAndEnabled("buildersbag:supplier"))
 				{
-					NonNullList<ItemStack> provided = InventoryHelper.getOrProvideStackWithCount(stack, requested, bagCap, player, null);
+					NonNullList<ItemStack> provided = BagHelper.getOrProvideStackWithCount(stack, requested + (player.world.isRemote ? 1 : 0), bagCap, player, null);
 					if (!provided.isEmpty())
-						providedBlocks += provided.size();
+						providedBlocks += provided.size() - (player.world.isRemote ? 1 : 0);
 
 					requested -= provided.size();
 
 					if (!player.world.isRemote)
 						for (ItemStack prov : provided)
-							InventoryHelper.addStack(prov, bagCap, player);
+							BagHelper.addStack(prov, bagCap, player);
 				}
 			}
+
+			if (player.world.isRemote)
+				BagCache.stopSimulation(bag);
+
 		}
 
 		if (stack.getItem() instanceof BuildersBagItem)
@@ -112,7 +121,7 @@ public class LinearEvents
 			IBagCap bagCap = CapHelper.getBagCap(stack);
 
 			ItemStack placementStack = ItemStack.EMPTY;
-			for (IBagModule module : InventoryHelper.getSortedModules(bagCap))
+			for (IBagModule module : BagHelper.getSortedModules(bagCap))
 			{
 				if (module.isEnabled() && module.isDominating())
 				{
@@ -129,6 +138,9 @@ public class LinearEvents
 			if (placementStack.isEmpty() || !(placementStack.getItem() instanceof ItemBlock))
 				return;
 
+			if (player.world.isRemote)
+				BagCache.startSimulation(stack);
+
 			NonNullList<ItemStack> provided = NonNullList.create();
 			int newlyProvided = 0;
 
@@ -136,27 +148,32 @@ public class LinearEvents
 			{
 				if (player.world.isRemote)
 				{
-					newlyProvided += InventoryHelper.getAllAvailableStacksCount(bagCap, player);
+					newlyProvided += BagHelper.getAllAvailableStacksCount(bagCap, player);
 					providedBlocks += newlyProvided;
-				} else
-					provided = InventoryHelper.getOrProvideStackWithCountDominating(requested, bagCap, player);
-			} else
-				provided = InventoryHelper.getOrProvideStackWithCount(placementStack, requested, bagCap, player, null);
+				}
+				else
+					provided = BagHelper.getOrProvideStackWithCountDominating(requested, bagCap, player);
+			}
+			else
+				provided = BagHelper.getOrProvideStackWithCount(placementStack, requested + (player.world.isRemote ? 1 : 0), bagCap, player, null);
 
 			if (!provided.isEmpty())
-				providedBlocks += provided.size();
+				providedBlocks += provided.size() - (player.world.isRemote ? 1 : 0);
 
 			if (!player.world.isRemote)
 				for (ItemStack prov : provided)
-					InventoryHelper.addStack(prov, bagCap, player);
+					BagHelper.addStack(prov, bagCap, player);
 
 			requested -= (provided.size() + newlyProvided);
+
+			if (player.world.isRemote)
+				BagCache.stopSimulation(stack);
 		}
 
 		event.setProvidedBlocks(event.getProvidedBlocks() + providedBlocks);
-		
-		lastCount = providedBlocks;
-		lastSelected = stack;
+
+		// lastCount = providedBlocks;
+		// lastSelected = stack;
 	}
 
 	@Method(modid = "linear")
@@ -183,20 +200,19 @@ public class LinearEvents
 
 					if (bag.hasModuleAndEnabled("buildersbag:supplier"))
 					{
-						ItemStack result = InventoryHelper.getOrProvideStack(stack, bag, player, null);
+						ItemStack result = BagHelper.getOrProvideStack(stack, bag, player, null);
 						if (!result.isEmpty())
 							stack.grow(1);
-						
+
 						BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, InventoryHelper.getSlotForStack(player, bagStack)), (EntityPlayerMP) player);
 						BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
 
 						return;
 					}
 				}
-				
-				
 
-			} else if (stack.getItem() instanceof BuildersBagItem)
+			}
+			else if (stack.getItem() instanceof BuildersBagItem)
 			{
 				IBagCap bag = CapHelper.getBagCap(stack);
 
@@ -207,7 +223,7 @@ public class LinearEvents
 				{
 					ItemStack placementStack = ItemStack.EMPTY;
 
-					for (IBagModule module : InventoryHelper.getSortedModules(bag))
+					for (IBagModule module : BagHelper.getSortedModules(bag))
 					{
 						if (module.isEnabled() && module.isDominating())
 						{
@@ -233,7 +249,7 @@ public class LinearEvents
 					if (!canEdit || !canPlace)
 						continue;
 
-					ItemStack result = player.isCreative() ? placementStack.copy() : InventoryHelper.getOrProvideStack(placementStack, bag, player, null);
+					ItemStack result = player.isCreative() ? placementStack.copy() : BagHelper.getOrProvideStack(placementStack, bag, player, null);
 
 					if (!result.isEmpty())
 					{
@@ -276,7 +292,7 @@ public class LinearEvents
 
 			for (int i = 0; i < 10; i++)
 			{
-				for (IBagModule module : InventoryHelper.getSortedModules(bag))
+				for (IBagModule module : BagHelper.getSortedModules(bag))
 				{
 					if (module.isEnabled() && module.isDominating())
 					{
@@ -323,18 +339,19 @@ public class LinearEvents
 
 			for (int i = 0; i < 10; i++)
 			{
-				for (IBagModule module : InventoryHelper.getSortedModules(bag))
+				for (IBagModule module : BagHelper.getSortedModules(bag))
 				{
 					if (module.isEnabled() && module.isDominating())
 					{
 						if (module.getName().equals("buildersbag:random"))
 						{
-							NonNullList<ItemStack> available = InventoryHelper.getAllAvailableStacks(bag, player);
+							NonNullList<ItemStack> available = BagHelper.getAllAvailableStacks(bag, player);
 							if (!available.isEmpty())
 							{
 								placementStack = available.get(BagItemStackRenderer.listIndex % available.size());
 							}
-						} else
+						}
+						else
 							placementStack = module.getBlock(bag, player);
 						break;
 					}

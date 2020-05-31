@@ -11,7 +11,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.AbstractBagModule;
 import tschipp.buildersbag.api.IBagCap;
-import tschipp.buildersbag.common.helper.InventoryHelper;
+import tschipp.buildersbag.common.helper.BagHelper;
 
 public class RandomnessModule extends AbstractBagModule
 {
@@ -35,7 +35,7 @@ public class RandomnessModule extends AbstractBagModule
 	public ItemStack getBlock(IBagCap bag, EntityPlayer player)
 	{
 		Random rand = new Random();
-		NonNullList<ItemStack> list = InventoryHelper.getAllAvailableStacks(bag, player);
+		NonNullList<ItemStack> list = BagHelper.getAllAvailableStacks(bag, player);
 		
 		NonNullList<ItemStack> blocks = NonNullList.create();
 		blocks.addAll(list.stream().filter(stack -> stack.getItem() instanceof ItemBlock).collect(Collectors.toList()));
@@ -72,9 +72,9 @@ public class RandomnessModule extends AbstractBagModule
 	}
 
 	@Override
-	public ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player)
+	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player)
 	{
-		return ItemStack.EMPTY;
+		return NonNullList.create();
 	}
 
 }

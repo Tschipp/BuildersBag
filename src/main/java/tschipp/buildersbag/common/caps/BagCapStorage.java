@@ -2,6 +2,7 @@ package tschipp.buildersbag.common.caps;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
@@ -35,6 +36,7 @@ public class BagCapStorage implements IStorage<IBagCap>
 		tag.setTag("inventory", inventory);
 		tag.setTag("modules", modules);
 		tag.setTag("selected", selected);
+		tag.setString("uuid", instance.getUUID());
 		
 		return tag;
 
@@ -42,12 +44,16 @@ public class BagCapStorage implements IStorage<IBagCap>
 
 	@Override
 	public void readNBT(Capability<IBagCap> capability, IBagCap instance, EnumFacing side, NBTBase nbt)
-	{
+	{	
 		NBTTagCompound tag = (NBTTagCompound) nbt;
 		NBTTagCompound inventory = tag.getCompoundTag("inventory");
 		NBTTagCompound selected = tag.getCompoundTag("selected");
 		NBTTagList modules = tag.getTagList("modules", 10);
-
+		String uuid = tag.getString("uuid");
+		
+		if(uuid.isEmpty())
+			uuid = UUID.randomUUID().toString();
+		
 		BagItemStackHandler handler = new BagItemStackHandler(0);
 		handler.deserializeNBT(inventory);
 		instance.setBlockInventory(handler);
@@ -55,6 +61,8 @@ public class BagCapStorage implements IStorage<IBagCap>
 		SelectedBlockHandler selectedHandler = new SelectedBlockHandler(1);
 		selectedHandler.deserializeNBT(selected);
 		instance.setSelectedInventory(selectedHandler);
+		
+		instance.setUUID(uuid);
 		
 		List<IBagModule> parsedModules = new ArrayList<IBagModule>();
 		for(int i = 0; i < modules.tagCount(); i++)

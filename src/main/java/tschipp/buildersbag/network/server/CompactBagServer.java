@@ -1,9 +1,10 @@
-package tschipp.buildersbag.network;
+package tschipp.buildersbag.network.server;
 
 import baubles.api.BaublesApi;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
@@ -16,28 +17,27 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.caps.BagCapProvider;
+import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
+import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
 
-public class SyncBagCapInventoryClient implements IMessage, IMessageHandler<SyncBagCapInventoryClient, IMessage>
+public class CompactBagServer implements IMessage, IMessageHandler<CompactBagServer, IMessage>
 {
 
-	private IBagCap bagCap;
 	public int slot;
-	public NBTTagCompound readTag;
 	public boolean isBauble;
 	
-	public SyncBagCapInventoryClient()
+	public CompactBagServer()
 	{
 	}
 	
-	public SyncBagCapInventoryClient(IBagCap bagCap, int slot)
+	public CompactBagServer(int slot)
 	{
-		this(bagCap, slot, false);
+		this(slot, false);
 	}
 	
-	public SyncBagCapInventoryClient(IBagCap bagCap, int slot, boolean isBauble)
+	public CompactBagServer(int slot, boolean isBauble)
 	{
-		this.bagCap = bagCap;
 		this.slot = slot;
 		this.isBauble = isBauble;
 	}
@@ -45,7 +45,6 @@ public class SyncBagCapInventoryClient implements IMessage, IMessageHandler<Sync
 	@Override
 	public void fromBytes(ByteBuf buf)
 	{
-		readTag = ByteBufUtils.readTag(buf);
 		slot = buf.readInt();
 		isBauble = buf.readBoolean();
 	}
@@ -53,19 +52,18 @@ public class SyncBagCapInventoryClient implements IMessage, IMessageHandler<Sync
 	@Override
 	public void toBytes(ByteBuf buf)
 	{
-		ByteBufUtils.writeTag(buf, (NBTTagCompound) BagCapProvider.BAG_CAPABILITY.writeNBT(bagCap, null));
 		buf.writeInt(slot);
 		buf.writeBoolean(isBauble);
 	}
 	
 	@Override
-	public IMessage onMessage(SyncBagCapInventoryClient message, MessageContext ctx)
+	public IMessage onMessage(CompactBagServer message, MessageContext ctx)
 	{
-		final IThreadListener mainThread = Minecraft.getMinecraft();
+		final IThreadListener mainThread = (IThreadListener)ctx.getServerHandler().player.world;
 
 		mainThread.addScheduledTask(() -> {
 
-			EntityPlayer player = BuildersBag.proxy.getPlayer();
+			EntityPlayer player = ctx.getServerHandler().player;
 			if (message.slot >= 0)
 			{
 				ItemStack stack = ItemStack.EMPTY;
@@ -81,7 +79,9 @@ public class SyncBagCapInventoryClient implements IMessage, IMessageHandler<Sync
 				if (!stack.isEmpty())
 				{
 					IBagCap oldCap = CapHelper.getBagCap(stack);
-					BagCapProvider.BAG_CAPABILITY.readNBT(oldCap, null, message.readTag);
+					
+					BagHelper.compactStacks(oldCap, player);
+					BuildersBag.network.sendTo(new SyncBagCapInventoryClient(oldCap, message.slot, message.isBauble), (EntityPlayerMP) player);
 				}
 			}
 		});

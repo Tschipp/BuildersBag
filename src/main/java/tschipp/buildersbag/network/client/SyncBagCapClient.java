@@ -1,4 +1,4 @@
-package tschipp.buildersbag.network;
+package tschipp.buildersbag.network.client;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
@@ -56,7 +56,7 @@ public class SyncBagCapClient implements IMessage, IMessageHandler<SyncBagCapCli
 
 			EntityPlayer player = BuildersBag.proxy.getPlayer();
 			ItemStack stack = message.right ? player.getHeldItemMainhand() : player.getHeldItemOffhand();
-
+	
 			IBagCap oldCap = CapHelper.getBagCap(stack);
 			BagCapProvider.BAG_CAPABILITY.readNBT(oldCap, null, message.readTag);
 		});

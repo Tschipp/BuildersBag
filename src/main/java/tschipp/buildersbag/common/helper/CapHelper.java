@@ -14,4 +14,9 @@ public class CapHelper
 		}
 		return null;
 	}
+	
+	public static boolean areCapsEqual(IBagCap one, IBagCap other)
+	{
+		return one.getUUID().equals(other.getUUID());
+	}
 }

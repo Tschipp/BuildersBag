@@ -7,7 +7,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import tschipp.buildersbag.api.IBagCap;
-import tschipp.buildersbag.common.helper.InventoryHelper;
+import tschipp.buildersbag.common.helper.BagHelper;
 
 public class StackProviderIInventoryWrapper implements IInventory
 {
@@ -22,7 +22,7 @@ public class StackProviderIInventoryWrapper implements IInventory
 		this.bag = bag;
 		this.stack = stack;
 		this.player = player;
-		this.availableStacks = InventoryHelper.getAllAvailableStacks(bag, player);
+		this.availableStacks = BagHelper.getAllAvailableStacks(bag, player);
 	}
 
 	@Override
@@ -46,7 +46,7 @@ public class StackProviderIInventoryWrapper implements IInventory
 	@Override
 	public int getSizeInventory()
 	{
-		return InventoryHelper.getAllAvailableStacks(bag, player).size();
+		return BagHelper.getAllAvailableStacks(bag, player).size();
 	}
 
 	@Override
@@ -58,8 +58,8 @@ public class StackProviderIInventoryWrapper implements IInventory
 	@Override
 	public ItemStack getStackInSlot(int index)
 	{
-		ItemStack provided = InventoryHelper.getOrProvideStack(availableStacks.get(index), bag, player, null);
-		this.availableStacks = InventoryHelper.getAllAvailableStacks(bag, player);
+		ItemStack provided = BagHelper.getOrProvideStack(availableStacks.get(index), bag, player, null);
+		this.availableStacks = BagHelper.getAllAvailableStacks(bag, player);
 		
 		return provided;
 	}

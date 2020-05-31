@@ -44,4 +44,16 @@ public class ClientProxy extends CommonProxy
 	{
 		item.setTileEntityItemStackRenderer(new BagItemStackRenderer());
 	}
+	
+	@Override
+	public void startWorking(String uuid, EntityPlayer player)
+	{
+		BagItemStackRenderer.working.add(uuid);
+	}
+	
+	@Override
+	public void stopWorking(String uuid, EntityPlayer player)
+	{
+		BagItemStackRenderer.working.remove(uuid);
+	}
 }

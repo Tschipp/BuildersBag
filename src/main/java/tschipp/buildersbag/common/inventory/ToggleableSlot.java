@@ -13,7 +13,7 @@ public class ToggleableSlot extends SlotItemHandler
 		super(itemHandler, index, xPosition, yPosition);
 	}
 	
-	public ToggleableSlot setEnabled(boolean bool)
+	public ToggleableSlot setSlotEnabled(boolean bool)
 	{
 		this.enabled = bool;
 		return this;
@@ -25,11 +25,15 @@ public class ToggleableSlot extends SlotItemHandler
 		return this;
 	}
 	
-	@Override
-	public boolean isEnabled()
+	public boolean isSlotEnabled()
 	{
 		return enabled;
 	}
 
+	@Override
+	public boolean isEnabled()
+	{
+		return this.isSlotEnabled();
+	}
 	
 }

@@ -1,44 +1,43 @@
-package tschipp.buildersbag.network;
+package tschipp.buildersbag.network.server;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.inventory.ContainerBag;
 
-public class SyncItemStackServer implements IMessage, IMessageHandler<SyncItemStackServer, IMessage>
+public class SyncModuleStateServer implements IMessage, IMessageHandler<SyncModuleStateServer, IMessage>
 {
 
-	private ItemStack stack;
-	private boolean right;
+	private NBTTagCompound tag;
+	private String name;
 	
-	public SyncItemStackServer()
+	public SyncModuleStateServer()
 	{
 	}
 	
-	public SyncItemStackServer(ItemStack stack, EnumHand hand)
+	public SyncModuleStateServer(String name, IBagModule module)
 	{
-		this.stack = stack;
-		this.right = hand == EnumHand.MAIN_HAND;
+		this.name = name;
+		this.tag = module.serializeNBT();
 	}
 	
 	@Override
-	public IMessage onMessage(SyncItemStackServer message, MessageContext ctx)
+	public IMessage onMessage(SyncModuleStateServer message, MessageContext ctx)
 	{
 		final IThreadListener mainThread = (IThreadListener)ctx.getServerHandler().player.world;
 		
 		mainThread.addScheduledTask(() -> {
 			
 			EntityPlayer player = ctx.getServerHandler().player;
-			ItemStack stack = message.right ? player.getHeldItemMainhand() : player.getHeldItemOffhand();
-			
-			stack.deserializeNBT(message.stack.serializeNBT());
-//			((ContainerBag)player.openContainer).processUpdate(stack);
+			((ContainerBag)player.openContainer).updateModule(message.name, message.tag);
 			
 		});
 		
@@ -48,15 +47,15 @@ public class SyncItemStackServer implements IMessage, IMessageHandler<SyncItemSt
 	@Override
 	public void fromBytes(ByteBuf buf)
 	{
-		stack = ByteBufUtils.readItemStack(buf);
-		right = buf.readBoolean();
+		tag = ByteBufUtils.readTag(buf);
+		name = ByteBufUtils.readUTF8String(buf);
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf)
 	{
-		ByteBufUtils.writeItemStack(buf, stack);
-		buf.writeBoolean(right);
+		ByteBufUtils.writeTag(buf, tag);
+		ByteBufUtils.writeUTF8String(buf, name);
 	}
 
 }

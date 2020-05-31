@@ -28,7 +28,24 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 	 * @param player
 	 * @return the newly created stack, with size 1
 	 */
-	public ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player);
+	default ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player)
+	{
+		NonNullList<ItemStack> list = createStackWithCount(stack, 1, bag, player);
+		if(list.isEmpty())
+			return ItemStack.EMPTY;
+		return list.get(0);
+	}
+	
+	/**
+	 * Creates the requested stack using some method. If any remainder stacks are created during this process,
+	 * they must be added with InventoryHelper.addStack.
+	 * @param stack the stack that is requested
+	 * @param count
+	 * @param bag
+	 * @param player
+	 * @return A list of the created stacks, all with size 1. If stacks cannot be created, return an empty list.
+	 */
+	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player);
 	
 	/**
 	 * Toggles this module

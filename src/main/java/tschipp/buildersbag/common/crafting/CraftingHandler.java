@@ -148,6 +148,9 @@ public class CraftingHandler
 
 	public static String[] getStackIngredientStrings(ItemStack output, boolean self)
 	{
+		if(output.isEmpty())
+			return new String[0];
+		
 		int[] ores = OreDictionary.getOreIDs(output);
 
 		List<String> oredict = new ArrayList<String>();
@@ -167,6 +170,18 @@ public class CraftingHandler
 		}
 
 		return oredict.toArray(new String[oredict.size()]);
+	}
+	
+	public static String getStackIngredientString(ItemStack output, boolean self)
+	{
+		String[] str = getStackIngredientStrings(output, self);
+		StringBuilder sb = new StringBuilder();
+		for(String s : str)
+		{
+			sb.append(s);
+		}
+		
+		return sb.toString();
 	}
 
 	public static String[] getIngredientStrings(Ingredient ing)
@@ -213,7 +228,7 @@ public class CraftingHandler
 				stack.setTagCompound(tag);
 			} catch (NBTException e)
 			{
-				e.printStackTrace();
+				return ItemStack.EMPTY;
 			}
 
 		}

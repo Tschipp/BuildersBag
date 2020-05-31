@@ -68,6 +68,9 @@ public class Configs {
 		@Config.RequiresMcRestart
 		@Comment("If recipes should be added that update a bag's modules (needed when new mods are added which add modules)")
 		public boolean addUpdateRecipes = false;
+		
+		@Comment("Whether the bag should render spinning gears while it is performing work")
+		public boolean drawWorkingState = true;
 
 	}
 

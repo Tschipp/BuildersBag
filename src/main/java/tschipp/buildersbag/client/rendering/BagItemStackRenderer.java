@@ -3,8 +3,10 @@ package tschipp.buildersbag.client.rendering;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.common.collect.Lists;
 
@@ -13,6 +15,7 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderItem;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
+import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemBlock;
@@ -26,8 +29,9 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
+import tschipp.buildersbag.common.config.BuildersBagConfig;
+import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
-import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.item.BuildersBagItem;
 
 @EventBusSubscriber(modid = BuildersBag.MODID, value = Side.CLIENT)
@@ -37,10 +41,11 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 
 	private Map<Integer, List<ItemStack>> possibleItems = new HashMap<Integer, List<ItemStack>>();
 	private Map<Integer, String> renderStack = new HashMap<Integer, String>();
+	public static Set<String> working = new HashSet<String>();
 	public static int listIndex;
 	private static int renderTimer = 0;
 	private static int renderTotal = 0;
-	
+
 	private static Method renderModelF;
 
 	static
@@ -57,17 +62,18 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 		Minecraft mc = Minecraft.getMinecraft();
 		World world = player.world;
 		RenderItem render = mc.getRenderItem();
+		IBakedModel gears = render.getItemModelMesher().getModelManager().getModel(new ModelResourceLocation("buildersbag:gears", "inventory"));
 
 		String serialized = stack.serializeNBT().toString();
 		int hash = stack.hashCode();
-		
-		if(renderStack.get(hash) == null)
+
+		if (renderStack.get(hash) == null)
 		{
 			renderStack.put(hash, serialized);
 			regenerateAvailablityList(stack);
 		}
-		
-		if(renderStack.get(hash) != null && !renderStack.get(hash).equals(serialized))
+
+		if (renderStack.get(hash) != null && !renderStack.get(hash).equals(serialized))
 		{
 			renderStack.put(hash, serialized);
 			regenerateAvailablityList(stack);
@@ -78,7 +84,7 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 		boolean random = bag.hasModuleAndEnabled("buildersbag:random");
 
 		List<ItemStack> possibleItems = this.possibleItems.get(hash);
-		
+
 		ItemStack selected = random ? (possibleItems.size() > 0 ? possibleItems.get(listIndex % possibleItems.size()) : ItemStack.EMPTY) : bag.getSelectedInventory().getStackInSlot(0);
 
 		IBakedModel selectedModel = render.getItemModelWithOverrides(selected, mc.world, mc.player);
@@ -106,7 +112,8 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 				renderModel(render, selectedModel, -1, selected);
 
 				GlStateManager.popMatrix();
-			} else if (transform == TransformType.FIRST_PERSON_LEFT_HAND || transform == TransformType.FIRST_PERSON_RIGHT_HAND)
+			}
+			else if (transform == TransformType.FIRST_PERSON_LEFT_HAND || transform == TransformType.FIRST_PERSON_RIGHT_HAND)
 			{
 				GlStateManager.pushMatrix();
 
@@ -117,7 +124,8 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 
 					GlStateManager.rotate(90, 0, 1, 0);
 					GlStateManager.rotate(25, 1, 0, 0);
-				} else
+				}
+				else
 				{
 					GlStateManager.translate(1, 0.22, 0.4);
 					GlStateManager.scale(1.8, 1.8, 1.8);
@@ -143,7 +151,8 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 				renderModel(render, selectedModel, -1, selected);
 
 				GlStateManager.popMatrix();
-			} else
+			}
+			else
 			{
 				GlStateManager.pushMatrix();
 				renderModel(render, renderModel, -1, stack);
@@ -151,6 +160,7 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 
 				if (transform == TransformType.GUI)
 				{
+
 					GlStateManager.pushMatrix();
 
 					GlStateManager.enableLighting();
@@ -166,12 +176,22 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 					GlStateManager.translate(-0.5F, -0.5F, -0.5F);
 
 					renderModel(render, selectedModel, -1, selected);
-
 					GlStateManager.popMatrix();
+
+					if (BuildersBagConfig.Settings.drawWorkingState && this.working.contains(bag.getUUID()))
+					{
+						GlStateManager.pushMatrix();
+						GlStateManager.scale(0.7, 0.7, 0.7);
+						GlStateManager.translate(0, 0.0, 2);
+						renderModel(render, gears, -1, stack);
+						GlStateManager.popMatrix();
+					}
+
 				}
 
 			}
-		} else
+		}
+		else
 		{
 			renderModel(render, renderModel, -1, stack);
 		}
@@ -190,11 +210,13 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 				GlStateManager.enableRescaleNormal();
 				TileEntityItemStackRenderer.instance.renderByItem(stack);
 				GlStateManager.popMatrix();
-			} else
+			}
+			else
 			{
 				renderModelF.invoke(render, model, color, stack);
 			}
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
+		}
+		catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
 		{
 		}
 	}
@@ -204,30 +226,29 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 		if (!(bagStack.getItem() instanceof BuildersBagItem))
 			return;
 
-		if(renderTotal >= 10000)
+		if (renderTotal >= 10000)
 		{
 			this.possibleItems.clear();
 			this.renderStack.clear();
 			this.renderTotal = 0;
 		}
-		
-		
+
 		List<ItemStack> list = possibleItems.get(bagStack.hashCode());
-		if(list == null)
+		if (list == null)
 			list = Lists.newArrayList();
-		
+
 		IBagCap cap = CapHelper.getBagCap(bagStack);
 
 		if (!cap.hasModuleAndEnabled("buildersbag:random"))
 			return;
 
 		list.clear();
-		for(ItemStack s : InventoryHelper.getAllAvailableStacks(cap, Minecraft.getMinecraft().player))
+		for (ItemStack s : BagHelper.getAllAvailableStacks(cap, Minecraft.getMinecraft().player))
 		{
-			if(s.getItem() instanceof ItemBlock)
+			if (s.getItem() instanceof ItemBlock)
 				list.add(s);
 		}
-		
+
 		possibleItems.put(bagStack.hashCode(), list);
 	}
 

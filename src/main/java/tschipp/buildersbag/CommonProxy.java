@@ -3,6 +3,7 @@ package tschipp.buildersbag;
 import java.lang.reflect.Field;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -12,6 +13,7 @@ import net.minecraftforge.fml.common.network.FMLEmbeddedChannel;
 import net.minecraftforge.fml.common.network.FMLEventChannel;
 import net.minecraftforge.fml.common.network.NetworkEventFiringHandler;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.thread.SidedThreadGroups;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import tschipp.buildersbag.common.BuildersBagRegistry;
@@ -22,16 +24,21 @@ import tschipp.buildersbag.compat.bbw.BBWCompat;
 import tschipp.buildersbag.compat.botania.BotaniaCompat;
 import tschipp.buildersbag.compat.chisel.ChiselEvents;
 import tschipp.buildersbag.compat.linear.LinearCompatManager;
-import tschipp.buildersbag.network.GrowItemClient;
-import tschipp.buildersbag.network.OpenBaubleBagServer;
-import tschipp.buildersbag.network.SetHeldItemClient;
-import tschipp.buildersbag.network.SyncBagCapClient;
-import tschipp.buildersbag.network.SyncBagCapInventoryClient;
-import tschipp.buildersbag.network.CompactBagServer;
-import tschipp.buildersbag.network.SyncBagCapServer;
-import tschipp.buildersbag.network.SyncEnderchestToClient;
-import tschipp.buildersbag.network.SyncItemStackServer;
-import tschipp.buildersbag.network.SyncModuleStateServer;
+import tschipp.buildersbag.network.client.GrowItemClient;
+import tschipp.buildersbag.network.client.ModifyCacheClient;
+import tschipp.buildersbag.network.client.SetHeldItemClient;
+import tschipp.buildersbag.network.client.SetWorkStateClient;
+import tschipp.buildersbag.network.client.SyncBagCapClient;
+import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
+import tschipp.buildersbag.network.client.SyncBagCapServer;
+import tschipp.buildersbag.network.client.SyncEnderchestToClient;
+import tschipp.buildersbag.network.client.UpdateCacheClient;
+import tschipp.buildersbag.network.server.CompactBagServer;
+import tschipp.buildersbag.network.server.OpenBaubleBagServer;
+import tschipp.buildersbag.network.server.RequestBagUpdateServer;
+import tschipp.buildersbag.network.server.RequestCacheUpdateServer;
+import tschipp.buildersbag.network.server.SyncItemStackServer;
+import tschipp.buildersbag.network.server.SyncModuleStateServer;
 
 public class CommonProxy
 {
@@ -57,22 +64,27 @@ public class CommonProxy
 		BuildersBag.network.registerMessage(SyncEnderchestToClient.class, SyncEnderchestToClient.class, 7, Side.CLIENT);
 		BuildersBag.network.registerMessage(SyncBagCapServer.class, SyncBagCapServer.class, 8, Side.SERVER);
 		BuildersBag.network.registerMessage(CompactBagServer.class, CompactBagServer.class, 9, Side.SERVER);
+		BuildersBag.network.registerMessage(RequestCacheUpdateServer.class, RequestCacheUpdateServer.class, 10, Side.SERVER);
+		BuildersBag.network.registerMessage(UpdateCacheClient.class, UpdateCacheClient.class, 11, Side.CLIENT);
+		BuildersBag.network.registerMessage(ModifyCacheClient.class, ModifyCacheClient.class, 12, Side.CLIENT);
+		BuildersBag.network.registerMessage(SetWorkStateClient.class, SetWorkStateClient.class, 13, Side.CLIENT);
+		BuildersBag.network.registerMessage(RequestBagUpdateServer.class, RequestBagUpdateServer.class, 14, Side.SERVER);
 
 		NetworkRegistry.INSTANCE.registerGuiHandler(BuildersBag.instance, new BagGuiHandler());
 		BuildersBagRegistry.registerModules();
 
 		BuildersBagConfig.setDefaultsOnFirstLoad();
-		
+
 		BuildersBagRegistry.registerCapabilities();
 		BuildersBagRegistry.registerItems();
 	}
 
 	public void init(FMLInitializationEvent event)
 	{
-		if(Loader.isModLoaded("betterbuilderswands"))
+		if (Loader.isModLoaded("betterbuilderswands"))
 			BBWCompat.register();
-		
-		if(Loader.isModLoaded("botania"))
+
+		if (Loader.isModLoaded("botania"))
 			BotaniaCompat.register();
 
 	}
@@ -89,25 +101,40 @@ public class CommonProxy
 			{
 				FMLEventChannel fmleventChannel = (FMLEventChannel) eventChannel.get(handler);
 				fmleventChannel.register(new ChiselEvents());
-			} catch (IllegalArgumentException | IllegalAccessException e)
+			}
+			catch (IllegalArgumentException | IllegalAccessException e)
 			{
 				e.printStackTrace();
 			}
 		}
-		
-		if(Loader.isModLoaded("linear"))
+
+		if (Loader.isModLoaded("linear"))
 			LinearCompatManager.register();
 
 	}
-	
+
 	public EntityPlayer getPlayer()
 	{
 		return null;
 	}
-	
+
 	public void setTEISR(Item item)
 	{
-		
+	}
+
+	public Side getSide()
+	{
+		return Thread.currentThread().getThreadGroup() == SidedThreadGroups.SERVER ? Side.SERVER : Side.CLIENT;
+	}
+	
+	public void startWorking(String uuid, EntityPlayer player)
+	{
+		BuildersBag.network.sendTo(new SetWorkStateClient(uuid, true), (EntityPlayerMP) player);
+	}
+	
+	public void stopWorking(String uuid, EntityPlayer player)
+	{
+		BuildersBag.network.sendTo(new SetWorkStateClient(uuid, false), (EntityPlayerMP) player);
 	}
 
 }

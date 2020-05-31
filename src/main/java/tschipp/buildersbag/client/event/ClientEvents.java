@@ -27,8 +27,8 @@ import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.client.BuildersBagKeybinds;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.item.BuildersBagItem;
-import tschipp.buildersbag.network.OpenBaubleBagServer;
-import tschipp.buildersbag.network.SyncBagCapServer;
+import tschipp.buildersbag.network.client.SyncBagCapServer;
+import tschipp.buildersbag.network.server.OpenBaubleBagServer;
 
 @EventBusSubscriber(modid = BuildersBag.MODID, value = Side.CLIENT)
 public class ClientEvents

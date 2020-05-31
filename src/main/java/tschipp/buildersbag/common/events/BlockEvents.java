@@ -13,17 +13,21 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.util.FakePlayer;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.common.cache.BagCache;
+import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.compat.linear.LinearCompatManager;
-import tschipp.buildersbag.network.SyncBagCapInventoryClient;
-import tschipp.buildersbag.network.SyncEnderchestToClient;
+import tschipp.buildersbag.network.client.SetHeldItemClient;
+import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
+import tschipp.buildersbag.network.client.SyncEnderchestToClient;
 
 @EventBusSubscriber(modid = BuildersBag.MODID)
 public class BlockEvents
@@ -56,22 +60,28 @@ public class BlockEvents
 				for (ItemStack bag : bags)
 				{
 					IBagCap bagCap = CapHelper.getBagCap(bag);
-					for (IBagModule module : InventoryHelper.getSortedModules(bagCap))
+					for (IBagModule module : BagHelper.getSortedModules(bagCap))
 					{
 						if (module.isEnabled() && module.isSupplier() && (Loader.isModLoaded("linear") ? !LinearCompatManager.isDragging(player) : true))
 						{
+
 							ItemStack provided = module.createStack(placementItem, bagCap, player);
 							if (!provided.isEmpty())
 							{
-								placementItem.grow(1);
+								ItemStack s = placementItem.copy();
 
+								placementItem.grow(1);
+								
 								if (!player.world.isRemote)
 								{
 									BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, InventoryHelper.getSlotForStack(player, bag)), (EntityPlayerMP) player);
-									BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
+									BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);	
 								}
 								return;
 							}
+							else if(world.isRemote)
+								placementItem.grow(1);
+
 						}
 					}
 				}
@@ -92,4 +102,9 @@ public class BlockEvents
 		}
 	}
 
+	@SubscribeEvent
+	public static void onExitWorld(WorldEvent.Unload event)
+	{
+		BagCache.clearCache();
+	}
 }

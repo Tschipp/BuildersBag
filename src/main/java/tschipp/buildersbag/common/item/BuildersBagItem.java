@@ -2,6 +2,7 @@ package tschipp.buildersbag.common.item;
 
 import javax.annotation.Nonnull;
 
+import com.creativemd.creativecore.common.utils.type.HashMapList;
 import com.creativemd.littletiles.common.api.ILittleIngredientInventory;
 import com.creativemd.littletiles.common.api.ILittleIngredientSupplier;
 import com.creativemd.littletiles.common.util.ingredient.LittleIngredients;
@@ -38,15 +39,14 @@ import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.caps.BagCapProvider;
+import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
-import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.modules.LittleTilesModule;
 import tschipp.buildersbag.compat.botania.BotaniaCompat;
 import tschipp.buildersbag.compat.linear.LinearCompatManager;
-import tschipp.buildersbag.compat.littletiles.NonModifiableLittleIngredients;
-import tschipp.buildersbag.network.SyncBagCapClient;
-import tschipp.buildersbag.network.SyncBagCapInventoryClient;
-import tschipp.buildersbag.network.SyncEnderchestToClient;
+import tschipp.buildersbag.network.client.SyncBagCapClient;
+import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
+import tschipp.buildersbag.network.client.SyncEnderchestToClient;
 import vazkii.botania.api.item.IBlockProvider;
 
 @InterfaceList(value = { @Interface(modid = "littletiles", iface = "com.creativemd.littletiles.common.api.ILittleIngredientSupplier"), @Interface(modid = "littletiles", iface = "com.creativemd.littletiles.common.api.ILittleIngredientInventory"), @Interface(modid = "botania", iface = "vazkii.botania.api.item.IBlockProvider"), @Interface(modid = "baubles", iface = "baubles.api.IBauble") })
@@ -92,10 +92,11 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 		if (player.isSneaking())
 			return EnumActionResult.PASS;
 
+		ItemStack stack = player.getHeldItem(hand);
+		IBagCap bag = CapHelper.getBagCap(stack);		
+		
 		if (!world.isRemote)
 		{
-			ItemStack stack = player.getHeldItem(hand);
-			IBagCap bag = CapHelper.getBagCap(stack);
 			FakePlayer fake = new FakePlayer((WorldServer) world, player.getGameProfile());
 			fake.rotationPitch = player.rotationPitch;
 			fake.rotationYaw = player.rotationYaw;
@@ -103,7 +104,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 
 			ItemStack placementStack = ItemStack.EMPTY;
 
-			for (IBagModule module : InventoryHelper.getSortedModules(bag))
+			for (IBagModule module : BagHelper.getSortedModules(bag))
 			{
 				if (module.isEnabled() && module.isDominating())
 				{
@@ -140,11 +141,11 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			}
 
 			if (!player.isCreative())
-				placementStack = InventoryHelper.getOrProvideStack(placementStack, bag, player, null);
+				placementStack = BagHelper.getOrProvideStack(placementStack, bag, player, null);
 			else
 				placementStack = placementStack.copy();
 
-			InventoryHelper.resetRecursionDepth(player);
+			BagHelper.resetRecursionDepth(player);
 			
 			if (placementStack.isEmpty())
 			{
@@ -159,7 +160,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			EnumActionResult result = placementStack.onItemUse(fake, world, pos, hand, facing, hitX, hitY, hitZ);
 
 			if (result != EnumActionResult.SUCCESS)
-				InventoryHelper.addStack(placementStack, bag, player);
+				BagHelper.addStack(placementStack, bag, player);
 			else
 				player.swingArm(hand);
 
@@ -202,14 +203,14 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 	@Override
 	public LittleIngredients getInventory(ItemStack stack)
 	{
-		IBagCap bag = CapHelper.getBagCap(stack);
+//		IBagCap bag = CapHelper.getBagCap(stack);
+//
+//		if (bag.hasModuleAndEnabled("buildersbag:littletiles"))
+//		{
+//			return LittleTilesModule.getAvailableIngredients(stack);
+//		}
 
-		if (bag.hasModuleAndEnabled("buildersbag:littletiles"))
-		{
-			return LittleTilesModule.getAvailableIngredients(stack);
-		}
-
-		return new NonModifiableLittleIngredients();
+		return new LittleIngredients();
 	}
 
 	@Optional.Method(modid = "littletiles")
@@ -226,7 +227,21 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			}
 		}
 	}
+	
+	@Optional.Method(modid = "littletiles")
+	@Override
+	public void collect(HashMapList<String, ItemStack> list, ItemStack stack, EntityPlayer player)
+	{
+		if (stack.getItem() instanceof BuildersBagItem)
+		{
+			IBagCap bag = CapHelper.getBagCap(stack);
 
+			if (bag.hasModuleAndEnabled("buildersbag:littletiles"))
+			{
+				LittleTilesModule.setAvailableIngredients(list, stack, bag, player);
+			}
+		}
+	}
 	
 	/*
 	 * BOTANIA COMPAT

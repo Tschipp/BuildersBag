@@ -24,11 +24,13 @@ import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.inventory.ContainerBag;
-import tschipp.buildersbag.network.CompactBagServer;
-import tschipp.buildersbag.network.SyncModuleStateServer;
+import tschipp.buildersbag.network.server.CompactBagServer;
+import tschipp.buildersbag.network.server.RequestBagUpdateServer;
+import tschipp.buildersbag.network.server.SyncModuleStateServer;
 
 public class GuiBag extends GuiContainer
 {
@@ -50,6 +52,8 @@ public class GuiBag extends GuiContainer
 
 	private static int TEX_HEIGHT = 60;
 	private static int TEX_WIDTH = 54;
+	
+	private boolean isNew = true;
 	
 	public GuiBag(ContainerBag container, EntityPlayer player)
 	{
@@ -80,6 +84,12 @@ public class GuiBag extends GuiContainer
 		super.drawScreen(mouseX, mouseY, partialTicks);
 		this.renderHoveredToolTip(mouseX, mouseY);
 
+		if(isNew)
+		{
+			isNew = false;
+			BuildersBag.network.sendToServer(new RequestBagUpdateServer(slot, isBauble));
+		}
+		
 		int mX = mouseX - guiLeft;
 		int mY = mouseY - guiTop;
 
@@ -173,7 +183,7 @@ public class GuiBag extends GuiContainer
 		if(mousePosX >= this.compactButtonX && mousePosX <= this.compactButtonX + 32 && mousePosY >= this.compactButtonY && mousePosY <= this.compactButtonY + 32)
 		{
 			player.playSound(SoundEvents.UI_BUTTON_CLICK, 1.0F, 1.0f);
-			InventoryHelper.compactStacks(CapHelper.getBagCap(bag), player);
+			BagHelper.compactStacks(CapHelper.getBagCap(bag), player);
 			BuildersBag.network.sendToServer(new CompactBagServer(container.slot, container.isBauble));
 			container.update();
 		}

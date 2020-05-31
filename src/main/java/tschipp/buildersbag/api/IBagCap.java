@@ -23,5 +23,9 @@ public interface IBagCap
 
 	public void reInit(int tier);
 	
+	public String getUUID();
+	
+	public void setUUID(String uuid);
+	
 	public IBagCap copy();
 }
