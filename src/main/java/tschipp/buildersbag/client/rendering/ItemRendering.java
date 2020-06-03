@@ -19,7 +19,7 @@ public class ItemRendering
 		register(BuildersBagRegistry.tier5);
 		
 		ResourceLocation loc = new ModelResourceLocation("buildersbag:gears", "inventory");
-		ModelLoader.registerItemVariants(Items.COAL, loc);
+		ModelLoader.registerItemVariants(Items.AIR, loc);
 //		Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, definition);
 	}
 	
