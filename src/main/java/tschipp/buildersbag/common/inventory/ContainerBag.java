@@ -51,6 +51,7 @@ public class ContainerBag extends Container
 	public int slot = -1;
 
 	private List<Slot> inventoryBagSlots = new ArrayList<Slot>();
+	private Slot selectedBlockSlot;
 
 	public int invSize;
 	public String name;
@@ -62,7 +63,7 @@ public class ContainerBag extends Container
 	{
 		this(player, bag);
 		this.hand = hand;
-		
+
 		sync();
 	}
 
@@ -71,10 +72,9 @@ public class ContainerBag extends Container
 		this(player, bag);
 		this.slot = baubleSlot;
 		this.isBauble = true;
-		
+
 		sync();
 	}
-	
 
 	private ContainerBag(EntityPlayer player, ItemStack bag)
 	{
@@ -84,7 +84,7 @@ public class ContainerBag extends Container
 		this.inv = bagCap.getBlockInventory();
 		this.invSize = inv.getSlots();
 		this.slot = InventoryHelper.getSlotForStack(player, bag);
-		
+
 		this.leftOffset = Math.max(InventoryHelper.getBagExtraLeft(CapHelper.getBagCap(bag)), InventoryHelper.getBagExtraRight(CapHelper.getBagCap(bag)));
 
 		if (bag.hasDisplayName())
@@ -95,13 +95,11 @@ public class ContainerBag extends Container
 		setupInventories();
 	}
 
-	
-	
 	private void setupInventories()
 	{
 		setupPlayerInventory();
 		setupBagInventory();
-		setupModuleInventories();		
+		setupModuleInventories();
 	}
 
 	private void setupBagInventory()
@@ -124,8 +122,7 @@ public class ContainerBag extends Container
 			}
 		}
 
-		addSlotToContainer(new SelectedBlockSlot(bagCap.getSelectedInventory(), 0, 80 + leftOffset, -24));
-
+		selectedBlockSlot = addSlotToContainer(new SelectedBlockSlot(bagCap.getSelectedInventory(), 0, 80 + leftOffset, -24));
 	}
 
 	private void setupPlayerInventory()
@@ -212,7 +209,8 @@ public class ContainerBag extends Container
 				{
 					addSlotToContainer(new ToggleableSlot(handler, slotIndex++, x - j * 18 - 16 + leftOffset, y).setSlotEnabled(module.isExpanded()));
 				}
-			} else
+			}
+			else
 
 				x = -41;
 			y += 34;
@@ -238,12 +236,14 @@ public class ContainerBag extends Container
 				if (!this.mergeItemStack(stack, 36 + invSize + 1, this.inventorySlots.size(), false))
 					return ItemStack.EMPTY;
 
-		} else if (index >= 9 * 4 && index < 9 * (4 + rows))
+		}
+		else if (index >= 9 * 4 && index < 9 * (4 + rows))
 		{
 			// Item is in bag inventory
 			if (!this.mergeItemStack(stack, 0, 36, false))
 				return ItemStack.EMPTY;
-		} else
+		}
+		else
 		{
 			// Item is somewhere else in bag
 			if (!this.mergeItemStack(stack, 0, 36, false))
@@ -273,7 +273,8 @@ public class ContainerBag extends Container
 					{
 						break;
 					}
-				} else if (i >= endIndex)
+				}
+				else if (i >= endIndex)
 				{
 					break;
 				}
@@ -301,7 +302,8 @@ public class ContainerBag extends Container
 						itemstack.setCount(j);
 						slot.onSlotChanged();
 						flag = true;
-					} else if (itemstack.getCount() < maxSize)
+					}
+					else if (itemstack.getCount() < maxSize)
 					{
 						stack.shrink(maxSize - itemstack.getCount());
 						itemstack.setCount(maxSize);
@@ -313,7 +315,8 @@ public class ContainerBag extends Container
 				if (reverseDirection)
 				{
 					--i;
-				} else
+				}
+				else
 				{
 					++i;
 				}
@@ -325,7 +328,8 @@ public class ContainerBag extends Container
 			if (reverseDirection)
 			{
 				i = endIndex - 1;
-			} else
+			}
+			else
 			{
 				i = startIndex;
 			}
@@ -338,7 +342,8 @@ public class ContainerBag extends Container
 					{
 						break;
 					}
-				} else if (i >= endIndex)
+				}
+				else if (i >= endIndex)
 				{
 					break;
 				}
@@ -361,7 +366,8 @@ public class ContainerBag extends Container
 					if (stack.getCount() > slot1.getSlotStackLimit())
 					{
 						slot1.putStack(stack.splitStack(slot1.getSlotStackLimit()));
-					} else
+					}
+					else
 					{
 						slot1.putStack(stack.splitStack(stack.getCount()));
 					}
@@ -374,7 +380,8 @@ public class ContainerBag extends Container
 				if (reverseDirection)
 				{
 					--i;
-				} else
+				}
+				else
 				{
 					++i;
 				}
@@ -392,7 +399,8 @@ public class ContainerBag extends Container
 
 	public void updateModule(String name, NBTTagCompound nbt)
 	{
-		modules.forEach((module, triple) -> {
+		modules.forEach((module, triple) ->
+		{
 			if (module.getName().equals(name))
 			{
 				module.deserializeNBT(nbt);
@@ -420,10 +428,10 @@ public class ContainerBag extends Container
 				BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (EntityPlayerMP) player);
 		}
 	}
-	
+
 	@Override
 	public boolean canInteractWith(EntityPlayer player)
-	{		
+	{
 		if (Loader.isModLoaded("baubles"))
 		{
 			return isBauble ? BaublesApi.getBaubles(player).getStackInSlot(this.slot) == bag : !player.getHeldItem(hand).isEmpty() && player.getHeldItem(hand) == bag;
@@ -434,6 +442,17 @@ public class ContainerBag extends Container
 	@Override
 	public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player)
 	{
+		if (slotId == selectedBlockSlot.slotNumber)
+		{
+			ItemStack mouseItem = player.inventory.getItemStack().copy();
+			if (selectedBlockSlot.isItemValid(mouseItem) || mouseItem.isEmpty())
+			{
+				mouseItem.setCount(1);
+				selectedBlockSlot.putStack(mouseItem);
+			}
+			return ItemStack.EMPTY;
+		}
+
 		ItemStack ret = super.slotClick(slotId, dragType, clickTypeIn, player);
 
 		sync();
@@ -445,9 +464,9 @@ public class ContainerBag extends Container
 	public void onContainerClosed(EntityPlayer playerIn)
 	{
 		super.onContainerClosed(playerIn);
-		
+
 		sync();
-		
+
 		BagCache.clearBagCache(bag);
 	}
 
