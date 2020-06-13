@@ -23,6 +23,7 @@ import net.minecraft.util.NonNullList;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.data.Tuple;
 import tschipp.buildersbag.common.helper.InventoryHelper;
+import tschipp.buildersbag.compat.gamestages.StageHelper;
 
 //Don't touch this class, just hope that it works
 public class RecipeTreeNew
@@ -124,9 +125,14 @@ public class RecipeTreeNew
 				if(this.blacklistedRecipes.contains(parent.getSecond()))
 					continue;
 				
+				if(!StageHelper.hasStage(player, parent.getSecond().getStage()))
+					continue;
+				
 				RecipeNode p = parent.getFirst();
 				if (!markedNodes.containsKey(p.id))
 				{
+					
+					
 					if (this.rootNodes.containsKey(p.id))
 					{	
 						parentNode = p;
@@ -151,6 +157,9 @@ public class RecipeTreeNew
 			for (Tuple<RecipeNode, RecipeContainer> child : current.adjacentNodes)
 			{
 				if(this.blacklistedRecipes.contains(child.getSecond()))
+					continue;
+				
+				if(!StageHelper.hasStage(player, child.getSecond().getStage()))
 					continue;
 				
 				RecipeNode c = child.getFirst();

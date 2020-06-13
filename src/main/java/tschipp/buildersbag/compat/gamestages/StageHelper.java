@@ -1,8 +1,12 @@
-package tschipp.buildersbag.common.helper;
+package tschipp.buildersbag.compat.gamestages;
 
 import java.lang.reflect.Method;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.Tuple;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
 
@@ -53,6 +57,21 @@ public class StageHelper
 		}
 	}
 
+	public static String getItemStage(ItemStack stack)
+	{
+		if(Loader.isModLoaded("itemstages"))
+			return ItemStageHelper.getItemStage(stack);
+		return "";
+	}
+	
+	public static Tuple<String, IBlockState> getOreStage(IBlockState block)
+	{
+		if(Loader.isModLoaded("orestages"))
+			return OreStageHelper.getOreStage(block);
+		return new Tuple("", Blocks.AIR.getDefaultState());
+	}
+	
+	
 	public static boolean hasStage(EntityPlayer player, String stage)
 	{
 		if (Loader.isModLoaded("gamestages"))
@@ -89,5 +108,8 @@ public class StageHelper
 
 		return true;
 	}
+	
+	
+	
 
 }

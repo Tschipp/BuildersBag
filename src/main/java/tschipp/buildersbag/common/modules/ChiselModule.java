@@ -43,7 +43,8 @@ public class ChiselModule extends AbstractBagModule
 		NonNullList<ItemStack> list = NonNullList.create();
 
 		ItemStack chisel = handler.getStackInSlot(0);
-		if (chisel.isEmpty())
+
+		if (chisel.isEmpty() || !validTinkersChisel(chisel))
 			return list;
 
 		Set<ICarvingGroup> groups = new HashSet<ICarvingGroup>();
@@ -112,13 +113,13 @@ public class ChiselModule extends AbstractBagModule
 			return list;
 
 		ItemStack chisel = handler.getStackInSlot(0);
-		if (chisel.isEmpty())
+
+		if (chisel.isEmpty() || !validTinkersChisel(chisel))
 			return list;
 
 		NonNullList<ItemStack> availableBlocks = InventoryHelper.getInventoryStacks(bag, player);
 
 		NonNullList<ItemStack> providedVariants = NonNullList.create();
-
 
 		for (ICarvingVariation variant : group)
 		{
@@ -134,39 +135,41 @@ public class ChiselModule extends AbstractBagModule
 					break;
 			}
 		}
-		
+
 		for (ICarvingVariation variant : group)
 		{
-			if(providedVariants.size() < count)
+			if (providedVariants.size() < count)
 			{
 				NonNullList<ItemStack> provided = BagHelper.getOrProvideStackWithCount(variant.getStack(), count - providedVariants.size(), bag, player, this);
 				providedVariants.addAll(provided);
 			}
 		}
-		
+
 		if (!providedVariants.isEmpty())
 		{
 			if (!player.world.isRemote)
 			{
 				for (int i = 0; i < providedVariants.size(); i++)
 				{
-					if (chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
+					if (!validTinkersChisel(chisel) || chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
 					{
 						list.add(stack.copy());
-						chisel.shrink(1);
-						
-						for(int j = i; j < providedVariants.size(); j++)
+
+						if (!chisel.getItem().getRegistryName().toString().equals("tcomplement:chisel"))
+							chisel.shrink(1);
+
+						for (int j = i; j < providedVariants.size(); j++)
 						{
 							BagHelper.addStack(providedVariants.get(j), bag, player);
 						}
-						
+
 						break;
 					}
 					else
 						list.add(stack.copy());
 				}
 			}
-			
+
 			return list;
 		}
 
@@ -180,7 +183,7 @@ public class ChiselModule extends AbstractBagModule
 			return toCompact;
 
 		ItemStack chisel = handler.getStackInSlot(0);
-		if (chisel.isEmpty())
+		if (chisel.isEmpty() || !validTinkersChisel(chisel))
 			return toCompact;
 
 		NonNullList<ItemStack> compacted = NonNullList.create();
@@ -243,7 +246,7 @@ public class ChiselModule extends AbstractBagModule
 				int stackCount = totalCount / 64;
 				for (int i = 0; i < stackCount; i++)
 				{
-					if (!chisel.isEmpty())
+					if (!chisel.isEmpty() && validTinkersChisel(chisel))
 					{
 						ItemStack s = maxVari.getStack();
 						s.setCount(64);
@@ -261,7 +264,7 @@ public class ChiselModule extends AbstractBagModule
 						chiselEmpty = true;
 				}
 
-				if (!chisel.isEmpty())
+				if (!chisel.isEmpty() && validTinkersChisel(chisel))
 				{
 					ItemStack s = maxVari.getStack();
 					s.setCount(totalCount % 64);
@@ -316,6 +319,16 @@ public class ChiselModule extends AbstractBagModule
 		}
 
 		return compacted;
+	}
+
+	public static boolean validTinkersChisel(ItemStack stack)
+	{
+		if (stack.getItem().getRegistryName().toString().equals("tcomplement:chisel"))
+		{
+			return stack.getItemDamage() != stack.getMaxDamage();
+		}
+		else
+			return true;
 	}
 
 }

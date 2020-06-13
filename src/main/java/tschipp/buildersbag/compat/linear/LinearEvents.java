@@ -60,22 +60,6 @@ public class LinearEvents
 
 		requested -= event.getProvidedBlocks();
 
-		// if(player.world.isRemote && ItemStack.areItemsEqual(lastSelected, stack))
-		// {
-		// if(lastRequested == requested)
-		// {
-		// event.setProvidedBlocks(event.getProvidedBlocks() + lastCount);
-		// return;
-		// }
-		// if(rand.nextDouble() < 0.90 && requested - lastRequested == 1)
-		// {
-		// event.setProvidedBlocks(event.getProvidedBlocks() + lastCount + 1);
-		// return;
-		// }
-		// }
-
-		// lastRequested = requested;
-
 		NonNullList<ItemStack> bags = InventoryHelper.getBagsInInventory(player);
 
 		int providedBlocks = 0;

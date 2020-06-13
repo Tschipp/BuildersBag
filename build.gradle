@@ -51,6 +51,10 @@ repositories {
         url "https://maven.tterrag.com/"
     }
 	
+	 maven { 
+		url 'https://maven.mcmoddev.com'
+	}
+	
 	maven {
 		url "https://maven.blamejared.com/"
 	}
@@ -61,7 +65,7 @@ repositories {
 	
 	maven {
         name = "thiakil"
-        url = "http://maven.thiakil.com" //Baubles
+        url = "https://maven.thiakil.com" //Baubles
     }
 }
 
@@ -77,25 +81,25 @@ dependencies {
 	deobfCompile "tschipp.linear:linear-1.12.2:${linear_version}" //Linear
 	deobfCompile "vazkii.botania:Botania:${botania_version}" //Botania
 	deobfCompile "com.azanor.baubles:Baubles:${baubles_version}" //Baubles
-   	compile "CraftTweaker2:CraftTweaker2-MC1120-Main:${ct_version}"
-   	runtime "CraftTweaker2:CraftTweaker2-MC1120-Mod-JEI:${ct_version}"
+	compile "net.darkhax.gamestages:GameStages-1.12.2:${gamestage_version}" //Gamestages
+	compile "net.darkhax.itemstages:ItemStages-1.12.2:${itemstage_version}" //Itemstages
+	compile "net.darkhax.orestages:OreStages-1.12.2:${orestage_version}" //Orestages
+	compile "net.darkhax.bookshelf:Bookshelf-1.12.2:${bookshelf_version}" //Bookshelf
+   	compile "CraftTweaker2:CraftTweaker2-MC1120-Main:${ct_version}" //Crafttweaker
+   	runtime "CraftTweaker2:CraftTweaker2-MC1120-Mod-JEI:${ct_version}" //Crafttweaker-JEI compat
 
 }
 
 processResources {
-    // this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version
     inputs.property "mcversion", project.minecraft_version
 
-    // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
                 
-        // replace version and mcversion
         expand 'version':project.version, 'mcversion':project.minecraft_version
     }
         
-    // copy everything else except the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
         exclude 'mcmod.info'
     }

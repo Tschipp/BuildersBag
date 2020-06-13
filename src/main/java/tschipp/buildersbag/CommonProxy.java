@@ -86,12 +86,12 @@ public class CommonProxy
 
 		if (Loader.isModLoaded("botania"))
 			BotaniaCompat.register();
-
 	}
 
 	public void postInit(FMLPostInitializationEvent event)
 	{
-		CraftingHandler.generateRecipes();
+		if (!Loader.isModLoaded("crafttweaker"))
+			CraftingHandler.generateRecipes();
 
 		if (Loader.isModLoaded("chiselsandbits"))
 		{
@@ -126,12 +126,12 @@ public class CommonProxy
 	{
 		return Thread.currentThread().getThreadGroup() == SidedThreadGroups.SERVER ? Side.SERVER : Side.CLIENT;
 	}
-	
+
 	public void startWorking(String uuid, EntityPlayer player)
 	{
 		BuildersBag.network.sendTo(new SetWorkStateClient(uuid, true), (EntityPlayerMP) player);
 	}
-	
+
 	public void stopWorking(String uuid, EntityPlayer player)
 	{
 		BuildersBag.network.sendTo(new SetWorkStateClient(uuid, false), (EntityPlayerMP) player);

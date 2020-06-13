@@ -450,6 +450,8 @@ public class ContainerBag extends Container
 				mouseItem.setCount(1);
 				selectedBlockSlot.putStack(mouseItem);
 			}
+			sync();
+
 			return ItemStack.EMPTY;
 		}
 

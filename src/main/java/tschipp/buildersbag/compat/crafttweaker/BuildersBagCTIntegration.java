@@ -1,7 +1,5 @@
 package tschipp.buildersbag.compat.crafttweaker;
 
-import java.util.Map.Entry;
-
 import crafttweaker.CraftTweakerAPI;
 import crafttweaker.annotations.ZenRegister;
 import crafttweaker.api.item.IIngredient;
@@ -14,6 +12,7 @@ import net.minecraft.item.ItemStack;
 import stanhebben.zenscript.annotations.Optional;
 import stanhebben.zenscript.annotations.ZenClass;
 import stanhebben.zenscript.annotations.ZenMethod;
+import stanhebben.zenscript.annotations.ZenProperty;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.item.BuildersBagItem;
@@ -22,7 +21,8 @@ import tschipp.buildersbag.common.item.BuildersBagItem;
 @ZenClass("mods.buildersbag")
 public class BuildersBagCTIntegration
 {
-	private static IRecipeFunction bagUpgrader = (outputStack, inputs, info) ->
+	@ZenProperty(value = "upgradeFunction")
+	public static IRecipeFunction bagUpgrader = (outputStack, inputs, info) ->
 	{
 		
 		ICraftingInventory inv = info.getInventory();

@@ -12,6 +12,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.Tuple;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.RayTraceResult.Type;
 import net.minecraftforge.client.event.MouseEvent;
@@ -27,6 +28,7 @@ import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.client.BuildersBagKeybinds;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.item.BuildersBagItem;
+import tschipp.buildersbag.compat.gamestages.StageHelper;
 import tschipp.buildersbag.network.client.SyncBagCapServer;
 import tschipp.buildersbag.network.server.OpenBaubleBagServer;
 
@@ -69,8 +71,20 @@ public class ClientEvents
 				{
 					IBlockState state = player.world.getBlockState(ray.getBlockPos());
 
+					Tuple<String, IBlockState> orestage = StageHelper.getOreStage(state);
+					
+					if(!StageHelper.hasStage(player, orestage.getFirst()))
+					{
+						state = orestage.getSecond();
+					}
+					
 					ItemStack pickBlock = state.getBlock().getPickBlock(state, ray, player.world, ray.getBlockPos(), player);
 
+					if(!StageHelper.hasStage(player, StageHelper.getItemStage(pickBlock)))
+					{
+						return;
+					}
+					
 					if (!pickBlock.isEmpty() && pickBlock.getItem() instanceof ItemBlock)
 					{
 						IBagCap bag = CapHelper.getBagCap(stack);
@@ -129,8 +143,20 @@ public class ClientEvents
 				{
 					IBlockState state = player.world.getBlockState(ray.getBlockPos());
 
+					Tuple<String, IBlockState> orestage = StageHelper.getOreStage(state);
+					
+					if(!StageHelper.hasStage(player, orestage.getFirst()))
+					{
+						state = orestage.getSecond();
+					}
+					
 					ItemStack pickBlock = state.getBlock().getPickBlock(state, ray, player.world, ray.getBlockPos(), player);
 
+					if(!StageHelper.hasStage(player, StageHelper.getItemStage(pickBlock)))
+					{
+						return;
+					}
+					
 					if (!pickBlock.isEmpty() && pickBlock.getItem() instanceof ItemBlock)
 					{
 						IBagCap bag = CapHelper.getBagCap(stack);
