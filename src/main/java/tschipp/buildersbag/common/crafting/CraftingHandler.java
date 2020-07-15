@@ -28,7 +28,7 @@ import net.minecraftforge.oredict.OreIngredient;
 public class CraftingHandler
 {
 	private static final Map<String, List<RecipeContainer>> recipes = new HashMap<String, List<RecipeContainer>>();
-	private static final RecipeTreeNew recipeTree = new RecipeTreeNew();
+	private static final RecipeTree recipeTree = new RecipeTree();
 	private static final Map<String, Set<String>> alternativeIngredients = new HashMap<String, Set<String>>();
 
 	public static void generateRecipes()
@@ -86,7 +86,7 @@ public class CraftingHandler
 
 	public static NonNullList<ItemStack> getPossibleItems(NonNullList<ItemStack> available, boolean removeAvailable)
 	{
-		RecipeTreeNew subtree = recipeTree.getSubtree(available);
+		RecipeTree subtree = recipeTree.getSubtree(available);
 
 		return subtree.getPossibleStacks(removeAvailable);
 	}
@@ -102,15 +102,15 @@ public class CraftingHandler
 		return blocks;
 	}
 
-	public static RecipeTreeNew getRecipeTree(ItemStack requested, NonNullList<ItemStack> available)
+	public static RecipeTree getRecipeTree(ItemStack requested, NonNullList<ItemStack> available)
 	{
-		RecipeTreeNew subtree = recipeTree.getSubtree(available);
+		RecipeTree subtree = recipeTree.getSubtree(available);
 		return subtree.getRecipeTree(requested);
 	}
 
-	public static RecipeTreeNew getSubTree(NonNullList<ItemStack> available)
+	public static RecipeTree getSubTree(NonNullList<ItemStack> available)
 	{
-		RecipeTreeNew subtree = recipeTree.getSubtree(available);
+		RecipeTree subtree = recipeTree.getSubtree(available);
 		return subtree;
 	}
 

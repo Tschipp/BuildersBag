@@ -77,7 +77,8 @@ dependencies {
 	compile "curse.maven:creativecore:${creativecore_version}" //Creative Core
 	compile "curse.maven:chisels-bits:${chisels_and_bits_version}" //C & B
 	compile "curse.maven:better-builders-wands:${bbw_version}" //Better Builder's Wands
-	compile "curse.maven:building-gadgets:${buildinggadgets_version}" //Building Gadgets
+	//compile "curse.maven:building-gadgets:${buildinggadgets_version}" //Building Gadgets
+	compile files('libs/BuildingGadgets-2.8.3.jar')
 	deobfCompile "tschipp.linear:linear-1.12.2:${linear_version}" //Linear
 	deobfCompile "vazkii.botania:Botania:${botania_version}" //Botania
 	deobfCompile "com.azanor.baubles:Baubles:${baubles_version}" //Baubles
