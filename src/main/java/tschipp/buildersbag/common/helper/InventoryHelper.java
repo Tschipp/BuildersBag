@@ -1,5 +1,8 @@
 package tschipp.buildersbag.common.helper;
 
+import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
+
 import baubles.api.BaublesApi;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -133,23 +136,25 @@ public class InventoryHelper
 		return list;
 	}
 
-	public static NonNullList<ItemStack> getBagsInInventory(EntityPlayer player)
+	public static NonNullList<Triple<Integer, Boolean, ItemStack>> getBagsInInventory(EntityPlayer player)
 	{
-		NonNullList<ItemStack> list = NonNullList.create();
+		NonNullList<Triple<Integer, Boolean, ItemStack>> list = NonNullList.create();
 
-		for (ItemStack s : player.inventory.mainInventory)
+		for (int i = 0; i < player.inventory.mainInventory.size(); i++)
 		{
+			ItemStack s = player.inventory.mainInventory.get(i);
 			if (s.getItem() instanceof BuildersBagItem)
 			{
-				list.add(s);
+				list.add(new ImmutableTriple(i, false, s));
 			}
 		}
 
-		for (ItemStack s : player.inventory.offHandInventory)
+		for (int i = 0; i < player.inventory.offHandInventory.size(); i++)
 		{
+			ItemStack s = player.inventory.offHandInventory.get(i);
 			if (s.getItem() instanceof BuildersBagItem)
 			{
-				list.add(s);
+				list.add(new ImmutableTriple(i + 40, false, s));
 			}
 		}
 
@@ -160,7 +165,7 @@ public class InventoryHelper
 			{
 				ItemStack s = baubles.getStackInSlot(i);
 				if (s.getItem() instanceof BuildersBagItem)
-					list.add(s);
+					list.add(new ImmutableTriple(i, true, s));
 			}
 		}
 
@@ -219,18 +224,18 @@ public class InventoryHelper
 
 		return -1;
 	}
-	
+
 	public static ItemStack getStackInSlot(EntityPlayer player, int slot, boolean isBauble)
 	{
 		ItemStack stack = ItemStack.EMPTY;
-		
+
 		if (isBauble && Loader.isModLoaded("baubles"))
 		{
 			BaublesApi.getBaubles(player).getStackInSlot(slot);
 		}
 		else
 			stack = player.inventory.getStackInSlot(slot);
-		
+
 		return stack;
 
 	}
@@ -239,13 +244,26 @@ public class InventoryHelper
 	{
 		for (int i = 0; i < player.inventory.getSizeInventory(); i++)
 		{
-			if (ItemStack.areItemStacksEqualUsingNBTShareTag(player.inventory.getStackInSlot(i), stack))
+			ItemStack inSlot = player.inventory.getStackInSlot(i);
+			
+			if(inSlot.getItem() instanceof BuildersBagItem && stack.getItem() instanceof BuildersBagItem)
+			{
+				if(CapHelper.areCapsEqual(CapHelper.getBagCap(stack), CapHelper.getBagCap(inSlot)))
+					return new Tuple(false, i);
+			}
+			else if (ItemStack.areItemStackTagsEqual(inSlot, stack))
 				return new Tuple(false, i);
 		}
 
 		if (Loader.isModLoaded("baubles"))
 		{
-			if (ItemStack.areItemStacksEqualUsingNBTShareTag(BaublesApi.getBaubles(player).getStackInSlot(3), stack))
+			ItemStack inSlot = BaublesApi.getBaubles(player).getStackInSlot(3);
+			if(inSlot.getItem() instanceof BuildersBagItem && stack.getItem() instanceof BuildersBagItem)
+			{
+				if(CapHelper.areCapsEqual(CapHelper.getBagCap(stack), CapHelper.getBagCap(inSlot)))
+					return new Tuple(true, 3);
+			}
+			else if (ItemStack.areItemStacksEqualUsingNBTShareTag(inSlot, stack))
 				return new Tuple(true, 3);
 		}
 

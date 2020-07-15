@@ -10,7 +10,7 @@ public class CacheUpdaterThread extends Thread
 
 	public Lock lock = new ReentrantLock();
 	public Condition needsProgress = lock.newCondition();
-	
+
 	public CacheUpdaterThread(String name)
 	{
 		super(name);
@@ -20,8 +20,8 @@ public class CacheUpdaterThread extends Thread
 
 	public void enqueueRunnable(Runnable run)
 	{
-		queue.push(run);	
-		
+		queue.push(run);
+
 		lock.lock();
 		needsProgress.signalAll();
 		lock.unlock();
@@ -41,7 +41,7 @@ public class CacheUpdaterThread extends Thread
 			catch (InterruptedException e1)
 			{
 			}
-			
+
 			if (!queue.isEmpty())
 			{
 				Runnable run = queue.poll();

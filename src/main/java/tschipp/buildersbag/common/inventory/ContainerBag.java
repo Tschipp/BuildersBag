@@ -63,8 +63,6 @@ public class ContainerBag extends Container
 	{
 		this(player, bag);
 		this.hand = hand;
-
-		sync();
 	}
 
 	public ContainerBag(EntityPlayer player, ItemStack bag, int baubleSlot)
@@ -72,8 +70,6 @@ public class ContainerBag extends Container
 		this(player, bag);
 		this.slot = baubleSlot;
 		this.isBauble = true;
-
-		sync();
 	}
 
 	private ContainerBag(EntityPlayer player, ItemStack bag)

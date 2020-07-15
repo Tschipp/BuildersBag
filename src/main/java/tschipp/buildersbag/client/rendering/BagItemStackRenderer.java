@@ -66,7 +66,7 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 
 		String serialized = stack.serializeNBT().toString();
 		int hash = stack.hashCode();
-
+		
 		if (renderStack.get(hash) == null)
 		{
 			renderStack.put(hash, serialized);
@@ -79,6 +79,8 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 			regenerateAvailablityList(stack);
 		}
 
+//		System.out.println(serialized);
+		
 		IBagCap bag = CapHelper.getBagCap(stack);
 
 		boolean random = bag.hasModuleAndEnabled("buildersbag:random");
@@ -161,6 +163,7 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 				if (transform == TransformType.GUI)
 				{
 
+					
 					GlStateManager.pushMatrix();
 
 					GlStateManager.enableLighting();

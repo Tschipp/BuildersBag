@@ -1,7 +1,10 @@
 package tschipp.buildersbag.compat.gamestages;
 
 import java.lang.reflect.Method;
+import java.util.Collection;
 
+import net.darkhax.gamestages.GameStageHelper;
+import net.darkhax.gamestages.data.IStageData;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -9,6 +12,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Tuple;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import tschipp.buildersbag.common.helper.FakePlayerCopy;
 
 public class StageHelper
 {
@@ -71,6 +75,11 @@ public class StageHelper
 		return new Tuple("", Blocks.AIR.getDefaultState());
 	}
 	
+	public static Collection<String> getStages(EntityPlayer player)
+	{
+		IStageData data = GameStageHelper.getPlayerData(player);
+		return data.getStages();
+	}
 	
 	public static boolean hasStage(EntityPlayer player, String stage)
 	{
@@ -78,7 +87,12 @@ public class StageHelper
 		{
 			if (stage.isEmpty())
 				return true;
-
+			
+			if(player instanceof FakePlayerCopy)
+			{
+				return ((FakePlayerCopy) player).stages.contains(stage);
+			}
+			
 			if (usesNewVersion)
 			{
 				try

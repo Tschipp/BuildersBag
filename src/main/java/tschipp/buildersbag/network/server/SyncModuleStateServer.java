@@ -37,7 +37,8 @@ public class SyncModuleStateServer implements IMessage, IMessageHandler<SyncModu
 		mainThread.addScheduledTask(() -> {
 			
 			EntityPlayer player = ctx.getServerHandler().player;
-			((ContainerBag)player.openContainer).updateModule(message.name, message.tag);
+			if(player.openContainer instanceof ContainerBag)
+				((ContainerBag) player.openContainer).updateModule(message.name, message.tag);
 			
 		});
 		

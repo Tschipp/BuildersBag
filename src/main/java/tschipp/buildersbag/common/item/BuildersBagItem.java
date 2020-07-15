@@ -43,6 +43,7 @@ import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.modules.LittleTilesModule;
 import tschipp.buildersbag.compat.botania.BotaniaCompat;
+import tschipp.buildersbag.compat.buildinggadgets.BagProviderCapProvider;
 import tschipp.buildersbag.compat.linear.LinearCompatManager;
 import tschipp.buildersbag.network.client.SyncBagCapClient;
 import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
@@ -71,16 +72,55 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 	{
 		return new BagCapProvider(this.getTier());
 	}
-	
+
+	@Override
+	public boolean getShareTag()
+	{
+		return true;
+	}
+
+	@Override
+	public NBTTagCompound getNBTShareTag(ItemStack stack)
+	{
+		NBTTagCompound sub = new NBTTagCompound();
+		NBTTagCompound nbttags = super.getNBTShareTag(stack);
+		if (nbttags != null)
+			sub.setTag("nbt", nbttags);
+
+		IBagCap cap = CapHelper.getBagCap(stack);
+
+		if (cap != null)
+		{
+			NBTTagCompound bagcap = (NBTTagCompound) BagCapProvider.BAG_CAPABILITY.getStorage().writeNBT(BagCapProvider.BAG_CAPABILITY, cap, null);
+			sub.setTag("bagcap", bagcap);
+		}
+		return sub;
+	}
+
+	@Override
+	public void readNBTShareTag(ItemStack stack, NBTTagCompound nbt)
+	{
+		if (nbt != null)
+		{
+			if (nbt.hasKey("nbt"))
+				super.readNBTShareTag(stack, nbt.getCompoundTag("nbt"));
+
+			if (nbt.hasKey("bagcap"))
+				BagCapProvider.BAG_CAPABILITY.getStorage().readNBT(BagCapProvider.BAG_CAPABILITY, CapHelper.getBagCap(stack), null, nbt.getCompoundTag("bagcap"));
+		}
+	}
+
 	@Override
 	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand)
 	{
 		ItemStack stack = player.getHeldItem(hand);
 
+		BagProviderCapProvider.setPlayer(player, stack);
+
 		if (player.isSneaking() && (Loader.isModLoaded("linear") ? LinearCompatManager.doDragCheck(player) : true))
 			player.openGui(BuildersBag.instance, 0, world, hand == EnumHand.MAIN_HAND ? 1 : 0, 0, 0);
 
-		if(!world.isRemote)
+		if (!world.isRemote)
 			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
 
 		return new ActionResult<ItemStack>(EnumActionResult.PASS, stack);
@@ -93,8 +133,10 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			return EnumActionResult.PASS;
 
 		ItemStack stack = player.getHeldItem(hand);
-		IBagCap bag = CapHelper.getBagCap(stack);		
-		
+		IBagCap bag = CapHelper.getBagCap(stack);
+
+		BagProviderCapProvider.setPlayer(player, stack);
+
 		if (!world.isRemote)
 		{
 			FakePlayer fake = new FakePlayer((WorldServer) world, player.getGameProfile());
@@ -120,6 +162,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 
 			if (placementStack.isEmpty())
 			{
+				// Send these via packet
 				player.sendStatusMessage(new TextComponentString(ChatFormatting.RED + I18n.translateToLocal("buildersbag.noblock")), true);
 				return EnumActionResult.FAIL;
 			}
@@ -146,7 +189,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 				placementStack = placementStack.copy();
 
 			BagHelper.resetRecursionDepth(player);
-			
+
 			if (placementStack.isEmpty())
 			{
 				player.sendStatusMessage(new TextComponentString(ChatFormatting.RED + I18n.translateToLocalFormatted("buildersbag.nomaterials", requestedStack.getDisplayName())), true);
@@ -166,10 +209,11 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 
 			BuildersBag.network.sendTo(new SyncBagCapClient(bag, hand), (EntityPlayerMP) player);
 			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
-			
+
 			return result;
 
-		} else
+		}
+		else
 			return EnumActionResult.SUCCESS;
 	}
 
@@ -203,12 +247,12 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 	@Override
 	public LittleIngredients getInventory(ItemStack stack)
 	{
-//		IBagCap bag = CapHelper.getBagCap(stack);
-//
-//		if (bag.hasModuleAndEnabled("buildersbag:littletiles"))
-//		{
-//			return LittleTilesModule.getAvailableIngredients(stack);
-//		}
+		// IBagCap bag = CapHelper.getBagCap(stack);
+		//
+		// if (bag.hasModuleAndEnabled("buildersbag:littletiles"))
+		// {
+		// return LittleTilesModule.getAvailableIngredients(stack);
+		// }
 
 		return new LittleIngredients();
 	}
@@ -227,7 +271,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			}
 		}
 	}
-	
+
 	@Optional.Method(modid = "littletiles")
 	@Override
 	public void collect(HashMapList<String, ItemStack> list, ItemStack stack, EntityPlayer player)
@@ -242,7 +286,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			}
 		}
 	}
-	
+
 	/*
 	 * BOTANIA COMPAT
 	 */
@@ -259,7 +303,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 	{
 		return BotaniaCompat.getBlockCount(player, requestor, stack, block, meta);
 	}
-	
+
 	/*
 	 * BAUBLES COMPAT
 	 */
@@ -274,9 +318,9 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 	@Override
 	public void onEquipped(ItemStack itemstack, EntityLivingBase player)
 	{
-		IBagCap cap = CapHelper.getBagCap(itemstack);
-		if(!player.world.isRemote)
-			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(cap, 3, true), (EntityPlayerMP) player);
+//		IBagCap cap = CapHelper.getBagCap(itemstack);
+//		if (!player.world.isRemote)
+//			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(cap, 3, true), (EntityPlayerMP) player);
 	}
-	
+
 }

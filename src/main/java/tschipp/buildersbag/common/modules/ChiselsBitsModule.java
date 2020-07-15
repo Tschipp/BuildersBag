@@ -4,6 +4,8 @@ import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.lang3.tuple.Triple;
+
 import mod.chiselsandbits.chiseledblock.TileEntityBlockChiseled;
 import mod.chiselsandbits.chiseledblock.data.BitLocation;
 import mod.chiselsandbits.chiseledblock.data.VoxelBlob;
@@ -229,9 +231,10 @@ public class ChiselsBitsModule extends AbstractBagModule
 				double blocks = missingBits / (16.0 * 16.0 * 16.0) + (needsExtra ? 1 : 0);
 				int rounded = (int) Math.ceil(blocks);
 
-				NonNullList<ItemStack> bags = InventoryHelper.getBagsInInventory(player);
-				for (ItemStack bag : bags)
+				NonNullList<Triple<Integer, Boolean, ItemStack>> bags = InventoryHelper.getBagsInInventory(player);
+				for (Triple<Integer, Boolean, ItemStack> triple : bags)
 				{
+					ItemStack bag = triple.getRight();
 					if (!bag.isEmpty())
 					{
 						IBagCap cap = CapHelper.getBagCap(bag);
@@ -241,7 +244,7 @@ public class ChiselsBitsModule extends AbstractBagModule
 							ItemStackHandler inv = chiselModule.getInventory();
 							ItemStack chisel = inv.getStackInSlot(0);
 
-							if (!chisel.isEmpty())
+							if (!chisel.isEmpty() && !required.isEmpty())
 							{
 								NonNullList<ItemStack> provided = BagHelper.getOrProvideStackWithCount(required, rounded, cap, player, null);
 								rounded -= provided.size();

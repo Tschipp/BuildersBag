@@ -106,6 +106,8 @@ public class ChiselModule extends AbstractBagModule
 	@Override
 	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player)
 	{
+		System.out.println("Chisel: Trying to create " + count + " of " + stack);
+
 		NonNullList list = NonNullList.create();
 
 		ICarvingGroup group = CarvingUtils.getChiselRegistry().getGroup(stack);
@@ -117,7 +119,7 @@ public class ChiselModule extends AbstractBagModule
 		if (chisel.isEmpty() || !validTinkersChisel(chisel))
 			return list;
 
-		NonNullList<ItemStack> availableBlocks = InventoryHelper.getInventoryStacks(bag, player);
+		NonNullList<ItemStack> availableBlocks = InventoryHelper.getStacks(bag.getBlockInventory());
 
 		NonNullList<ItemStack> providedVariants = NonNullList.create();
 
@@ -128,8 +130,7 @@ public class ChiselModule extends AbstractBagModule
 				ItemStack available = ItemStack.EMPTY;
 				if (!(available = ItemHelper.containsStack(variant.getStack(), availableBlocks)).isEmpty())
 				{
-					available.shrink(1);
-					providedVariants.add(available);
+					providedVariants.add(available.splitStack(1));
 				}
 				else
 					break;

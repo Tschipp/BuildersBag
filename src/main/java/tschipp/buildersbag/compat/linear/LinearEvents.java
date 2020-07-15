@@ -2,6 +2,8 @@ package tschipp.buildersbag.compat.linear;
 
 import java.util.Random;
 
+import org.apache.commons.lang3.tuple.Triple;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityArmorStand;
@@ -60,7 +62,7 @@ public class LinearEvents
 
 		requested -= event.getProvidedBlocks();
 
-		NonNullList<ItemStack> bags = InventoryHelper.getBagsInInventory(player);
+		NonNullList<Triple<Integer, Boolean, ItemStack>> bags = InventoryHelper.getBagsInInventory(player);
 
 		int providedBlocks = 0;
 
@@ -70,8 +72,10 @@ public class LinearEvents
 			return;
 		}
 
-		for (ItemStack bag : bags)
+		for (Triple<Integer, Boolean, ItemStack> triple : bags)
 		{
+			ItemStack bag = triple.getRight();
+			
 			if (requested <= 0)
 				break;
 
@@ -172,14 +176,15 @@ public class LinearEvents
 		EnumFacing facing = LinearHelper.getFacing(player);
 		float[] hit = LinearHelper.getHitCoords(player);
 
-		NonNullList<ItemStack> bags = InventoryHelper.getBagsInInventory(player);
+		NonNullList<Triple<Integer, Boolean, ItemStack>> bags = InventoryHelper.getBagsInInventory(player);
 
 		if (!world.isRemote)
 		{
 			if (stack.getItem() instanceof ItemBlock && !player.isCreative())
 			{
-				for (ItemStack bagStack : bags)
+				for (Triple<Integer, Boolean, ItemStack> triple : bags)
 				{
+					ItemStack bagStack = triple.getRight();
 					IBagCap bag = CapHelper.getBagCap(bagStack);
 
 					if (bag.hasModuleAndEnabled("buildersbag:supplier"))
@@ -188,7 +193,7 @@ public class LinearEvents
 						if (!result.isEmpty())
 							stack.grow(1);
 
-						BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, InventoryHelper.getSlotForStack(player, bagStack)), (EntityPlayerMP) player);
+						BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, triple.getLeft(), triple.getMiddle()), (EntityPlayerMP) player);
 						BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
 
 						return;

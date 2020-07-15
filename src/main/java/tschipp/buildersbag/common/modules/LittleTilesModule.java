@@ -294,10 +294,10 @@ public class LittleTilesModule extends AbstractBagModule
 			}
 		}
 		
-		if(!player.world.isRemote)
-		{
-			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(stack, player), (EntityPlayerMP) player);
-		}
+//		if(!player.world.isRemote)
+//		{
+//			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(stack, player), (EntityPlayerMP) player);
+//		}
 	}
 
 	private static void insertIngredientsIntoBag(ItemStack stack, EntityPlayer player, BlockIngredientEntry ing)

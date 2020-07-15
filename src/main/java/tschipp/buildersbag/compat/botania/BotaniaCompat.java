@@ -74,7 +74,7 @@ public class BotaniaCompat
 			if (provided.isEmpty())
 				return false;
 
-			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, InventoryHelper.getSlotForStack(player, stack)), (EntityPlayerMP) player);
+//			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, InventoryHelper.getSlotForStack(player, stack)), (EntityPlayerMP) player);
 			return true;
 		} else
 		{

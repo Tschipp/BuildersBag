@@ -68,6 +68,7 @@ public class BagCache
 		cachedBag.updateCachedAmount(forStack, count);
 
 		Tuple<Boolean, Integer> slot = InventoryHelper.getSlotForStackWithBaubles(player, bag);
+		
 		BuildersBag.network.sendTo(new UpdateCacheClient(slot.getSecond(), slot.getFirst(), forStack, count), (EntityPlayerMP) player);
 		return count;
 	}
@@ -78,6 +79,7 @@ public class BagCache
 	@SideOnly(Side.CLIENT)
 	public static void updateCachedBagStackWithAmount(ItemStack bag, EntityPlayer player, ItemStack forStack, int amount)
 	{
+		
 		IBagCap bagCap = CapHelper.getBagCap(bag);
 		CachedBag cachedBag = client_cache.get(bagCap.getUUID());
 		if (cachedBag == null)

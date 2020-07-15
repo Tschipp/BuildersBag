@@ -83,7 +83,7 @@ public class ContainerHandlerBuildersBag implements IContainerHandler
 		
 		IBagCap bag = CapHelper.getBagCap(inventoryStack);
 		NonNullList<ItemStack> provided = BagHelper.getOrProvideStackWithCount(stack, count, bag, player, null);
-		BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, InventoryHelper.getSlotForStack(player, inventoryStack)), (EntityPlayerMP) player);
+//		BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, InventoryHelper.getSlotForStack(player, inventoryStack)), (EntityPlayerMP) player);
 		
 		if(provided.size() == 0)
 		{

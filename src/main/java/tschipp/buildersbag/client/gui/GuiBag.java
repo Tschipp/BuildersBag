@@ -84,11 +84,11 @@ public class GuiBag extends GuiContainer
 		super.drawScreen(mouseX, mouseY, partialTicks);
 		this.renderHoveredToolTip(mouseX, mouseY);
 		
-		if(isNew)
-		{
-			isNew = false;
-			BuildersBag.network.sendToServer(new RequestBagUpdateServer(slot, isBauble));
-		}
+//		if(isNew)
+//		{
+//			isNew = false;
+//			BuildersBag.network.sendToServer(new RequestBagUpdateServer(slot, isBauble));
+//		}
 		
 		int mX = mouseX - guiLeft;
 		int mY = mouseY - guiTop;

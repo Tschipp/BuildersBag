@@ -11,6 +11,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import tschipp.buildersbag.api.IBlockSourceAdapter;
+import tschipp.buildersbag.common.helper.FakePlayerCopy;
 import tschipp.buildersbag.common.item.BuildersBagItem;
 import vazkii.botania.api.item.IBlockProvider;
 import vazkii.botania.common.item.ItemBlackHoleTalisman;

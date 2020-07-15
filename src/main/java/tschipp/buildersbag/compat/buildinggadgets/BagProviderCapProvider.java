@@ -2,8 +2,10 @@ package tschipp.buildersbag.compat.buildinggadgets;
 
 import static net.minecraftforge.items.CapabilityItemHandler.ITEM_HANDLER_CAPABILITY;
 
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
@@ -34,13 +36,21 @@ public class BagProviderCapProvider implements ICapabilitySerializable
 	@Override
 	public NBTBase serializeNBT()
 	{
-		return ITEM_HANDLER_CAPABILITY.getStorage().writeNBT(ITEM_HANDLER_CAPABILITY, instance, null);
+		return new NBTTagCompound();
 	}
 
 	@Override
 	public void deserializeNBT(NBTBase nbt)
 	{
-		ITEM_HANDLER_CAPABILITY.getStorage().readNBT(ITEM_HANDLER_CAPABILITY, instance, null, nbt);
+	}
+	
+	public static void setPlayer(EntityPlayer player, ItemStack bag)
+	{
+		if(bag.hasCapability(ITEM_HANDLER_CAPABILITY, null))
+		{
+			BagProviderItemHandler provider = (BagProviderItemHandler) bag.getCapability(ITEM_HANDLER_CAPABILITY, null);
+			provider.setPlayer(player);
+		}
 	}
 
 }

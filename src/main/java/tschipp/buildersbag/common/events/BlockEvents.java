@@ -1,5 +1,7 @@
 package tschipp.buildersbag.common.events;
 
+import org.apache.commons.lang3.tuple.Triple;
+
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -55,11 +57,13 @@ public class BlockEvents
 
 			if (b)
 			{
-				NonNullList<ItemStack> bags = InventoryHelper.getBagsInInventory(player);
-
-				for (ItemStack bag : bags)
+				NonNullList<Triple<Integer, Boolean, ItemStack>> bags = InventoryHelper.getBagsInInventory(player);
+				
+				for (Triple<Integer, Boolean, ItemStack> triple : bags)
 				{
+					ItemStack bag = triple.getRight();
 					IBagCap bagCap = CapHelper.getBagCap(bag);
+					
 					for (IBagModule module : BagHelper.getSortedModules(bagCap))
 					{
 						if (module.isEnabled() && module.isSupplier() && (Loader.isModLoaded("linear") ? !LinearCompatManager.isDragging(player) : true))
@@ -74,7 +78,7 @@ public class BlockEvents
 								
 								if (!player.world.isRemote)
 								{
-									BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, InventoryHelper.getSlotForStack(player, bag)), (EntityPlayerMP) player);
+									BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, triple.getLeft(), triple.getMiddle()), (EntityPlayerMP) player);
 									BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);	
 								}
 								return;

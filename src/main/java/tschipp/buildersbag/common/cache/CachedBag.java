@@ -60,11 +60,11 @@ public class CachedBag
 		CachedAmount amount = cachedStacks.get(ic);
 		if (amount == null)
 		{
-			if (dirtyClientCache.containsKey(ic))
-				return dirtyClientCache.get(ic).value;
-
 			requestCacheUpdate(forStack, preferredAmount);
 
+			if (dirtyClientCache.containsKey(ic))
+				return dirtyClientCache.get(ic).value;
+			
 			CachedAmount c = new CachedAmount();
 			c.value = 100;
 
@@ -129,6 +129,7 @@ public class CachedBag
 
 		cache.timestamp = System.currentTimeMillis();
 		cachedStacks.put(cont, cache);
+		
 	}
 
 	public boolean isSimulating()

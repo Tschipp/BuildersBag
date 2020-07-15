@@ -27,25 +27,18 @@ public class SyncBagCapInventoryClient implements IMessage, IMessageHandler<Sync
 	public NBTTagCompound readTag;
 	public boolean isBauble;
 	
-	public SyncBagCapInventoryClient(ItemStack bag, EntityPlayer player)
-	{
-		this.bagCap = CapHelper.getBagCap(bag);
-		Tuple<Boolean, Integer> tup = InventoryHelper.getSlotForStackWithBaubles(player, bag);
-		this.slot = tup.getSecond();
-		this.isBauble = tup.getFirst();
-	}
-	
 	public SyncBagCapInventoryClient()
 	{
 	}
-	
-	public SyncBagCapInventoryClient(IBagCap bagCap, int slot)
-	{
-		this(bagCap, slot, false);
-	}
-	
+		
 	public SyncBagCapInventoryClient(IBagCap bagCap, int slot, boolean isBauble)
 	{
+		if(bagCap == null || bagCap.getBlockInventory() == null)
+		{
+			BuildersBag.LOGGER.error("Invalid Bag Cap! It is null!");
+			new Throwable().printStackTrace();
+		}
+		
 		this.bagCap = bagCap;
 		this.slot = slot;
 		this.isBauble = isBauble;
