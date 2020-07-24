@@ -7,7 +7,6 @@ import com.creativemd.littletiles.common.api.ILittleIngredientInventory;
 import com.creativemd.littletiles.common.api.ILittleIngredientSupplier;
 import com.creativemd.littletiles.common.util.ingredient.LittleIngredients;
 import com.creativemd.littletiles.common.util.ingredient.LittleInventory;
-import com.mojang.realmsclient.gui.ChatFormatting;
 
 import baubles.api.BaubleType;
 import baubles.api.IBauble;
@@ -25,6 +24,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -163,7 +163,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			if (placementStack.isEmpty())
 			{
 				// Send these via packet
-				player.sendStatusMessage(new TextComponentString(ChatFormatting.RED + I18n.translateToLocal("buildersbag.noblock")), true);
+				player.sendStatusMessage(new TextComponentString(TextFormatting.RED + I18n.translateToLocal("buildersbag.noblock")), true);
 				return EnumActionResult.FAIL;
 			}
 
@@ -179,7 +179,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 
 			if (!b)
 			{
-				player.sendStatusMessage(new TextComponentString(ChatFormatting.RED + I18n.translateToLocalFormatted("buildersbag.cantplace", requestedStack.getDisplayName())), true);
+				player.sendStatusMessage(new TextComponentString(TextFormatting.RED + I18n.translateToLocalFormatted("buildersbag.cantplace", requestedStack.getDisplayName())), true);
 				return EnumActionResult.FAIL;
 			}
 
@@ -192,7 +192,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 
 			if (placementStack.isEmpty())
 			{
-				player.sendStatusMessage(new TextComponentString(ChatFormatting.RED + I18n.translateToLocalFormatted("buildersbag.nomaterials", requestedStack.getDisplayName())), true);
+				player.sendStatusMessage(new TextComponentString(TextFormatting.RED + I18n.translateToLocalFormatted("buildersbag.nomaterials", requestedStack.getDisplayName())), true);
 				return EnumActionResult.FAIL;
 			}
 
