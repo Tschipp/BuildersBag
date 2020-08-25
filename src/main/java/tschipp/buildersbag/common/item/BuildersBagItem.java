@@ -158,7 +158,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			if (placementStack.isEmpty())
 			{
 				// Send these via packet
-				player.sendStatusMessage(new TextComponentString(ChatFormatting.RED + I18n.translateToLocal("buildersbag.noblock")), true);
+				player.sendStatusMessage(new TextComponentString(TextFormatting.RED + I18n.translateToLocal("buildersbag.noblock")), true);
 				BuildersBag.network.sendTo(new PlayFailureSoundClient(),  (EntityPlayerMP) player);
 				return EnumActionResult.FAIL;
 			}
@@ -175,7 +175,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 
 			if (!b)
 			{
-				player.sendStatusMessage(new TextComponentString(ChatFormatting.RED + I18n.translateToLocalFormatted("buildersbag.cantplace", requestedStack.getDisplayName())), true);
+				player.sendStatusMessage(new TextComponentString(TextFormatting.RED + I18n.translateToLocalFormatted("buildersbag.cantplace", requestedStack.getDisplayName())), true);
 				BuildersBag.network.sendTo(new PlayFailureSoundClient(),  (EntityPlayerMP) player);
 				return EnumActionResult.FAIL;
 			}
@@ -189,7 +189,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 
 			if (placementStack.isEmpty())
 			{
-				player.sendStatusMessage(new TextComponentString(ChatFormatting.RED + I18n.translateToLocalFormatted("buildersbag.nomaterials", requestedStack.getDisplayName())), true);
+				player.sendStatusMessage(new TextComponentString(TextFormatting.RED + I18n.translateToLocalFormatted("buildersbag.nomaterials", requestedStack.getDisplayName())), true);
 				BuildersBag.network.sendTo(new PlayFailureSoundClient(),  (EntityPlayerMP) player);
 				return EnumActionResult.FAIL;
 			}
