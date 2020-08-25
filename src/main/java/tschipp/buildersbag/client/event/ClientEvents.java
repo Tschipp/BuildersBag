@@ -8,6 +8,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -26,6 +27,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.client.BuildersBagKeybinds;
+import tschipp.buildersbag.common.config.BuildersBagConfig;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.item.BuildersBagItem;
 import tschipp.buildersbag.compat.gamestages.StageHelper;
@@ -36,16 +38,20 @@ import tschipp.buildersbag.network.server.OpenBaubleBagServer;
 public class ClientEvents
 {
 	private static final Method unpressKey;
-	
-	static {
+
+	static
+	{
 		unpressKey = ReflectionHelper.findMethod(KeyBinding.class, "unpressKey", "func_74505_d");
 		unpressKey.setAccessible(true);
 	}
-	
+
 	@SubscribeEvent
 	public static void onMousePressed(MouseEvent event)
 	{
 		EntityPlayer player = Minecraft.getMinecraft().player;
+
+		if (!event.isButtonstate())
+			return;
 
 		if (Minecraft.getMinecraft().gameSettings.keyBindPickBlock.isActiveAndMatches(event.getButton() - 100))
 		{
@@ -58,7 +64,8 @@ public class ClientEvents
 			{
 				stack = main;
 				hand = EnumHand.MAIN_HAND;
-			} else if (off.getItem() instanceof BuildersBagItem)
+			}
+			else if (off.getItem() instanceof BuildersBagItem)
 			{
 				stack = off;
 				hand = EnumHand.OFF_HAND;
@@ -72,24 +79,27 @@ public class ClientEvents
 					IBlockState state = player.world.getBlockState(ray.getBlockPos());
 
 					Tuple<String, IBlockState> orestage = StageHelper.getOreStage(state);
-					
-					if(!StageHelper.hasStage(player, orestage.getFirst()))
+
+					if (!StageHelper.hasStage(player, orestage.getFirst()))
 					{
 						state = orestage.getSecond();
 					}
-					
+
 					ItemStack pickBlock = state.getBlock().getPickBlock(state, ray, player.world, ray.getBlockPos(), player);
 
-					if(!StageHelper.hasStage(player, StageHelper.getItemStage(pickBlock)))
+					if (!StageHelper.hasStage(player, StageHelper.getItemStage(pickBlock)))
 					{
 						return;
 					}
-					
+
 					if (!pickBlock.isEmpty() && pickBlock.getItem() instanceof ItemBlock)
 					{
 						IBagCap bag = CapHelper.getBagCap(stack);
 						bag.getSelectedInventory().setStackInSlot(0, pickBlock.copy());
 
+						if (BuildersBagConfig.Settings.playPickBlockSounds)
+							player.playSound(SoundEvents.BLOCK_NOTE_HAT, 0.5f, 0.1f);
+						
 						BuildersBag.network.sendToServer(new SyncBagCapServer(bag, hand));
 
 						event.setCanceled(true);
@@ -118,7 +128,7 @@ public class ClientEvents
 				}
 			}
 		}
-		
+
 		if (Minecraft.getMinecraft().gameSettings.keyBindPickBlock.isKeyDown())
 		{
 			ItemStack main = player.getHeldItemMainhand();
@@ -130,7 +140,8 @@ public class ClientEvents
 			{
 				stack = main;
 				hand = EnumHand.MAIN_HAND;
-			} else if (off.getItem() instanceof BuildersBagItem)
+			}
+			else if (off.getItem() instanceof BuildersBagItem)
 			{
 				stack = off;
 				hand = EnumHand.OFF_HAND;
@@ -144,30 +155,34 @@ public class ClientEvents
 					IBlockState state = player.world.getBlockState(ray.getBlockPos());
 
 					Tuple<String, IBlockState> orestage = StageHelper.getOreStage(state);
-					
-					if(!StageHelper.hasStage(player, orestage.getFirst()))
+
+					if (!StageHelper.hasStage(player, orestage.getFirst()))
 					{
 						state = orestage.getSecond();
 					}
-					
+
 					ItemStack pickBlock = state.getBlock().getPickBlock(state, ray, player.world, ray.getBlockPos(), player);
 
-					if(!StageHelper.hasStage(player, StageHelper.getItemStage(pickBlock)))
+					if (!StageHelper.hasStage(player, StageHelper.getItemStage(pickBlock)))
 					{
 						return;
 					}
-					
+
 					if (!pickBlock.isEmpty() && pickBlock.getItem() instanceof ItemBlock)
 					{
 						IBagCap bag = CapHelper.getBagCap(stack);
 						bag.getSelectedInventory().setStackInSlot(0, pickBlock.copy());
+
+						if (BuildersBagConfig.Settings.playPickBlockSounds)
+							player.playSound(SoundEvents.BLOCK_NOTE_HAT, 0.5f, 0.1f);
 
 						BuildersBag.network.sendToServer(new SyncBagCapServer(bag, hand));
 
 						try
 						{
 							unpressKey.invoke(Minecraft.getMinecraft().gameSettings.keyBindPickBlock);
-						} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
+						}
+						catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e)
 						{
 							e.printStackTrace();
 						}

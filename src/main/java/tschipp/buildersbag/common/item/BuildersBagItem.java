@@ -43,10 +43,9 @@ import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.modules.LittleTilesModule;
 import tschipp.buildersbag.compat.botania.BotaniaCompat;
-import tschipp.buildersbag.compat.buildinggadgets.BagProviderCapProvider;
 import tschipp.buildersbag.compat.linear.LinearCompatManager;
+import tschipp.buildersbag.network.client.PlayFailureSoundClient;
 import tschipp.buildersbag.network.client.SyncBagCapClient;
-import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
 import tschipp.buildersbag.network.client.SyncEnderchestToClient;
 import vazkii.botania.api.item.IBlockProvider;
 
@@ -115,8 +114,6 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 	{
 		ItemStack stack = player.getHeldItem(hand);
 
-		BagProviderCapProvider.setPlayer(player, stack);
-
 		if (player.isSneaking() && (Loader.isModLoaded("linear") ? LinearCompatManager.doDragCheck(player) : true))
 			player.openGui(BuildersBag.instance, 0, world, hand == EnumHand.MAIN_HAND ? 1 : 0, 0, 0);
 
@@ -134,8 +131,6 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 
 		ItemStack stack = player.getHeldItem(hand);
 		IBagCap bag = CapHelper.getBagCap(stack);
-
-		BagProviderCapProvider.setPlayer(player, stack);
 
 		if (!world.isRemote)
 		{
@@ -164,6 +159,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			{
 				// Send these via packet
 				player.sendStatusMessage(new TextComponentString(ChatFormatting.RED + I18n.translateToLocal("buildersbag.noblock")), true);
+				BuildersBag.network.sendTo(new PlayFailureSoundClient(),  (EntityPlayerMP) player);
 				return EnumActionResult.FAIL;
 			}
 
@@ -180,6 +176,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			if (!b)
 			{
 				player.sendStatusMessage(new TextComponentString(ChatFormatting.RED + I18n.translateToLocalFormatted("buildersbag.cantplace", requestedStack.getDisplayName())), true);
+				BuildersBag.network.sendTo(new PlayFailureSoundClient(),  (EntityPlayerMP) player);
 				return EnumActionResult.FAIL;
 			}
 
@@ -193,6 +190,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			if (placementStack.isEmpty())
 			{
 				player.sendStatusMessage(new TextComponentString(ChatFormatting.RED + I18n.translateToLocalFormatted("buildersbag.nomaterials", requestedStack.getDisplayName())), true);
+				BuildersBag.network.sendTo(new PlayFailureSoundClient(),  (EntityPlayerMP) player);
 				return EnumActionResult.FAIL;
 			}
 
@@ -210,6 +208,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			BuildersBag.network.sendTo(new SyncBagCapClient(bag, hand), (EntityPlayerMP) player);
 			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
 
+			
 			return result;
 
 		}

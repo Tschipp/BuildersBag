@@ -26,6 +26,7 @@ import tschipp.buildersbag.compat.chisel.ChiselEvents;
 import tschipp.buildersbag.compat.linear.LinearCompatManager;
 import tschipp.buildersbag.network.client.GrowItemClient;
 import tschipp.buildersbag.network.client.ModifyCacheClient;
+import tschipp.buildersbag.network.client.PlayFailureSoundClient;
 import tschipp.buildersbag.network.client.SetHeldItemClient;
 import tschipp.buildersbag.network.client.SetWorkStateClient;
 import tschipp.buildersbag.network.client.SyncBagCapClient;
@@ -69,6 +70,7 @@ public class CommonProxy
 		BuildersBag.network.registerMessage(ModifyCacheClient.class, ModifyCacheClient.class, 12, Side.CLIENT);
 		BuildersBag.network.registerMessage(SetWorkStateClient.class, SetWorkStateClient.class, 13, Side.CLIENT);
 		BuildersBag.network.registerMessage(RequestBagUpdateServer.class, RequestBagUpdateServer.class, 14, Side.SERVER);
+		BuildersBag.network.registerMessage(PlayFailureSoundClient.class, PlayFailureSoundClient.class, 15, Side.CLIENT);
 
 		NetworkRegistry.INSTANCE.registerGuiHandler(BuildersBag.instance, new BagGuiHandler());
 		BuildersBagRegistry.registerModules();

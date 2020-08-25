@@ -172,7 +172,7 @@ public class InventoryHelper
 		return list;
 	}
 
-	public static NonNullList<ItemStack> addMatchingStacksWithSizeOne(ItemStack stack, int count, NonNullList<ItemStack> fromStacks)
+	public static NonNullList<ItemStack> removeMatchingStacksWithSizeOne(ItemStack stack, int count, NonNullList<ItemStack> fromStacks)
 	{
 		NonNullList<ItemStack> list = NonNullList.create();
 		stack = stack.copy();
@@ -214,6 +214,32 @@ public class InventoryHelper
 		return list;
 	}
 
+	public static NonNullList<ItemStack> getMatchingStacksWithSizeOne(ItemStack stack, int maxCount, NonNullList<ItemStack> fromStacks)
+	{
+		NonNullList<ItemStack> list = NonNullList.create();
+		int added = 0;
+		for (ItemStack s : fromStacks)
+		{
+			if (ItemStack.areItemsEqual(s, stack))
+			{
+				s = s.copy();
+
+				int count = s.getCount();
+				for (int i = 0; i < count; i++)
+				{
+					if (added < maxCount)
+					{
+						list.add(s.splitStack(1));
+						added++;
+					}
+					else
+						return list;
+				}
+			}
+		}
+		return list;
+	}
+
 	public static int getSlotForStack(EntityPlayer player, ItemStack stack)
 	{
 		for (int i = 0; i < player.inventory.getSizeInventory(); i++)
@@ -245,10 +271,10 @@ public class InventoryHelper
 		for (int i = 0; i < player.inventory.getSizeInventory(); i++)
 		{
 			ItemStack inSlot = player.inventory.getStackInSlot(i);
-			
-			if(inSlot.getItem() instanceof BuildersBagItem && stack.getItem() instanceof BuildersBagItem)
+
+			if (inSlot.getItem() instanceof BuildersBagItem && stack.getItem() instanceof BuildersBagItem)
 			{
-				if(CapHelper.areCapsEqual(CapHelper.getBagCap(stack), CapHelper.getBagCap(inSlot)))
+				if (CapHelper.areCapsEqual(CapHelper.getBagCap(stack), CapHelper.getBagCap(inSlot)))
 					return new Tuple(false, i);
 			}
 			else if (ItemStack.areItemStackTagsEqual(inSlot, stack))
@@ -258,9 +284,9 @@ public class InventoryHelper
 		if (Loader.isModLoaded("baubles"))
 		{
 			ItemStack inSlot = BaublesApi.getBaubles(player).getStackInSlot(3);
-			if(inSlot.getItem() instanceof BuildersBagItem && stack.getItem() instanceof BuildersBagItem)
+			if (inSlot.getItem() instanceof BuildersBagItem && stack.getItem() instanceof BuildersBagItem)
 			{
-				if(CapHelper.areCapsEqual(CapHelper.getBagCap(stack), CapHelper.getBagCap(inSlot)))
+				if (CapHelper.areCapsEqual(CapHelper.getBagCap(stack), CapHelper.getBagCap(inSlot)))
 					return new Tuple(true, 3);
 			}
 			else if (ItemStack.areItemStacksEqualUsingNBTShareTag(inSlot, stack))

@@ -43,14 +43,4 @@ public class BagProviderCapProvider implements ICapabilitySerializable
 	public void deserializeNBT(NBTBase nbt)
 	{
 	}
-	
-	public static void setPlayer(EntityPlayer player, ItemStack bag)
-	{
-		if(bag.hasCapability(ITEM_HANDLER_CAPABILITY, null))
-		{
-			BagProviderItemHandler provider = (BagProviderItemHandler) bag.getCapability(ITEM_HANDLER_CAPABILITY, null);
-			provider.setPlayer(player);
-		}
-	}
-
 }

@@ -14,6 +14,7 @@ import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.data.ItemContainer;
 import tschipp.buildersbag.common.data.Tuple;
+import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.network.server.RequestCacheUpdateServer;
@@ -60,10 +61,10 @@ public class CachedBag
 		CachedAmount amount = cachedStacks.get(ic);
 		if (amount == null)
 		{
-			requestCacheUpdate(forStack, preferredAmount);
-
 			if (dirtyClientCache.containsKey(ic))
 				return dirtyClientCache.get(ic).value;
+			
+			requestCacheUpdate(forStack, preferredAmount);
 			
 			CachedAmount c = new CachedAmount();
 			c.value = 100;
@@ -74,7 +75,7 @@ public class CachedBag
 
 		if (amount.value < preferredAmount)
 			requestCacheUpdate(forStack, preferredAmount);
-
+		
 		return amount.value;
 	}
 
@@ -130,6 +131,8 @@ public class CachedBag
 		cache.timestamp = System.currentTimeMillis();
 		cachedStacks.put(cont, cache);
 		
+		
+		BagHelper.clearTreeBlacklist();
 	}
 
 	public boolean isSimulating()

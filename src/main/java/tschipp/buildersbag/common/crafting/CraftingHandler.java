@@ -28,11 +28,30 @@ import net.minecraftforge.oredict.OreIngredient;
 public class CraftingHandler
 {
 	private static final Map<String, List<RecipeContainer>> recipes = new HashMap<String, List<RecipeContainer>>();
-	private static final RecipeTreeNew recipeTree = new RecipeTreeNew();
+	private static final RecipeTree recipeTree = new RecipeTree();
+
 	private static final Map<String, Set<String>> alternativeIngredients = new HashMap<String, Set<String>>();
+	private static final Map<Long, String> IDToNBTCache = new HashMap<Long, String>();
+	private static final Map<String, Long> NBTToIDCache = new HashMap<String, Long>();
+
+	private static long num = 1;
+
+	static
+	{
+		IDToNBTCache.put(0L, "");
+		NBTToIDCache.put("", 0L);
+	}
 
 	public static void generateRecipes()
 	{
+		for (IRecipe recipe : ForgeRegistries.RECIPES)
+		{
+			for(Ingredient ing : recipe.getIngredients())
+			{
+				addIngredientIfAlternative(ing);
+			}
+		}
+		
 		for (IRecipe recipe : ForgeRegistries.RECIPES)
 		{
 			ItemStack output = recipe.getRecipeOutput();
@@ -45,7 +64,8 @@ public class CraftingHandler
 				if (genRecipes != null)
 				{
 					genRecipes.add(new RecipeContainer(ingredients, output, getTierIfStaged(recipe)));
-				} else
+				}
+				else
 				{
 					genRecipes = new ArrayList<RecipeContainer>();
 					genRecipes.add(new RecipeContainer(ingredients, output, getTierIfStaged(recipe)));
@@ -86,7 +106,7 @@ public class CraftingHandler
 
 	public static NonNullList<ItemStack> getPossibleItems(NonNullList<ItemStack> available, boolean removeAvailable)
 	{
-		RecipeTreeNew subtree = recipeTree.getSubtree(available);
+		RecipeTree subtree = recipeTree.getSubtree(available);
 
 		return subtree.getPossibleStacks(removeAvailable);
 	}
@@ -102,15 +122,15 @@ public class CraftingHandler
 		return blocks;
 	}
 
-	public static RecipeTreeNew getRecipeTree(ItemStack requested, NonNullList<ItemStack> available)
+	public static RecipeTree getRecipeTree(ItemStack requested, NonNullList<ItemStack> available)
 	{
-		RecipeTreeNew subtree = recipeTree.getSubtree(available);
+		RecipeTree subtree = recipeTree.getSubtree(available);
 		return subtree.getRecipeTree(requested);
 	}
 
-	public static RecipeTreeNew getSubTree(NonNullList<ItemStack> available)
+	public static RecipeTree getSubTree(NonNullList<ItemStack> available)
 	{
-		RecipeTreeNew subtree = recipeTree.getSubtree(available);
+		RecipeTree subtree = recipeTree.getSubtree(available);
 		return subtree;
 	}
 
@@ -131,7 +151,8 @@ public class CraftingHandler
 					return tier;
 				}
 
-			} catch (Exception e)
+			}
+			catch (Exception e)
 			{
 				return "";
 			}
@@ -142,15 +163,29 @@ public class CraftingHandler
 
 	public static String getItemString(ItemStack output)
 	{
-		String outputString = output.getItem().getRegistryName().toString() + "@" + output.getMetadata() + "$" + (output.hasTagCompound() ? output.getTagCompound().toString() : "") + ";";
+		String nbt = output.hasTagCompound() ? output.getTagCompound().toString() : "";
+		long nbtID = 0;
+
+		if (NBTToIDCache.containsKey(nbt))
+		{
+			nbtID = NBTToIDCache.get(nbt);
+		}
+		else
+		{
+			NBTToIDCache.put(nbt, num);
+			IDToNBTCache.put(num, nbt);
+			num++;
+		}
+
+		String outputString = output.getItem().getRegistryName().toString() + "@" + output.getMetadata() + "$" + nbtID + ";";
 		return outputString;
 	}
 
 	public static String[] getStackIngredientStrings(ItemStack output, boolean self)
 	{
-		if(output.isEmpty())
+		if (output.isEmpty())
 			return new String[0];
-		
+
 		int[] ores = OreDictionary.getOreIDs(output);
 
 		List<String> oredict = new ArrayList<String>();
@@ -171,16 +206,17 @@ public class CraftingHandler
 
 		return oredict.toArray(new String[oredict.size()]);
 	}
-	
+
 	public static String getStackIngredientString(ItemStack output, boolean self)
 	{
 		String[] str = getStackIngredientStrings(output, self);
 		StringBuilder sb = new StringBuilder();
-		for(String s : str)
+		sb.ensureCapacity(10000);
+		for (String s : str)
 		{
 			sb.append(s);
 		}
-		
+
 		return sb.toString();
 	}
 
@@ -221,14 +257,18 @@ public class CraftingHandler
 
 		if (!nbt.isEmpty())
 		{
-			NBTTagCompound tag;
 			try
 			{
-				tag = JsonToNBT.getTagFromJson(nbt);
+				String nbtString = IDToNBTCache.get(Long.parseLong(nbt));
+				
+				NBTTagCompound tag;
+
+				tag = JsonToNBT.getTagFromJson(nbtString);
 				stack.setTagCompound(tag);
-			} catch (NBTException e)
+			}
+			catch (Exception e)
 			{
-				return ItemStack.EMPTY;
+				return stack;
 			}
 
 		}

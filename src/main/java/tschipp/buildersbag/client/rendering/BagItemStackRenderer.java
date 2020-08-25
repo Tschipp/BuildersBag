@@ -78,8 +78,6 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 			renderStack.put(hash, serialized);
 			regenerateAvailablityList(stack);
 		}
-
-//		System.out.println(serialized);
 		
 		IBagCap bag = CapHelper.getBagCap(stack);
 
@@ -183,11 +181,14 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 
 					if (BuildersBagConfig.Settings.drawWorkingState && this.working.contains(bag.getUUID()))
 					{
+						GlStateManager.disableLighting();
+						mc.getTextureManager().bindTexture(mc.getTextureMapBlocks().LOCATION_BLOCKS_TEXTURE);
 						GlStateManager.pushMatrix();
 						GlStateManager.scale(0.7, 0.7, 0.7);
 						GlStateManager.translate(0, 0.0, 2);
 						renderModel(render, gears, -1, stack);
 						GlStateManager.popMatrix();
+						GlStateManager.enableLighting();
 					}
 
 				}

@@ -40,10 +40,7 @@ public class BagHelper
 	private static ItemStack cachedRoot = ItemStack.EMPTY;
 	
 	public static NonNullList<ItemStack> getOrProvideStackWithTree(ItemStack stack, int count, IBagCap bag, EntityPlayer player, @Nullable IBagModule exclude, @Nullable RecipeTree tree, @Nonnull ItemStack root)
-	{
-		System.out.println("Trying to provide " + count + " of " + stack);
-		
-		
+	{			
 		ItemStack bagStack = BagHelper.getStackFromCap(player, bag);
 	
 		NonNullList<ItemStack> providedList = NonNullList.create();
@@ -62,12 +59,53 @@ public class BagHelper
 			return ItemHelper.listOf(stack, Math.min(amount, count));
 		}
 	
+		providedList.addAll(getStackDontProvide(stack, count, bag, player));
+	
+		for (IBagModule module : BagHelper.getSortedModules(bag))
+		{
+			if (module.isEnabled() && !module.isSupplier() && (exclude == null ? true : exclude != module))
+			{
+				if (providedList.size() >= count)
+				{
+					BuildersBag.proxy.stopWorking(bag.getUUID(), player);
+					return providedList;
+				}
+	
+				if (BagHelper.incrementRecursionDepth(player))
+				{
+					NonNullList<ItemStack> provided = module instanceof CraftingModule ? ((CraftingModule) module).createStackWithRecipeTree(stack, count - providedList.size(), bag, player, tree, root) : module.createStackWithCount(stack, count, bag, player);
+	
+					BagHelper.resetRecursionDepth(player);
+					BagCache.sendBagModificationToClient(bagStack, stack, -provided.size(), player);
+	
+					providedList.addAll(provided);
+	
+				}
+				else
+				{
+					BuildersBag.proxy.stopWorking(bag.getUUID(), player);
+					return providedList;
+				}
+			}
+	
+		}
+		
+	
+		BuildersBag.proxy.stopWorking(bag.getUUID(), player);
+		return providedList;
+	}
+	
+	public static NonNullList<ItemStack> getStackDontProvide(ItemStack stack, int count, IBagCap bag, EntityPlayer player)
+	{
+		ItemStack bagStack = BagHelper.getStackFromCap(player, bag);
+
+		NonNullList<ItemStack> providedList = NonNullList.create();
 		ItemStack foundStack = ItemStack.EMPTY;
 		NonNullList<ItemStack> availableBlocks = InventoryHelper.getStacks(bag.getBlockInventory());
 	
 		BuildersBag.proxy.startWorking(bag.getUUID(), player);
 		
-		providedList.addAll(InventoryHelper.addMatchingStacksWithSizeOne(stack, count, availableBlocks));
+		providedList.addAll(InventoryHelper.removeMatchingStacksWithSizeOne(stack, count, availableBlocks));
 		
 		for (ItemStack available : availableBlocks)
 		{
@@ -110,37 +148,7 @@ public class BagHelper
 				}
 			}
 		}
-	
-		for (IBagModule module : BagHelper.getSortedModules(bag))
-		{
-			if (module.isEnabled() && !module.isSupplier() && (exclude == null ? true : exclude != module))
-			{
-				if (providedList.size() >= count)
-				{
-					BuildersBag.proxy.stopWorking(bag.getUUID(), player);
-					return providedList;
-				}
-	
-				if (BagHelper.incrementRecursionDepth(player))
-				{
-					NonNullList<ItemStack> provided = module instanceof CraftingModule ? ((CraftingModule) module).createStackWithRecipeTree(stack, count - providedList.size(), bag, player, tree, root) : module.createStackWithCount(stack, count, bag, player);
-	
-					BagHelper.resetRecursionDepth(player);
-					BagCache.sendBagModificationToClient(bagStack, stack, -provided.size(), player);
-	
-					providedList.addAll(provided);
-	
-				}
-				else
-				{
-					BuildersBag.proxy.stopWorking(bag.getUUID(), player);
-					return providedList;
-				}
-			}
-	
-		}
-	
-		BuildersBag.proxy.stopWorking(bag.getUUID(), player);
+		
 		return providedList;
 	}
 
@@ -414,6 +422,11 @@ public class BagHelper
 		cachedTree = tree;
 		cachedRoot = root;
 		treeCacheTime = System.currentTimeMillis();
+	}
+	
+	public static void clearTreeBlacklist()
+	{
+		cachedTree.blacklistedRecipes.clear();
 	}
 	
 	private static boolean botaniaCheck(ItemStack stack)
