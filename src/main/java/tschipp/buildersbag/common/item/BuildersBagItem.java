@@ -7,7 +7,6 @@ import com.creativemd.littletiles.common.api.ILittleIngredientInventory;
 import com.creativemd.littletiles.common.api.ILittleIngredientSupplier;
 import com.creativemd.littletiles.common.util.ingredient.LittleIngredients;
 import com.creativemd.littletiles.common.util.ingredient.LittleInventory;
-import com.mojang.realmsclient.gui.ChatFormatting;
 
 import baubles.api.BaubleType;
 import baubles.api.IBauble;
@@ -25,6 +24,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
