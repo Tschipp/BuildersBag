@@ -1,6 +1,6 @@
 package tschipp.buildersbag.common.modules;
 
-import java.util.Map;
+import java.util.Collections;
 import java.util.Map.Entry;
 
 import javax.annotation.Nonnull;
@@ -15,15 +15,13 @@ import tschipp.buildersbag.api.AbstractBagModule;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.ModulePriority;
 import tschipp.buildersbag.common.crafting.CraftingHandler;
+import tschipp.buildersbag.common.crafting.CraftingStepList;
+import tschipp.buildersbag.common.crafting.CraftingStepList.CraftingStep;
 import tschipp.buildersbag.common.crafting.RecipeContainer;
-import tschipp.buildersbag.common.crafting.RecipeRequirementList;
-import tschipp.buildersbag.common.crafting.RecipeRequirementList.CraftingOrderList;
-import tschipp.buildersbag.common.crafting.RecipeRequirementList.CraftingStep;
 import tschipp.buildersbag.common.crafting.RecipeTree;
 import tschipp.buildersbag.common.data.ItemContainer;
 import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
-import tschipp.buildersbag.common.helper.ItemHelper;
 
 public class CraftingModule extends AbstractBagModule
 {
@@ -61,8 +59,6 @@ public class CraftingModule extends AbstractBagModule
 
 	public NonNullList<ItemStack> createStackWithRecipeTree(ItemStack stack, int count, IBagCap bag, EntityPlayer player, @Nullable RecipeTree subTree, @Nonnull ItemStack root)
 	{
-		System.out.println("Crafting: Trying to create " + count + " of " + stack);
-
 		boolean newTree = subTree == null;
 
 		if (subTree == null)
@@ -87,132 +83,190 @@ public class CraftingModule extends AbstractBagModule
 		}
 
 		NonNullList<ItemStack> list = NonNullList.create();
-
-		RecipeRequirementList recipeList = subTree.generateRequirementList(CraftingHandler.getItemString(stack), null, player, bag);
-
+		
 		int attempt = 0;
 
-		while (attempt < 10 && recipeList != null && list.size() < count)
+		while (attempt < 10 && list.size() < count)
 		{
+			CraftingStepList stepList = subTree.generateCraftingStepList(CraftingHandler.getItemString(stack), count - list.size(), player, bag);
+			
 			attempt++;
 
-			CraftingOrderList craftingList = recipeList.generateCraftingOrderList(count, player, bag);
-
+			if(stepList == null)
+			{
+				continue;
+			}
+			
 			NonNullList<ItemStack> providedRecipeIngredients = NonNullList.create();
 
-			for (CraftingStep step : craftingList)
+			steplist:
+			for (CraftingStep step : stepList)
 			{
 				RecipeContainer recipe = step.getRecipe();
-				int totalCraftAmount = step.getCraftCount();
+				int recipeAmount = step.getRecipeAmount();
 
-				Map<ItemContainer, Integer> ingredientAmount = recipeList.getRecipeIngredientAmounts(craftingList, step);
-
-				for (Entry<ItemContainer, Integer> ingEntry : ingredientAmount.entrySet())
+				for (Entry<ItemContainer, Integer> ingEntry : step.ingredientsToUse.entrySet())
 				{
-					int amountNeeded = ingEntry.getValue();
+					int needed = ingEntry.getValue();
+					ItemStack ingStack = ingEntry.getKey().getItem();
 
-					ItemStack matchingStack = ingEntry.getKey().getItem();
-					if (!matchingStack.isEmpty())
+					int removed = InventoryHelper.removeMatchingStacksWithSizeOne(ingStack, needed, providedRecipeIngredients).size();
+					needed -= removed;
+
+					if (needed <= 0)
+						continue;
+
+					NonNullList<ItemStack> provided = BagHelper.getStackDontProvide(ingStack, needed, bag, player);
+					needed -= provided.size();
+					
+					if(needed > 0)
 					{
-						if (amountNeeded <= 0)
-							continue;
-
-						int x = amountNeeded;
-
-						NonNullList<ItemStack> providedCopy = ItemHelper.copy(providedRecipeIngredients);
-
-						for (int i = 0; i < x; i++)
-						{
-							ItemStack providedStack = ItemHelper.containsStack(matchingStack, providedCopy);
-							if (!providedStack.isEmpty())
-							{
-								providedCopy.remove(providedStack);
-								amountNeeded--;
-							}
-							else
-								continue;
-						}
-
-						if (amountNeeded <= 0)
-							continue;
-
-						NonNullList<ItemStack> provided = BagHelper.getOrProvideStackWithTree(matchingStack, amountNeeded, bag, player, this, subTree, root);
-						amountNeeded -= provided.size();
-						providedRecipeIngredients.addAll(provided);
+						stepList.blacklist();
+						break steplist;
 					}
-
 				}
-
-				for (int i = 0; i < totalCraftAmount; i++)
-				{
-					boolean hasRecipeRequirements = true;
-					NonNullList<ItemStack> removedIngredients = NonNullList.create();
-
-					for (Entry<ItemContainer, Integer> ingEntry : ingredientAmount.entrySet())
-					{
-						int amountNeeded = ingEntry.getValue() / totalCraftAmount;
-						boolean hasIng = false;
-
-						ItemStack matchingStack = ingEntry.getKey().getItem();
-						if (!matchingStack.isEmpty())
-						{
-							if(amountNeeded <= 0)
-								hasIng = true;
-								
-							int x = amountNeeded;
-							for (int j = 0; j < x; j++)
-							{
-								ItemStack provided = ItemHelper.containsStack(matchingStack, providedRecipeIngredients);
-								if (!provided.isEmpty())
-								{
-									amountNeeded--;
-									providedRecipeIngredients.remove(provided);
-									removedIngredients.add(provided);
-
-									if (amountNeeded <= 0)
-									{
-										hasIng = true;
-										break;
-									}
-								}
-							}
-						}
-
-						if (!hasIng)
-							hasRecipeRequirements = false;
-					}
-
-					if (hasRecipeRequirements)
-					{
-						ItemStack out = recipe.getOutput();
-						int outcount = out.getCount();
-						out.setCount(1);
-
-						if (ItemStack.areItemsEqual(recipe.getOutput(), root))
-							list.addAll(ItemHelper.listOf(out, outcount));
-						else
-							providedRecipeIngredients.addAll(ItemHelper.listOf(out, outcount));
-					}
-					else
-					{
-						for (ItemStack s : removedIngredients)
-							BagHelper.addStack(s, bag, player);
-						recipeList.blacklist(recipe);
-					}
-
-				}
-
+				
+				for(int i = 0; i < recipeAmount; i++)
+					providedRecipeIngredients.add(recipe.getOutput().copy());
 			}
 
-			if (!providedRecipeIngredients.isEmpty())
-			{
-				for (ItemStack s : providedRecipeIngredients)
-					BagHelper.addStack(s, bag, player);
-			}
-
-			recipeList = subTree.generateRequirementList(CraftingHandler.getItemString(stack), null, player, bag);
-
+			list.addAll(InventoryHelper.removeMatchingStacksWithSizeOne(stack, count - list.size(), providedRecipeIngredients));
+			
+			for(ItemStack s : providedRecipeIngredients)
+				BagHelper.addStack(s, bag, player);
+			
+			
+			if(list.size() >= count)
+				return list;
+			
+			stepList.blacklist();
 		}
+
+		// RecipeRequirementList recipeList = subTree.generateRequirementList(CraftingHandler.getItemString(stack), null, player, bag);
+		//
+		// int attempt = 0;
+		//
+		// while (attempt < 10 && recipeList != null && list.size() < count)
+		// {
+		// attempt++;
+		//
+		// CraftingOrderList craftingList = recipeList.generateCraftingOrderList(count, player, bag);
+		//
+		// NonNullList<ItemStack> providedRecipeIngredients = NonNullList.create();
+		//
+		// for (CraftingStep step : craftingList)
+		// {
+		// RecipeContainer recipe = step.getRecipe();
+		// int totalCraftAmount = step.getCraftCount();
+		//
+		// Map<ItemContainer, Integer> ingredientAmount = recipeList.getRecipeIngredientAmounts(craftingList, step);
+		//
+		// for (Entry<ItemContainer, Integer> ingEntry : ingredientAmount.entrySet())
+		// {
+		// int amountNeeded = ingEntry.getValue();
+		//
+		// ItemStack matchingStack = ingEntry.getKey().getItem();
+		// if (!matchingStack.isEmpty())
+		// {
+		// if (amountNeeded <= 0)
+		// continue;
+		//
+		// int x = amountNeeded;
+		//
+		// NonNullList<ItemStack> providedCopy = ItemHelper.copy(providedRecipeIngredients);
+		//
+		// for (int i = 0; i < x; i++)
+		// {
+		// ItemStack providedStack = ItemHelper.containsStack(matchingStack, providedCopy);
+		// if (!providedStack.isEmpty())
+		// {
+		// providedCopy.remove(providedStack);
+		// amountNeeded--;
+		// }
+		// else
+		// continue;
+		// }
+		//
+		// if (amountNeeded <= 0)
+		// continue;
+		//
+		// NonNullList<ItemStack> provided = BagHelper.getOrProvideStackWithTree(matchingStack, amountNeeded, bag, player, this, subTree, root);
+		// amountNeeded -= provided.size();
+		// providedRecipeIngredients.addAll(provided);
+		// }
+		//
+		// }
+		//
+		// for (int i = 0; i < totalCraftAmount; i++)
+		// {
+		// boolean hasRecipeRequirements = true;
+		// NonNullList<ItemStack> removedIngredients = NonNullList.create();
+		//
+		// for (Entry<ItemContainer, Integer> ingEntry : ingredientAmount.entrySet())
+		// {
+		// int amountNeeded = ingEntry.getValue() / totalCraftAmount;
+		// boolean hasIng = false;
+		//
+		// ItemStack matchingStack = ingEntry.getKey().getItem();
+		// if (!matchingStack.isEmpty())
+		// {
+		// if(amountNeeded <= 0)
+		// hasIng = true;
+		//
+		// int x = amountNeeded;
+		// for (int j = 0; j < x; j++)
+		// {
+		// ItemStack provided = ItemHelper.containsStack(matchingStack, providedRecipeIngredients);
+		// if (!provided.isEmpty())
+		// {
+		// amountNeeded--;
+		// providedRecipeIngredients.remove(provided);
+		// removedIngredients.add(provided);
+		//
+		// if (amountNeeded <= 0)
+		// {
+		// hasIng = true;
+		// break;
+		// }
+		// }
+		// }
+		// }
+		//
+		// if (!hasIng)
+		// hasRecipeRequirements = false;
+		// }
+		//
+		// if (hasRecipeRequirements)
+		// {
+		// ItemStack out = recipe.getOutput();
+		// int outcount = out.getCount();
+		// out.setCount(1);
+		//
+		// if (ItemStack.areItemsEqual(recipe.getOutput(), root))
+		// list.addAll(ItemHelper.listOf(out, outcount));
+		// else
+		// providedRecipeIngredients.addAll(ItemHelper.listOf(out, outcount));
+		// }
+		// else
+		// {
+		// for (ItemStack s : removedIngredients)
+		// BagHelper.addStack(s, bag, player);
+		// recipeList.blacklist(recipe);
+		// }
+		//
+		// }
+		//
+		// }
+		//
+		// if (!providedRecipeIngredients.isEmpty())
+		// {
+		// for (ItemStack s : providedRecipeIngredients)
+		// BagHelper.addStack(s, bag, player);
+		// }
+		//
+		// recipeList = subTree.generateRequirementList(CraftingHandler.getItemString(stack), null, player, bag);
+		//
+		// }
 
 		// List<RecipeContainer> recipes = CraftingHandler.getRecipes(stack);
 		// if (recipes.isEmpty())
@@ -317,12 +371,6 @@ public class CraftingModule extends AbstractBagModule
 		//
 		// return split;
 		// }
-
-		while (list.size() > count)
-
-		{
-			BagHelper.addStack(list.remove(list.size() - 1), bag, player);
-		}
 
 		return list;
 	}

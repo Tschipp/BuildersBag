@@ -72,6 +72,11 @@ public class Configs {
 		@Comment("Whether the bag should render spinning gears while it is performing work")
 		public boolean drawWorkingState = true;
 
+		@Comment("Whether a sound should be played if a block can't be placed")
+		public boolean playFailSounds = true;
+		
+		@Comment("Whether a sound should be played if a pick-block action was successful")
+		public boolean playPickBlockSounds = true;
 	}
 
 }

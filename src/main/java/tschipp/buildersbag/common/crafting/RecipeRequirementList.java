@@ -229,13 +229,11 @@ public class RecipeRequirementList
 				requirementHierarchy.put(e.getKey(), e.getValue().clone());
 		}
 
-		
 		NonNullList<ItemStack> bagInventory = NonNullList.create();
 		InventoryHelper.getInventoryStacks(bag, player).forEach(stack -> bagInventory.add(stack.copy()));
-		
-		
+
 		Map<ItemContainer, Integer> exactRequirements = this.generateExactRequirementList(amountToCraft, player, bag);
-		
+
 		do
 		{
 			for (Entry<ItemContainer, Double> entry : totalRequirements.entrySet())
@@ -246,56 +244,67 @@ public class RecipeRequirementList
 				{
 					double totalItemsNeededCount = totalItemsCrafted * entry.getValue();
 
-					if (reqCont.isIngredient()) // This requirement is an ingredient and we need to resolve it first
+					checkIngredient:
 					{
-						for (ItemContainer replacement : validIngredientReplacements.get(reqCont))
-						{
-							int recipeItemsAlreadyThere = orderList.removeCreatedCount(ItemContainer.forStack(replacement.getItem()), (int) totalItemsNeededCount);
-							int totalItemsAlreadyThere = InventoryHelper.addMatchingStacksWithSizeOne(replacement.getItem(), (int) Math.ceil(totalItemsNeededCount), bagInventory).size();
-
-							orderList.addItemAmount(replacement, (int) Math.min(totalItemsAlreadyThere, totalItemsNeededCount));
-							totalItemsNeededCount -= totalItemsAlreadyThere;
-							
-							if (totalItemsNeededCount <= 0)
-								break;
-						}
-
-						if (totalItemsNeededCount > 0)
+//						if(!exactRequirements.containsKey(reqCont))
+//							break checkIngredient;
+						
+						if (reqCont.isIngredient()) // This requirement is an ingredient and we need to resolve it first
 						{
 							for (ItemContainer replacement : validIngredientReplacements.get(reqCont))
 							{
-								RecipeRequirementList ingReqList = tree.generateRequirementList(CraftingHandler.getItemString(replacement.getItem()), null, player, bag);
-								CraftingOrderList ingOrderList = ingReqList.generateCraftingOrderList((int) Math.ceil(totalItemsNeededCount), player, bag);
+								int recipeItemsAlreadyThere = orderList.removeCreatedCount(ItemContainer.forStack(replacement.getItem()), (int) totalItemsNeededCount);
+								int totalItemsAlreadyThere = InventoryHelper.removeMatchingStacksWithSizeOne(replacement.getItem(), (int) Math.ceil(totalItemsNeededCount), bagInventory).size();
 
-								orderList.insert(ingOrderList);
-								orderList.addItemAmount(replacement, (int) Math.min(totalItemsNeededCount, orderList.rootItemCrafted));
+								orderList.addItemAmount(replacement, (int) Math.min(totalItemsAlreadyThere, totalItemsNeededCount));
+								totalItemsNeededCount -= totalItemsAlreadyThere;
 
-								totalItemsNeededCount -= orderList.rootItemCrafted;
-								
 								if (totalItemsNeededCount <= 0)
 									break;
 							}
+
+							if (totalItemsNeededCount > 0)
+							{
+								for (ItemContainer replacement : validIngredientReplacements.get(reqCont))
+								{
+									RecipeRequirementList ingReqList = tree.generateRequirementList(CraftingHandler.getItemString(replacement.getItem()), null, player, bag);
+
+									if (ingReqList == null)
+										continue;
+
+									CraftingOrderList ingOrderList = ingReqList.generateCraftingOrderList((int) Math.ceil(totalItemsNeededCount), player, bag);
+
+									orderList.insert(ingOrderList);
+									orderList.addItemAmount(replacement, (int) Math.min(totalItemsNeededCount, orderList.rootItemCrafted));
+
+									totalItemsNeededCount -= orderList.rootItemCrafted;
+
+									if (totalItemsNeededCount <= 0)
+										break;
+								}
+							}
+						}
+						else
+						{
+							RecipeContainer recipe = recipes.get(reqCont);
+
+							if (recipe == null)
+								recipe = new RecipeContainerProvided(reqCont.getItem());
+
+							int outputAmount = recipe.getOutput().getCount();
+
+							int recipeItemsAlreadyThere = orderList.removeCreatedCount(ItemContainer.forStack(recipe.getOutput()), (int) Math.ceil(totalItemsNeededCount));
+							int totalItemsAlreadyThere = InventoryHelper.removeMatchingStacksWithSizeOne(recipe.getOutput(), (int) Math.ceil(totalItemsNeededCount), bagInventory).size() + recipeItemsAlreadyThere;
+							int recipeCraftingOps = (int) Math.ceil((totalItemsNeededCount - totalItemsAlreadyThere) / outputAmount);
+
+							orderList.addItemAmount(reqCont, recipeCraftingOps * outputAmount + totalItemsAlreadyThere);
+
+							if (recipeCraftingOps > 0 && !(recipe instanceof RecipeContainerProvided))
+								orderList.addRecipe(recipe, recipeCraftingOps);
+
 						}
 					}
-					else
-					{
-						RecipeContainer recipe = recipes.get(reqCont);
 
-						if (recipe == null)
-							recipe = new RecipeContainerProvided(reqCont.getItem());
-
-						int outputAmount = recipe.getOutput().getCount();
-
-						int recipeItemsAlreadyThere = orderList.removeCreatedCount(ItemContainer.forStack(recipe.getOutput()), (int) Math.ceil(totalItemsNeededCount));
-						int totalItemsAlreadyThere = InventoryHelper.addMatchingStacksWithSizeOne(recipe.getOutput(), (int)Math.ceil(totalItemsNeededCount), bagInventory).size() + recipeItemsAlreadyThere;
-						int recipeCraftingOps = (int) Math.ceil((totalItemsNeededCount - totalItemsAlreadyThere) / outputAmount);
-
-						orderList.addItemAmount(reqCont, recipeCraftingOps * outputAmount + totalItemsAlreadyThere);
-						
-						if (recipeCraftingOps > 0 && !(recipe instanceof RecipeContainerProvided))
-							orderList.addRecipe(recipe, recipeCraftingOps);
-
-					}
 					List<ItemContainer> toRemove = new ArrayList<ItemContainer>();
 
 					for (Entry<ItemContainer, Requirement> h : requirementHierarchy.entrySet())
@@ -338,12 +347,12 @@ public class RecipeRequirementList
 			}
 		}
 	}
-	
+
 	public Map<ItemContainer, Integer> getRecipeIngredientAmounts(CraftingOrderList orderList, CraftingStep step)
 	{
 		Map<ItemContainer, Integer> ingredientAmount = new HashMap<ItemContainer, Integer>();
 		Map<ItemContainer, Integer> totalNeededIngs = orderList.itemAmounts;
-		
+
 		for (Ingredient ing : step.recipe.getIngredients())
 		{
 			if (ing.getMatchingStacks().length == 0)
@@ -351,40 +360,40 @@ public class RecipeRequirementList
 
 			String ingStr = CraftingHandler.getIngredientString(ing);
 			ItemContainer cont = ItemContainer.forIngredient(ingStr);
-			
-			if(totalNeededIngs.containsKey(cont))
+
+			if (totalNeededIngs.containsKey(cont))
 			{
 				Integer i = ingredientAmount.get(cont);
 				if (i == null)
 					i = 0;
 				i += step.craftCount;
 				ingredientAmount.put(cont, i);
-				
+
 				Integer j = totalNeededIngs.get(cont);
 				j -= step.craftCount;
-				if(j <= 0)
+				if (j <= 0)
 					totalNeededIngs.remove(cont);
 				else
 					totalNeededIngs.put(cont, j);
 			}
 			else
 			{
-				for(ItemContainer replacement : validIngredientReplacements.get(cont))
+				for (ItemContainer replacement : validIngredientReplacements.get(cont))
 				{
-					if(totalNeededIngs.containsKey(replacement))
+					if (totalNeededIngs.containsKey(replacement))
 					{
 						Integer j = totalNeededIngs.get(replacement);
 						Integer i = ingredientAmount.get(replacement);
 						if (i == null)
 							i = 0;
-						
+
 						int toAdd = Math.min(j, step.craftCount);
-						
+
 						i += toAdd;
 						ingredientAmount.put(replacement, i);
-						
+
 						j -= toAdd;
-						if(j <= 0)
+						if (j <= 0)
 							totalNeededIngs.remove(replacement);
 						else
 							totalNeededIngs.put(replacement, j);
@@ -439,27 +448,27 @@ public class RecipeRequirementList
 		private Map<ItemContainer, Integer> itemAmounts = new HashMap<ItemContainer, Integer>();
 		private Queue<CraftingStep> recipeQueue = new LinkedList<CraftingStep>();
 		private Map<ItemContainer, Integer> createdItems = new HashMap<ItemContainer, Integer>();
-		
+
 		public void addRecipe(RecipeContainer recipe, int craftCount)
 		{
 			recipeQueue.add(new CraftingStep(recipe, craftCount));
 			ItemStack out = recipe.getOutput();
 			addCreatedItem(ItemContainer.forStack(out), out.getCount() * craftCount);
 		}
-		
+
 		public void addItemAmount(ItemContainer item, int amount)
 		{
 			Integer i = itemAmounts.get(item);
-			if(i == null)
+			if (i == null)
 				i = 0;
 			i += amount;
 			itemAmounts.put(item, i);
 		}
-		
+
 		private void addCreatedItem(ItemContainer item, int amount)
 		{
 			Integer i = createdItems.get(item);
-			if(i == null)
+			if (i == null)
 				i = 0;
 			i += amount;
 			createdItems.put(item, i);
@@ -473,20 +482,20 @@ public class RecipeRequirementList
 		public int removeCreatedCount(ItemContainer stack, int max)
 		{
 			Integer count = createdItems.get(stack);
-			if(count == null)
+			if (count == null)
 				return 0;
-			
+
 			int remove = Math.min(count, max);
 			count -= remove;
 			createdItems.put(stack, count);
-			
+
 			return remove;
 		}
 
 		public void insert(CraftingOrderList other)
 		{
 			recipeQueue.addAll(other.recipeQueue);
-			for(Entry<ItemContainer, Integer> entry : other.itemAmounts.entrySet())
+			for (Entry<ItemContainer, Integer> entry : other.itemAmounts.entrySet())
 			{
 				this.addItemAmount(entry.getKey(), entry.getValue());
 			}
@@ -497,8 +506,7 @@ public class RecipeRequirementList
 		{
 			return recipeQueue.iterator();
 		}
-		
-		
+
 	}
 
 	public static class CraftingStep

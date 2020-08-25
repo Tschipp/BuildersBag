@@ -40,7 +40,7 @@ public class BuildersBag
 	public static final String VERSION = "GRADLE:VERSION";
 	public static final String NAME = "Builder's Bag";
 	public static final String ACCEPTED_VERSIONS = "[1.12.2,1.13)";
-	public static final String DEPENDENCIES = "required-after:forge@[13.20.1.2386,);after:chiselsandbits;after:littletiles@[1.5.0,);after:creativecore@[1.10.0,);after:linear@[1.3,);after:craftteaker;";
+	public static final String DEPENDENCIES = "required-after:forge@[13.20.1.2386,);after:chiselsandbits;after:littletiles@[1.5.0,);after:creativecore@[1.10.0,);after:linear@[1.3,);after:craftteaker;after:buildinggadgets@[2.8.4,);";
 	public static final Logger LOGGER = LogManager.getFormatterLogger(MODID.toUpperCase());
 	public static final String CERTIFICATE = "fd21553434f4905f2f73ea7838147ac4ea07bd88";
 

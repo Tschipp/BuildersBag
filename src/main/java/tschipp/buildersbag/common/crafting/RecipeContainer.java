@@ -36,7 +36,7 @@ public class RecipeContainer
 	@Override
 	public String toString()
 	{
-		return output.toString();
+		return output.getCount() + "x" + output.getItem().getRegistryName() + "@" + output.getMetadata();
 	}
 	
 	@Override

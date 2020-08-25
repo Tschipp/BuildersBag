@@ -41,6 +41,7 @@ import tschipp.linear.api.LinearBlockStateEvent;
 import tschipp.linear.api.LinearPlaceBlockEvent;
 import tschipp.linear.api.LinearRenderBlockStateEvent;
 import tschipp.linear.api.LinearRequestEvent;
+import tschipp.linear.common.config.LinearConfig;
 import tschipp.linear.common.helper.LinearHelper;
 
 @EventBusSubscriber(modid = BuildersBag.MODID)
@@ -143,10 +144,10 @@ public class LinearEvents
 					provided = BagHelper.getOrProvideStackWithCountDominating(requested, bagCap, player);
 			}
 			else
-				provided = BagHelper.getOrProvideStackWithCount(placementStack, requested + (player.world.isRemote ? 1 : 0), bagCap, player, null);
-
+				provided = BagHelper.getOrProvideStackWithCount(placementStack, requested + (player.world.isRemote ? requested + 5 : 0), bagCap, player, null);
+			
 			if (!provided.isEmpty())
-				providedBlocks += provided.size() - (player.world.isRemote ? 1 : 0);
+				providedBlocks += provided.size();
 
 			if (!player.world.isRemote)
 				for (ItemStack prov : provided)

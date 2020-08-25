@@ -5,6 +5,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,8 +23,11 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.NonNullList;
 import tschipp.buildersbag.api.IBagCap;
+import tschipp.buildersbag.common.crafting.CraftingStepList.CraftingStep;
+import tschipp.buildersbag.common.data.ItemContainer;
 import tschipp.buildersbag.common.data.Tuple;
 import tschipp.buildersbag.common.helper.InventoryHelper;
+import tschipp.buildersbag.common.helper.MapHelper;
 import tschipp.buildersbag.compat.gamestages.StageHelper;
 
 //Don't touch this class, just hope that it works
@@ -37,6 +42,7 @@ public class RecipeTree
 	private boolean aborted = false;
 
 	public Set<RecipeContainer> blacklistedRecipes = new HashSet<RecipeContainer>();
+	private int recursionCount = 0;
 
 	public void add(IRecipe recipe)
 	{
@@ -68,7 +74,7 @@ public class RecipeTree
 				if (ing.getMatchingStacks().length == 0)
 					continue;
 
-				CraftingHandler.addIngredientIfAlternative(ing);
+//				CraftingHandler.addIngredientIfAlternative(ing);
 
 				String ingString = CraftingHandler.getIngredientString(ing);
 
@@ -82,6 +88,245 @@ public class RecipeTree
 				node.add(altOutputNode, cont);
 			}
 		}
+	}
+
+	public CraftingStepList generateCraftingStepList(String toCreate, int createAmount, EntityPlayer player, IBagCap bag)
+	{
+		CraftingStepList result = null;
+		int craftAmount = 1;
+
+		ItemContainer toCreateContainer = ItemContainer.forIngredient(toCreate);
+
+		for (int i = 1; i <= Math.ceil(((double) createAmount / craftAmount)); i++)
+		{
+			this.recursionCount = 0;
+
+			CraftingStepList nextList = generateCraftingStepListInternal(toCreate, craftAmount, result == null ? null : result.copy(), player, bag, null);
+			if (nextList == null)
+				return null;
+
+			if (nextList.doesCreateLast(toCreateContainer))
+			{
+				if (result == null)
+					result = nextList;
+				else
+					result.merge(nextList);
+			}
+			else
+			{
+				nextList.blacklist();
+				break;
+			}
+
+			craftAmount = nextList.getCreationRecipe().getOutput().getCount();
+
+		}
+
+		this.recursionCount = 0;
+
+		return result;
+	}
+
+	private CraftingStepList generateCraftingStepListInternal(String toCreate, int createAmount, @Nullable CraftingStepList stepList, EntityPlayer player, IBagCap bag, @Nullable Map<ItemContainer, Integer> ingredientsCallback)
+	{
+		RecipeNode toCreateNode = this.nodes.get(toCreate);
+		RecipeNode parentNode = null;
+		RecipeContainer fastestRecipe = null;
+		ItemContainer toCreateContainer = ItemContainer.forIngredient(toCreate);
+
+		if (recursionCount >= 100)
+			return stepList;
+
+		recursionCount++;
+
+		if (toCreateNode == null)
+			return stepList;
+
+		if (stepList == null)
+		{
+			stepList = new CraftingStepList(player, bag, this);
+			validatedNodes.clear();
+			invalidatedNodes.clear();
+			callStack.clear();
+		}
+
+		if (stepList.findCycle())
+			return stepList;
+
+		markedNodes.clear();
+
+		Queue<RecipeNode> bfsqueue = new ArrayDeque<RecipeNode>();
+		bfsqueue.add(toCreateNode);
+
+		markedNodes.put(toCreateNode.id, true);
+
+		RecipeContainer firstRecipe = null;
+		
+		while (!bfsqueue.isEmpty()) // Go up the tree until we find the furthest parent
+		{
+			RecipeNode current = bfsqueue.poll();
+			for (Tuple<RecipeNode, RecipeContainer> parent : current.parentNodes)
+			{
+				if (this.blacklistedRecipes.contains(parent.getSecond()))
+					continue;
+
+				if (!StageHelper.hasStage(player, parent.getSecond().getStage()))
+					continue;
+
+				if(firstRecipe == null)
+					firstRecipe = parent.getSecond();
+				
+				RecipeNode p = parent.getFirst();
+				if (!markedNodes.containsKey(p.id))
+				{
+					if (p.id.split(";").length > 1)
+					{
+						parentNode = p;
+						markedNodes.put(p.id, true);
+						break;
+					}
+
+					if (this.rootNodes.containsKey(p.id))
+					{
+						parentNode = p;
+					}
+					bfsqueue.add(p);
+					markedNodes.put(p.id, true);
+				}
+			}
+		}
+
+		if (parentNode == null)
+		{
+			this.blacklistedRecipes.add(firstRecipe);
+			return stepList;
+		}
+
+		bfsqueue.clear();
+		bfsqueue.add(parentNode);
+		markedNodes.clear();
+
+		findcreate: while (!bfsqueue.isEmpty()) // Go down the tree until we find the requested node
+		{
+			RecipeNode current = bfsqueue.poll();
+			for (Tuple<RecipeNode, RecipeContainer> child : current.adjacentNodes)
+			{
+				if (this.blacklistedRecipes.contains(child.getSecond()))
+					continue;
+
+				if (!StageHelper.hasStage(player, child.getSecond().getStage()))
+					continue;
+
+				RecipeNode c = child.getFirst();
+
+				if (!markedNodes.containsKey(c.id))
+				{
+					if (toCreateNode.id.equals(c.id))
+					{
+						fastestRecipe = child.getSecond();
+						break findcreate;
+					}
+					bfsqueue.add(c);
+					markedNodes.put(c.id, true);
+				}
+			}
+		}
+
+		if (fastestRecipe == null)
+		{
+			return stepList;
+		}
+
+		stepList.setCreationRecipe(fastestRecipe);
+
+		CraftingStep step = stepList.addCraftingStep(fastestRecipe);
+		int alreadyCreated = stepList.getAlreadyCreated(toCreateContainer, createAmount, null);
+		double actualNeeded = createAmount - alreadyCreated;
+		int recipeCreationCount = fastestRecipe.getOutput().getCount();
+		int craftingActionsNeeded = (int) Math.ceil(actualNeeded / recipeCreationCount);
+		if ((craftingActionsNeeded * recipeCreationCount) - actualNeeded > 0)
+			stepList.addExcess(toCreateContainer, (int) ((craftingActionsNeeded * recipeCreationCount) - actualNeeded));
+
+		int cappedCraftingActions = craftingActionsNeeded;
+
+		if (cappedCraftingActions > 0)
+		{
+			for (Tuple<RecipeNode, RecipeContainer> parent : toCreateNode.parentNodes)
+			{
+				if (parent.getSecond() == fastestRecipe)
+				{
+					String parentString = parent.getFirst().id;
+					int ingCount = 0;
+					for (Ingredient ing : parent.getSecond().getIngredients())
+					{
+						if (CraftingHandler.getIngredientString(ing).equals(parentString))
+						{
+							ingCount += 1;
+						}
+					}
+
+					int totalNeeded = cappedCraftingActions * ingCount;
+
+					String[] split = parentString.split(";");
+					List<String> splitlist = Arrays.asList(split);
+					// Collections.shuffle(splitlist);
+					for (int i = 0; i < 2; i++)
+					{
+						for (String s : splitlist)
+						{
+							if (totalNeeded <= 0)
+								break;
+
+							s += ";";
+
+							ItemContainer cont = ItemContainer.forIngredient(s);
+
+							if (this.nodes.containsKey(s))
+							{
+								if (i == 0)
+								{
+									if (this.rootNodes.containsKey(s))
+									{
+										int created = stepList.getAlreadyCreated(cont, totalNeeded, step);
+//										step.addIngredient(cont, created);
+										totalNeeded -= created;
+									}
+								}
+								else if (i == 1)
+								{
+									Map<ItemContainer, Integer> callback = new HashMap<ItemContainer, Integer>();
+									this.generateCraftingStepListInternal(s, totalNeeded, stepList, player, bag, callback);
+									int removed = MapHelper.removeAtMost(callback, cont, totalNeeded);
+									step.addIngredient(cont, removed);
+									totalNeeded -= removed;
+
+									stepList.moveCraftingStep(step, stepList.getInsertionIndex(callback, step));
+								}
+							}
+						}
+					}
+
+					if (totalNeeded > 0)
+					{
+						int recipesNotCreateable = (int) Math.ceil(totalNeeded / (double) ingCount);
+						cappedCraftingActions -= recipesNotCreateable;
+					}
+				}
+
+			}
+		}
+
+		if (ingredientsCallback != null)
+		{
+			MapHelper.add(ingredientsCallback, toCreateContainer, cappedCraftingActions * recipeCreationCount + alreadyCreated);
+		}
+
+		if (cappedCraftingActions <= 0)
+			stepList.removeCraftingStep(step);
+
+		step.setRecipeAmount(cappedCraftingActions);
+
+		return stepList;
 	}
 
 	@Nullable
@@ -129,13 +374,13 @@ public class RecipeTree
 				RecipeNode p = parent.getFirst();
 				if (!markedNodes.containsKey(p.id))
 				{
-					if(p.id.split(";").length > 1)
+					if (p.id.split(";").length > 1)
 					{
 						parentNode = p;
 						markedNodes.put(p.id, true);
 						break;
 					}
-					
+
 					if (this.rootNodes.containsKey(p.id))
 					{
 						parentNode = p;
@@ -202,14 +447,14 @@ public class RecipeTree
 				boolean isRootElement = this.rootNodes.containsKey(parent.getFirst().id);
 
 				String requirementNode = parent.getFirst().id;
-				
+
 				String[] split = requirementNode.split(";");
 				boolean added = false;
 				for (String str : split)
 				{
 					RecipeNode n = this.nodes.get(str + ";");
 					if (n != null)
-					{						
+					{
 						reqList.addOreReplacement(requirementNode, str + ";");
 					}
 				}
@@ -304,12 +549,19 @@ public class RecipeTree
 				{
 					RecipeNode node = this.nodes.get(name);
 
-					if (node != null && !subtree.nodes.containsKey(node.id))
+					if (node != null)
 					{
 						subtree.rootNodes.put(node.id, node);
-						subtree.nodes.put(name, node);
-						subtree.addNodesRecursively(node, this);
-
+						if (!subtree.nodes.containsKey(node.id))
+						{
+							subtree.nodes.put(name, node);
+							subtree.addNodesRecursively(node, this);
+						}
+					}
+					else
+					{
+						subtree.rootNodes.put(name, new RecipeNode(name));
+						subtree.nodes.put(name, subtree.rootNodes.get(name));
 					}
 				}
 			}

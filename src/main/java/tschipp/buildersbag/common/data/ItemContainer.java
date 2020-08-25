@@ -1,27 +1,43 @@
 package tschipp.buildersbag.common.data;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import net.minecraft.item.ItemStack;
 import tschipp.buildersbag.common.crafting.CraftingHandler;
 
 public class ItemContainer
 {
+	private static final Map<String, ItemContainer> cache = new HashMap<String, ItemContainer>();
+	
 	private ItemStack item;
 	private String ingString;
-
+	private boolean isIng;
+	
 	public static ItemContainer forStack(ItemStack stack)
 	{
-		return new ItemContainer(stack, CraftingHandler.getItemString(stack));
+		String itemString = CraftingHandler.getItemString(stack);
+		if(cache.containsKey(itemString))
+			return cache.get(itemString);
+		
+		cache.put(itemString, new ItemContainer(stack, itemString));
+		return cache.get(itemString);
 	}
 	
 	public static ItemContainer forIngredient(String ingredientString)
 	{
-		return new ItemContainer(CraftingHandler.getItemFromString(ingredientString.split(";")[0] + ";"), ingredientString);
+		if(cache.containsKey(ingredientString))
+			return cache.get(ingredientString);
+		
+		cache.put(ingredientString, new ItemContainer(CraftingHandler.getItemFromString(ingredientString.split(";")[0] + ";"), ingredientString));
+		return cache.get(ingredientString);
 	}
 	
 	private ItemContainer(ItemStack stack, String ing)
 	{
 		this.ingString = ing;
 		this.item = stack;
+		this.isIng = ingString.split(";").length > 1;
 	}
 
 	public ItemStack getItem()
@@ -36,7 +52,19 @@ public class ItemContainer
 	
 	public boolean isIngredient()
 	{
-		return ingString.split(";").length > 1;
+		return isIng;
+	}
+	
+	public ItemContainer[] getItems()
+	{
+		String[] split = ingString.split(";");
+		ItemContainer[] items = new ItemContainer[split.length];
+		for(int i = 0; i < split.length; i++)
+		{
+			items[i] = ItemContainer.forStack(CraftingHandler.getItemFromString(split[i] + ";"));
+		}
+		
+		return items;
 	}
 	
 	@Override
