@@ -4,10 +4,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -29,11 +27,14 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.client.config.GuiUtils;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.client.rendering.BagRenderHelper;
+import tschipp.buildersbag.client.selectionwheel.SelectionWheelLogic.SelectionFilter;
+import tschipp.buildersbag.client.selectionwheel.SelectionWheelLogic.SelectionPage;
 import tschipp.buildersbag.common.config.BuildersBagConfig;
 import tschipp.buildersbag.common.data.Tuple;
 import tschipp.buildersbag.common.helper.BagHelper;
@@ -53,9 +54,10 @@ public class SelectionWheel
 	private static final int WHEEL_WIDTH = 238, WHEEL_HEIGHT = 235;
 	private static final int ARROW_WIDTH = 50, ARROW_HEIGHT = 54;
 	private static final double SCALE = 0.6;
+	private static final int HEXAGON_RADIUS = 38;
 
 	private static ItemStack bag;
-	private static IBagCap cap;
+	static IBagCap cap;
 	public static boolean open = false;
 	public static boolean shouldDraw = false;
 	private static boolean isAnimating = false;
@@ -67,8 +69,8 @@ public class SelectionWheel
 
 	private static String activeFilter = "";
 	private static int activePage = 0;
-	private static List<SelectionWheelLogic.SelectionPage> activePageList = new ArrayList<>();
-	private static List<SelectionWheelLogic.SelectionPage> unfilteredPageList = new ArrayList<>();
+	private static List<SelectionPage> activePageList = new ArrayList<>();
+	private static List<SelectionPage> unfilteredPageList = new ArrayList<>();
 	private static Map<String, SelectionFilter> filters = new HashMap<>();
 
 	private static Map<String, String> activeFilterCache = new HashMap<>();
@@ -80,6 +82,7 @@ public class SelectionWheel
 	private static List<Tuple<Integer, Integer>> selectedCorners = getHexagonPoints(new Tuple(0, 178));
 	private static List<List<Tuple<Integer, Integer>>> filterPoints = new ArrayList<>();
 	private static List<String> filterNames = new ArrayList<>();
+	private static double globalScale = 0;
 
 	public static void setBag(ItemStack stack)
 	{
@@ -103,8 +106,9 @@ public class SelectionWheel
 		filterNames.clear();
 
 		// SET UP FILTERS
-
 		List<ItemStack> provideableStacks = new ArrayList<ItemStack>();
+
+		provideableStacks.addAll(InventoryHelper.getInventoryStacks(cap, mc.player).stream().filter(s -> s.getItem() instanceof ItemBlock).collect(Collectors.toList()));
 
 		filters.clear();
 		for (IBagModule module : cap.getModules())
@@ -114,7 +118,7 @@ public class SelectionWheel
 				List<ItemStack> provideable = module.getPossibleStacks(cap, mc.player).stream().filter(s -> s.getItem() instanceof ItemBlock).collect(Collectors.toList());
 				if (!provideable.isEmpty())
 				{
-					List<SelectionWheelLogic.SelectionPage> filterpages = createPages(provideable);
+					List<SelectionPage> filterpages = SelectionWheelLogic.createPages(provideable);
 					SelectionFilter filt = new SelectionFilter(filterpages, module.getName());
 					filters.put(module.getName(), filt);
 					provideableStacks.addAll(provideable);
@@ -122,7 +126,7 @@ public class SelectionWheel
 			}
 		}
 		List<ItemStack> palette = cap.getPalette();
-		List<SelectionWheelLogic.SelectionPage> palettePages = createPages(palette);
+		List<SelectionPage> palettePages = SelectionWheelLogic.createPages(palette);
 		SelectionFilter filt = new SelectionFilter(palettePages, "palette");
 		filters.put("palette", filt);
 
@@ -139,13 +143,11 @@ public class SelectionWheel
 		filterNames.remove("palette");
 		Collections.sort(filterNames);
 		filterNames.add(0, "palette");
-
 		////
 
-		provideableStacks.addAll(InventoryHelper.getInventoryStacks(cap, mc.player).stream().filter(s -> s.getItem() instanceof ItemBlock).collect(Collectors.toList()));
 		ItemHelper.removeDuplicates(provideableStacks);
 
-		unfilteredPageList.addAll(createPages(provideableStacks));
+		unfilteredPageList.addAll(SelectionWheelLogic.createPages(provideableStacks));
 
 		if (filters.containsKey(cachedFilter))
 		{
@@ -214,9 +216,8 @@ public class SelectionWheel
 		GlStateManager.pushMatrix();
 		transform(partialTicks, res);
 
-		double renderScale = SCALE * ease;
-		int mouseX = (int) ((Mouse.getX() / res.getScaleFactor() - res.getScaledWidth() / 2) / renderScale);
-		int mouseY = (int) ((Mouse.getY() / res.getScaleFactor() - res.getScaledHeight() / 2) / renderScale);
+		int mouseX = (int) ((Mouse.getX() / res.getScaleFactor() - res.getScaledWidth() / 2) / globalScale);
+		int mouseY = (int) ((Mouse.getY() / res.getScaleFactor() - res.getScaledHeight() / 2) / globalScale);
 
 		if (activePageList.size() > 1)
 			drawPageButtons(partialTicks, mouseX, mouseY);
@@ -231,10 +232,9 @@ public class SelectionWheel
 
 	public static void onClick(boolean isRight)
 	{
-		double renderScale = SCALE * ease;
 		ScaledResolution res = new ScaledResolution(mc);
-		int mouseX = (int) ((Mouse.getX() / res.getScaleFactor() - res.getScaledWidth() / 2) / renderScale);
-		int mouseY = (int) ((Mouse.getY() / res.getScaleFactor() - res.getScaledHeight() / 2) / renderScale);
+		int mouseX = (int) ((Mouse.getX() / res.getScaleFactor() - res.getScaledWidth() / 2) / globalScale);
+		int mouseY = (int) ((Mouse.getY() / res.getScaleFactor() - res.getScaledHeight() / 2) / globalScale);
 
 		boolean rightArrow = isInPolygon(mouseX, mouseY, rightPoints.subList(0, 4)) || isInTriangle(mouseX, mouseY, rightPoints.subList(4, 7));
 		boolean leftArrow = isInPolygon(mouseX, mouseY, leftPoints.subList(0, 4)) || isInTriangle(mouseX, mouseY, leftPoints.subList(4, 7));
@@ -258,7 +258,7 @@ public class SelectionWheel
 			return;
 		}
 
-		if(isInPolygon(mouseX, mouseY, getHexagonPoints(new Tuple(0, 178))))
+		if (isInPolygon(mouseX, mouseY, selectedCorners))
 		{
 			if (!isRight)
 			{
@@ -267,10 +267,20 @@ public class SelectionWheel
 				if (BuildersBagConfig.Settings.playPickBlockSounds)
 					mc.player.playSound(SoundEvents.BLOCK_NOTE_HAT, 0.5f, 0.1f);
 			}
+			else
+			{
+				if (cap.getSelectedInventory().getStackInSlot(0).isEmpty())
+					return;
+
+				if (BuildersBagConfig.Settings.playPickBlockSounds)
+					mc.player.playSound(SoundEvents.BLOCK_NOTE_HAT, 0.5f, 0.7f);
+
+				modifyPalette(cap.getSelectedInventory().getStackInSlot(0), -1, activePageList.isEmpty() ? null : activePageList.get(activePage));
+			}
 			return;
 		}
-		
-		SelectionWheelLogic.SelectionPage page = activePageList.size() > 0 ? activePageList.get(activePage) : null;
+
+		SelectionPage page = activePageList.size() > 0 ? activePageList.get(activePage) : null;
 
 		for (int i = 0; i < wheelCorners.size(); i++)
 		{
@@ -296,32 +306,7 @@ public class SelectionWheel
 					if (BuildersBagConfig.Settings.playPickBlockSounds)
 						mc.player.playSound(SoundEvents.BLOCK_NOTE_HAT, 0.5f, 0.7f);
 
-					List<ItemStack> palette = cap.getPalette();
-					boolean add = ItemHelper.containsStack(selected, palette).isEmpty();
-
-					BuildersBag.network.sendToServer(new ModifyPaletteServer(cap.getUUID(), selected, add));
-					if (add)
-						palette.add(selected.copy());
-					else
-					{
-						for (int j = 0; j < palette.size(); j++)
-						{
-							if (ItemStack.areItemStacksEqual(selected, palette.get(j)))
-							{
-								palette.remove(j);
-								break;
-							}
-						}
-					}
-					SelectionFilter filt = filters.get("palette");
-					filt.pages.clear();
-					filt.pages = createPages(palette);
-					if (activeFilter.equals("palette"))
-					{
-						activePageList.clear();
-						activePageList.addAll(filt.pages);
-						activePage = activePageList.isEmpty() ? 0 : activePage % activePageList.size();
-					}
+					modifyPalette(selected, i, page);
 				}
 				return;
 			}
@@ -387,21 +372,21 @@ public class SelectionWheel
 	{
 		ItemStack selected = cap.getSelectedInventory().getStackInSlot(0);
 
-		boolean selectedHover = isInPolygon(mouseX, mouseY, getHexagonPoints(new Tuple(0, 178)));
-		
-		GlStateManager.pushMatrix();
-		GlStateManager.translate(97, 19 - (ease * 97), 0);
-		Gui.drawModalRectWithCustomSizedTexture(-14, -19, 119 + (selectedHover ? 69 : 0), 1192, 68, 78, 500, 1500);
-		GlStateManager.scale(2.5, 2.5, 2.5);
-		RenderHelper.enableGUIStandardItemLighting();
-		itemRender.renderItemAndEffectIntoGUI(mc.player, selected, 0, 0);
-		RenderHelper.disableStandardItemLighting();
-		mc.getTextureManager().bindTexture(TEXTURE);
-		GlStateManager.popMatrix();
+		boolean selectedHover = isInPolygon(mouseX, mouseY, selectedCorners);
+
+		separate(97, 19 - (ease * 97), () ->
+		{
+			Gui.drawModalRectWithCustomSizedTexture(-14, -19, 119 + (selectedHover ? 69 : 0), 1192, 68, 78, 500, 1500);
+			GlStateManager.scale(2.5, 2.5, 2.5);
+			drawItem(selected);
+			GlStateManager.scale(0.5, 0.5, 0.5);
+			GlStateManager.translate(20, -4, 1000);
+			if (!ItemHelper.containsStack(cap.getSelectedInventory().getStackInSlot(0), cap.getPalette()).isEmpty())
+				Gui.drawModalRectWithCustomSizedTexture(0, 0, 314, 1234, 16, 16, 500, 1500);
+		});
 
 		GlStateManager.pushMatrix();
 		GlStateManager.translate(119, 121, 0);
-
 		int filtercount = filters.size();
 		int offX = filtercount % 2 == 0 ? 34 : 0;
 		int width = 66;
@@ -414,7 +399,8 @@ public class SelectionWheel
 			GlStateManager.enableAlpha();
 			boolean isHovering = isInPolygon(mouseX, mouseY, filterPoints.get(i));
 			Gui.drawModalRectWithCustomSizedTexture(0, 0, 119 + (isHovering ? 69 : 0), 1192, 68, 78, 500, 1500);
-			if (activeFilter.equals(filterNames.get(i)))
+			String filterName = filterNames.get(i);
+			if (activeFilter.equals(filterName))
 			{
 				GlStateManager.translate(14 * ease, 20 * ease, 0);
 				GlStateManager.scale(2.1, 2.1, 2.1);
@@ -422,16 +408,13 @@ public class SelectionWheel
 			}
 			else
 			{
-				if (cap.hasModuleAndEnabled(filterNames.get(i)))
+				if (cap.hasModuleAndEnabled(filterName))
 				{
 					GlStateManager.translate(14 * ease, 19 * ease, 0);
 					GlStateManager.scale(2.5, 2.5, 2.5);
-					RenderHelper.enableGUIStandardItemLighting();
-					itemRender.renderItemAndEffectIntoGUI(mc.player, BagHelper.getModule(filterNames.get(i), cap).getDisplayItem(), 0, 0);
-					RenderHelper.disableStandardItemLighting();
-					mc.getTextureManager().bindTexture(TEXTURE);
+					drawItem(BagHelper.getModule(filterName, cap).getDisplayItem());
 				}
-				else if (filterNames.get(i).equals("palette"))
+				else if (filterName.equals("palette"))
 				{
 					GlStateManager.translate(16 * ease, 20 * ease, 0);
 					GlStateManager.scale(2.3, 2.3, 2.3);
@@ -443,40 +426,36 @@ public class SelectionWheel
 
 		for (int i = 0; i < filtercount; i++)
 		{
+			String filtername = filterNames.get(i);
 			if (isInPolygon(mouseX, mouseY, filterPoints.get(i)))
 			{
-				GlStateManager.pushMatrix();
-				GlStateManager.translate(mouseX, -mouseY, 0);
-				GlStateManager.scale(1.5, 1.5, 1.5);
-				if (activeFilter.equals(filterNames.get(i)))
-					GuiUtils.drawHoveringText(Lists.newArrayList(TextFormatting.DARK_PURPLE + "Click" + TextFormatting.RESET + " to view " + TextFormatting.GOLD + "all blocks" + TextFormatting.RESET), 0, 0, res.getScaledWidth() * res.getScaleFactor(), res.getScaledHeight() * res.getScaleFactor(), 1000, mc.fontRenderer);
-				else
-					GuiUtils.drawHoveringText(Lists.newArrayList(TextFormatting.DARK_PURPLE + "Click" + TextFormatting.RESET + " to set " + TextFormatting.GOLD + (filterNames.get(i).equals("palette") ? "Palette" : filterNames.get(i)) + TextFormatting.RESET + " filter"), 0, 0, res.getScaledWidth() * res.getScaleFactor(), res.getScaledHeight() * res.getScaleFactor(), 1000, mc.fontRenderer);
-				mc.getTextureManager().bindTexture(TEXTURE);
-				RenderHelper.disableStandardItemLighting();
-				GlStateManager.enableBlend();
-				GlStateManager.popMatrix();
+				separate(mouseX, -mouseY, () ->
+				{
+					GlStateManager.scale(1.5, 1.5, 1.5);
+					if (activeFilter.equals(filtername))
+						drawHoveringText(I18n.translateToLocal("buildersbag.selectionwheel.allblocks"));
+					else
+						drawHoveringText(I18n.translateToLocalFormatted("buildersbag.selectionwheel.setfilter", I18n.translateToLocal("buildersbag.module." + filtername)));
+				});
 			}
-			if(selectedHover && !cap.getSelectedInventory().getStackInSlot(0).isEmpty())
+			if (selectedHover && !cap.getSelectedInventory().getStackInSlot(0).isEmpty())
 			{
-				GlStateManager.pushMatrix();
-				GlStateManager.translate(mouseX, -mouseY, 0);
-				GlStateManager.scale(1.5, 1.5, 1.5);
-				GuiUtils.drawHoveringText(Lists.newArrayList(TextFormatting.DARK_PURPLE + "Left Click" + TextFormatting.RESET + " to deselect ", TextFormatting.DARK_PURPLE + "Right Click" + TextFormatting.RESET + " to " + TextFormatting.GREEN + "add " + TextFormatting.GOLD + cap.getSelectedInventory().getStackInSlot(0).getDisplayName() + TextFormatting.RESET + " to Palette"), 0, 0, res.getScaledWidth() * res.getScaleFactor(), res.getScaledHeight() * res.getScaleFactor(), 1000, mc.fontRenderer);
-				mc.getTextureManager().bindTexture(TEXTURE);
-				RenderHelper.disableStandardItemLighting();
-				GlStateManager.enableBlend();
-				GlStateManager.popMatrix();
+				separate(mouseX, -mouseY, () ->
+				{
+					ItemStack currentStack = cap.getSelectedInventory().getStackInSlot(0);
+					boolean add = ItemHelper.containsStack(currentStack, cap.getPalette()).isEmpty();
+					GlStateManager.scale(1.5, 1.5, 1.5);
+					drawHoveringText(I18n.translateToLocal("buildersbag.selectionwheel.deselect"), I18n.translateToLocalFormatted("buildersbag.selectionwheel.changepalette", add ? TextFormatting.GREEN : TextFormatting.RED, add ? I18n.translateToLocal("buildersbag.module.add") : I18n.translateToLocal("buildersbag.module.remove"), currentStack.getDisplayName(), add ? I18n.translateToLocal("buildersbag.module.to") : I18n.translateToLocal("buildersbag.module.from")));
+				});
+
 			}
 		}
-
 		GlStateManager.popMatrix();
+
 	}
 
 	private static void drawSelectionWheel(float partialTicks, int mouseX, int mouseY)
 	{
-		double renderScale = SCALE * ease;
-
 		int offsetX = 0;
 		int offsetY = 0;
 
@@ -493,30 +472,28 @@ public class SelectionWheel
 
 		if (!activeFilter.isEmpty())
 		{
-			GlStateManager.pushMatrix();
-			if (activeFilter.equals("palette"))
+			separate(() ->
 			{
-				GlStateManager.translate(119 - 16, 121 - 20, 0);
-				GlStateManager.scale(2.3, 2.3, 2.3);
-				Gui.drawModalRectWithCustomSizedTexture(0, 0, 314, 1234, 16, 16, 500, 1500);
-			}
-			else
-			{
-				GlStateManager.translate(119 - 20, 121 - 20, 0);
-				GlStateManager.scale(2.5, 2.5, 2.5);
-				RenderHelper.enableGUIStandardItemLighting();
-				itemRender.renderItemAndEffectIntoGUI(mc.player, BagHelper.getModule(activeFilter, cap).getDisplayItem(), 0, 0);
-				RenderHelper.disableStandardItemLighting();
-				mc.getTextureManager().bindTexture(TEXTURE);
-			}
-			GlStateManager.popMatrix();
+				if (activeFilter.equals("palette"))
+				{
+					GlStateManager.translate(119 - 16, 121 - 20, 0);
+					GlStateManager.scale(2.3, 2.3, 2.3);
+					Gui.drawModalRectWithCustomSizedTexture(0, 0, 314, 1234, 16, 16, 500, 1500);
+				}
+				else
+				{
+					GlStateManager.translate(119 - 20, 121 - 20, 0);
+					GlStateManager.scale(2.5, 2.5, 2.5);
+					drawItem(BagHelper.getModule(activeFilter, cap).getDisplayItem());
+				}
+			});
 		}
 
 		if (activePageList.size() > 0)
 		{
 			List<ItemStack> paletteList = cap.getPalette();
 
-			SelectionWheelLogic.SelectionPage currentPage = activePageList.get(activePage);
+			SelectionPage currentPage = activePageList.get(activePage);
 			for (int i = 0; i < currentPage.items.size(); i++)
 			{
 				Vector2d p1 = vec(wheelCorners.get(i));
@@ -528,60 +505,58 @@ public class SelectionWheel
 				itemPoint.scale(0.75);
 				itemPoint.x -= 16;
 				itemPoint.y += 16;
+				ItemStack currentStack = currentPage.items.get(i);
+				final int k = i;
 
-				GlStateManager.pushMatrix();
-				GlStateManager.translate(119, 121, 0);
-				GlStateManager.translate(itemPoint.x, -itemPoint.y, 0);
-				GlStateManager.scale(2.0, 2.0, 2.0);
-				RenderHelper.enableGUIStandardItemLighting();
-				itemRender.renderItemAndEffectIntoGUI(mc.player, currentPage.items.get(i), 0, 0);
-				RenderHelper.disableStandardItemLighting();
-				if (!activeFilter.equals("palette") && !ItemHelper.containsStack(currentPage.items.get(i), paletteList).isEmpty())
+				separate(119, 121, () ->
 				{
-					mc.getTextureManager().bindTexture(TEXTURE);
-					GlStateManager.scale(0.5, 0.5, 0.5);
-					GlStateManager.translate(20, -4, 1000);
-					Gui.drawModalRectWithCustomSizedTexture(0, 0, 314, 1234, 16, 16, 500, 1500);
-				}
-				GlStateManager.popMatrix();
+					GlStateManager.translate(itemPoint.x, -itemPoint.y, 0);
+					GlStateManager.scale(2.0, 2.0, 2.0);
+					drawItem(currentStack);
+					if (!activeFilter.equals("palette") && currentPage.paletteIndices.contains(k))
+					{
+						mc.getTextureManager().bindTexture(TEXTURE);
+						GlStateManager.scale(0.5, 0.5, 0.5);
+						GlStateManager.translate(20, -4, 1000);
+						Gui.drawModalRectWithCustomSizedTexture(0, 0, 314, 1234, 16, 16, 500, 1500);
+					}
+				});
 			}
 
 			String page = (activePage + 1) + "/" + activePageList.size();
-			GlStateManager.pushMatrix();
-			GlStateManager.translate(119 - mc.fontRenderer.getStringWidth(page), 240, 0);
-			GlStateManager.scale(2, 2, 2);
-			mc.fontRenderer.drawStringWithShadow(page, 0, 0, 0xFFFFFF);
-			GlStateManager.popMatrix();
+			separate(119 - mc.fontRenderer.getStringWidth(page), 240, () ->
+			{
+				GlStateManager.scale(2, 2, 2);
+				mc.fontRenderer.drawStringWithShadow(page, 0, 0, 0xFFFFFF);
+			});
 
 			for (int i = 0; i < currentPage.items.size(); i++)
 			{
 				ItemStack currentStack = currentPage.items.get(i);
 				if (isInTriangle(mouseX, mouseY, new Tuple(0, 0), wheelCorners.get(i), wheelCorners.get((i + 1) % wheelCorners.size())))
 				{
-					GlStateManager.pushMatrix();
-					GlStateManager.translate(119 + mouseX, 121 - mouseY, 0);
-					GlStateManager.scale(1.5, 1.5, 1.5);
-					GuiUtils.drawHoveringText(currentStack, Lists.newArrayList(TextFormatting.DARK_PURPLE + "Left Click" + TextFormatting.RESET + " to select " + TextFormatting.GOLD + currentStack.getDisplayName(), TextFormatting.DARK_PURPLE + "Right Click" + TextFormatting.RESET + " to " + TextFormatting.GREEN + "add " + TextFormatting.GOLD + currentStack.getDisplayName() + TextFormatting.RESET + " to Palette"), 0, 0, res.getScaledWidth() * res.getScaleFactor(), res.getScaledHeight() * res.getScaleFactor(), 1000, mc.fontRenderer);
-					RenderHelper.disableStandardItemLighting();
-					GlStateManager.enableBlend();
-					GlStateManager.popMatrix();
+					boolean add = !currentPage.paletteIndices.contains(i);
+					separate(119 + mouseX, 121 - mouseY, () ->
+					{
+						GlStateManager.scale(1.5, 1.5, 1.5);
+						drawHoveringText(I18n.translateToLocalFormatted("buildersbag.selectionwheel.selectblock", currentStack.getDisplayName()), I18n.translateToLocalFormatted("buildersbag.selectionwheel.changepalette", add ? TextFormatting.GREEN : TextFormatting.RED, add ? I18n.translateToLocal("buildersbag.module.add") : I18n.translateToLocal("buildersbag.module.remove"), currentStack.getDisplayName(), add ? I18n.translateToLocal("buildersbag.module.to") : I18n.translateToLocal("buildersbag.module.from")));
+					});
 				}
 			}
 		}
 
 		mc.getTextureManager().bindTexture(TEXTURE);
-
 	}
 
 	private static void transform(float partialTicks, ScaledResolution res)
 	{
-		double renderScale = SCALE * ease;
-
+		globalScale = SCALE * ease * (res.getScaledHeight_double() / 350);
+									
 		GlStateManager.enableAlpha();
 		GlStateManager.enableBlend();
 
-		GlStateManager.translate((res.getScaledWidth() / 2) - WHEEL_WIDTH / 2 * renderScale, (res.getScaledHeight() / 2) - WHEEL_HEIGHT / 2 * renderScale, 0);
-		GlStateManager.scale(renderScale, renderScale, renderScale);
+		GlStateManager.translate((res.getScaledWidth() / 2) - WHEEL_WIDTH / 2 * globalScale, (res.getScaledHeight() / 2) - WHEEL_HEIGHT / 2 * globalScale, 0);
+		GlStateManager.scale(globalScale, globalScale, globalScale);
 
 	}
 
@@ -627,11 +602,9 @@ public class SelectionWheel
 	{
 		List<Tuple<Integer, Integer>> points = new ArrayList<Tuple<Integer, Integer>>();
 
-		int radius = 38;
-
 		for (int i = 0; i < 6; i++)
 		{
-			points.add(new Tuple<Integer, Integer>((int) (Math.cos(Math.toRadians((i * 60 - 90) % 360)) * radius) + middlePoint.getFirst(), -(int) (Math.sin(Math.toRadians((i * 60 - 90) % 360)) * radius) + middlePoint.getSecond()));
+			points.add(new Tuple<Integer, Integer>((int) (Math.cos(Math.toRadians((i * 60 - 90) % 360)) * HEXAGON_RADIUS) + middlePoint.getFirst(), -(int) (Math.sin(Math.toRadians((i * 60 - 90) % 360)) * HEXAGON_RADIUS) + middlePoint.getSecond()));
 		}
 
 		Collections.reverse(points);
@@ -684,49 +657,97 @@ public class SelectionWheel
 		return new Vector2d(tuple.getFirst(), tuple.getSecond());
 	}
 
-	private static List<SelectionWheelLogic.SelectionPage> createPages(List<ItemStack> stacks)
+	private static void separate(Runnable toRun)
 	{
-		List<SelectionWheelLogic.SelectionPage> pages = new ArrayList<SelectionWheelLogic.SelectionPage>();
-
-		int counter = 0;
-		int pageCount = 0;
-		SelectionWheelLogic.SelectionPage currentPage = new SelectionWheelLogic.SelectionPage();
-		for (int i = 0; i < stacks.size(); i++)
-		{
-			ItemStack provideable = stacks.get(i).copy();
-			currentPage.items.add(provideable);
-			counter++;
-
-			if (counter == 9)
-			{
-				pageCount++;
-				counter = 0;
-				pages.add(currentPage);
-				currentPage = new SelectionWheelLogic.SelectionPage();
-				currentPage.index = pageCount;
-			}
-		}
-		if (!currentPage.items.isEmpty())
-			pages.add(currentPage);
-
-		return pages;
+		separate(0, 0, toRun);
 	}
 
-	private static class SelectionFilter
+	private static void separate(double x, double y, Runnable toRun)
 	{
-		private List<SelectionWheelLogic.SelectionPage> pages = new ArrayList<SelectionWheelLogic.SelectionPage>();
-		private String name = "";
+		GlStateManager.pushMatrix();
+		GlStateManager.translate(x, y, 0);
+		toRun.run();
+		GlStateManager.popMatrix();
+		mc.getTextureManager().bindTexture(TEXTURE);
+	}
 
-		public SelectionFilter(List<SelectionWheelLogic.SelectionPage> pages, String name)
+	private static void drawItem(ItemStack stack)
+	{
+		RenderHelper.enableGUIStandardItemLighting();
+		itemRender.renderItemAndEffectIntoGUI(mc.player, stack, 0, 0);
+		RenderHelper.disableStandardItemLighting();
+		mc.getTextureManager().bindTexture(TEXTURE);
+	}
+
+	private static void drawHoveringText(String... lines)
+	{
+		GuiUtils.drawHoveringText(Lists.newArrayList(lines), 0, 0, res.getScaledWidth() * res.getScaleFactor(), res.getScaledHeight() * res.getScaleFactor(), 300, mc.fontRenderer);
+		mc.getTextureManager().bindTexture(TEXTURE);
+		RenderHelper.disableStandardItemLighting();
+		GlStateManager.enableBlend();
+	}
+
+	private static void modifyPalette(ItemStack selected, int i, SelectionPage page)
+	{
+		List<ItemStack> palette = cap.getPalette();
+		boolean add = i == -1 || activeFilter.equals("palette") ? ItemHelper.containsStack(selected, cap.getPalette()).isEmpty() : !page.paletteIndices.contains(i);
+
+		BuildersBag.network.sendToServer(new ModifyPaletteServer(cap.getUUID(), selected, add));
+		
+		List<SelectionPage> it = new ArrayList<SelectionPage>();
+		it.addAll(unfilteredPageList);
+		filters.forEach((key, filter) -> it.addAll(filter.pages));
+		
+		if (add)
 		{
-			this.pages = pages;
-			this.name = name;
+			palette.add(selected.copy());
+			if (i != -1)
+				page.paletteIndices.add(i);
+			for(SelectionPage selPage : it)
+			{
+				for(int j = 0; j < selPage.items.size(); j++)
+				{
+					if(ItemStack.areItemStacksEqual(selPage.items.get(j), selected))
+					{
+						selPage.paletteIndices.add(j);
+						break;
+					}
+				}
+			}
 		}
-
-		@Override
-		public String toString()
+		else
 		{
-			return pages.toString();
+			for (int j = 0; j < palette.size(); j++)
+			{
+				if (ItemStack.areItemStacksEqual(selected, palette.get(j)))
+				{
+					palette.remove(j);
+					break;
+				}
+			}
+			if (i != -1)
+				page.paletteIndices.remove(i);
+			
+			for(SelectionPage selPage : it)
+			{
+				for(int j = 0; j < selPage.items.size(); j++)
+				{
+					if(ItemStack.areItemStacksEqual(selPage.items.get(j), selected))
+					{
+						selPage.paletteIndices.remove(j);
+						break;
+					}
+				}
+			}
+		}
+		SelectionFilter filt = filters.get("palette");
+		filt.pages.clear();
+		filt.pages = SelectionWheelLogic.createPages(palette);
+		if (activeFilter.equals("palette"))
+		{
+			activePageList.clear();
+			activePageList.addAll(filt.pages);
+			activePage = activePageList.isEmpty() ? 0 : activePage % activePageList.size();
 		}
 	}
 }

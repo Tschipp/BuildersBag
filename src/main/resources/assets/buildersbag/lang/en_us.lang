@@ -9,8 +9,13 @@ buildersbag.module.left=Left click
 buildersbag.module.shiftleft=Shift + left click 
 buildersbag.module.toggle=to toggle slots
 buildersbag.module.to=to 
+buildersbag.module.from=from 
 buildersbag.module.enable=enable
 buildersbag.module.disable=disable
+buildersbag.module.add=add
+buildersbag.module.remove=remove
+buildersbag.module.palette=Palette
+
 buildersbag.sort=Auto-Compact
 
 item.builders_bag_tier_one.name=Beginner Builder's Bag
@@ -27,3 +32,10 @@ buildersbag.nomaterials=Not enough materials to place %s!
 buildersbag.bagprovides=Can be provided by the Builder's Bag
 
 keybind.openBaubleBag=Open Bag in Bauble Slot
+keybind.openSelectionWheel=Open Selection Wheel
+
+buildersbag.selectionwheel.selectblock=§5Left click§r to select §6%s§r
+buildersbag.selectionwheel.changepalette=§5Right click§r to %s%s§r §6%s§r %sPalette
+buildersbag.selectionwheel.setfilter=§5Click§r to set §6%s§r filter
+buildersbag.selectionwheel.allblocks=§5Click§r to view §6all blocks§r
+buildersbag.selectionwheel.deselect=§5Left Click§r to deselect
