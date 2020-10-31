@@ -1,5 +1,8 @@
 package tschipp.buildersbag.api;
 
+import java.util.List;
+
+import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
 
 public interface IBagCap
@@ -16,6 +19,10 @@ public interface IBagCap
 	public ItemStackHandler getSelectedInventory();
 	
 	public void setModules(IBagModule[] modules);
+	
+	public List<ItemStack> getPalette();
+	
+	public void setPalette(List<ItemStack> list);
 	
 	public boolean hasModuleAndEnabled(String name);
 	

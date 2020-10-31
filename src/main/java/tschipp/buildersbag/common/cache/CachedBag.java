@@ -1,7 +1,9 @@
 package tschipp.buildersbag.common.cache;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -167,13 +169,16 @@ public class CachedBag
 	{
 		long time = System.currentTimeMillis();
 		
+		List<ItemContainer> toRemove = new ArrayList<ItemContainer>();
 		for(Entry<ItemContainer, CachedAmount> entry : cachedStacks.entrySet())
 		{
 			if(time - entry.getValue().timestamp >= 300000) //Refresh cache after 5 minutes
 			{
-				cachedStacks.remove(entry.getKey());
+				toRemove.add(entry.getKey());
 			}
 		}
+		
+		toRemove.forEach(cachedStacks::remove);
 	}
 	
 	private static class CachedAmount

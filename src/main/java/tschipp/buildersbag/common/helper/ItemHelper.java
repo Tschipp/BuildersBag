@@ -1,5 +1,7 @@
 package tschipp.buildersbag.common.helper;
 
+import java.util.List;
+
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -28,7 +30,7 @@ public class ItemHelper
 		stack.setTagCompound(tag);
 	}
 
-	public static ItemStack containsStack(ItemStack stack, NonNullList<ItemStack> stacks)
+	public static ItemStack containsStack(ItemStack stack, List<ItemStack> stacks)
 	{
 		for (ItemStack s : stacks)
 		{
@@ -55,6 +57,23 @@ public class ItemHelper
 		}
 		
 		return l;
+	}
+	
+	public static void removeDuplicates(List<ItemStack> stacks)
+	{
+		for (int i = 0; i < stacks.size(); i++)
+		{
+			ItemStack pr = stacks.get(i);
+			for(int j = 0; j < stacks.size(); j++)
+			{
+				ItemStack dupe = stacks.get(j);
+				if(dupe != pr && ItemStack.areItemStacksEqual(pr.copy().splitStack(1), dupe.copy().splitStack(1)))
+				{
+					stacks.remove(j);
+					j--;
+				}
+			}
+		}
 	}
 
 }

@@ -246,13 +246,6 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 	@Override
 	public LittleIngredients getInventory(ItemStack stack)
 	{
-		// IBagCap bag = CapHelper.getBagCap(stack);
-		//
-		// if (bag.hasModuleAndEnabled("buildersbag:littletiles"))
-		// {
-		// return LittleTilesModule.getAvailableIngredients(stack);
-		// }
-
 		return new LittleIngredients();
 	}
 
@@ -311,15 +304,6 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 	public BaubleType getBaubleType(ItemStack itemstack)
 	{
 		return BaubleType.BELT;
-	}
-
-	@Optional.Method(modid = "baubles")
-	@Override
-	public void onEquipped(ItemStack itemstack, EntityLivingBase player)
-	{
-//		IBagCap cap = CapHelper.getBagCap(itemstack);
-//		if (!player.world.isRemote)
-//			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(cap, 3, true), (EntityPlayerMP) player);
 	}
 
 }

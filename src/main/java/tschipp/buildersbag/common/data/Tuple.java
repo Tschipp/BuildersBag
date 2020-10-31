@@ -61,5 +61,11 @@ public class Tuple<A, B>
 			return false;
 		return true;
 	}
+	
+	@Override
+	public String toString()
+	{
+		return "<" + a.toString() + ", " + b.toString() + ">";
+	}
 
 }

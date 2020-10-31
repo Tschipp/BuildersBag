@@ -244,7 +244,6 @@ public class RecipeRequirementList
 				{
 					double totalItemsNeededCount = totalItemsCrafted * entry.getValue();
 
-					checkIngredient:
 					{
 //						if(!exactRequirements.containsKey(reqCont))
 //							break checkIngredient;

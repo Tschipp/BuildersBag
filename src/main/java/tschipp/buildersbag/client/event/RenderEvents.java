@@ -1,4 +1,4 @@
-package tschipp.buildersbag.client.rendering;
+package tschipp.buildersbag.client.event;
 
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -9,6 +9,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import tschipp.buildersbag.BuildersBag;
+import tschipp.buildersbag.client.rendering.BagModel;
 import tschipp.buildersbag.common.BuildersBagRegistry;
 
 @EventBusSubscriber(modid = BuildersBag.MODID, value = Side.CLIENT)
