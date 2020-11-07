@@ -86,9 +86,6 @@ public class SelectionWheel
 
 	public static void setBag(ItemStack stack)
 	{
-		rightPoints = getArrowPoints(true);
-		leftPoints = getArrowPoints(false);
-
 		int cachedPage = 0;
 		String cachedFilter = "";
 

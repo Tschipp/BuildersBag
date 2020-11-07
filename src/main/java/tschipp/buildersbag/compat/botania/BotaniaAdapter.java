@@ -43,30 +43,31 @@ public class BotaniaAdapter implements IBlockSourceAdapter
 	{
 		List<ItemStack> resultList = new ArrayList<ItemStack>();
 		Item item = fromStack.getItem();
-		
-		if(item instanceof ItemBlackHoleTalisman)
+
+		if (item instanceof ItemBlackHoleTalisman)
 		{
 			ItemStack result = item.getContainerItem(fromStack);
-			if(!result.isEmpty())
+			if (!result.isEmpty())
 				resultList.add(result);
 		}
 		else if (item instanceof ItemCobbleRod)
 		{
 			resultList.add(new ItemStack(Blocks.COBBLESTONE));
 		}
-		else if(item instanceof ItemDirtRod || item instanceof ItemTerraformRod)
+		else if (item instanceof ItemDirtRod || item instanceof ItemTerraformRod)
 		{
 			resultList.add(new ItemStack(Blocks.DIRT));
 		}
-		else if(item instanceof ItemEnderHand)
+		else if (item instanceof ItemEnderHand)
 		{
 			InventoryEnderChest echest = player.getInventoryEnderChest();
-			for(int i = 0; i < echest.getInventoryStackLimit(); i++)
+			for (int i = 0; i < echest.getInventoryStackLimit(); i++)
 			{
-				resultList.add(echest.getStackInSlot(i).copy());
+				if (!echest.getStackInSlot(i).isEmpty())
+					resultList.add(echest.getStackInSlot(i).copy());
 			}
 		}
-		
+
 		return resultList;
 	}
 
