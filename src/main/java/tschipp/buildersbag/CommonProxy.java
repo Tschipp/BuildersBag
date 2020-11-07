@@ -35,9 +35,11 @@ import tschipp.buildersbag.network.client.SyncBagCapServer;
 import tschipp.buildersbag.network.client.SyncEnderchestToClient;
 import tschipp.buildersbag.network.client.UpdateCacheClient;
 import tschipp.buildersbag.network.server.CompactBagServer;
+import tschipp.buildersbag.network.server.ModifyPaletteServer;
 import tschipp.buildersbag.network.server.OpenBaubleBagServer;
 import tschipp.buildersbag.network.server.RequestBagUpdateServer;
 import tschipp.buildersbag.network.server.RequestCacheUpdateServer;
+import tschipp.buildersbag.network.server.SetSelectedBlockServer;
 import tschipp.buildersbag.network.server.SyncItemStackServer;
 import tschipp.buildersbag.network.server.SyncModuleStateServer;
 
@@ -71,6 +73,8 @@ public class CommonProxy
 		BuildersBag.network.registerMessage(SetWorkStateClient.class, SetWorkStateClient.class, 13, Side.CLIENT);
 		BuildersBag.network.registerMessage(RequestBagUpdateServer.class, RequestBagUpdateServer.class, 14, Side.SERVER);
 		BuildersBag.network.registerMessage(PlayFailureSoundClient.class, PlayFailureSoundClient.class, 15, Side.CLIENT);
+		BuildersBag.network.registerMessage(SetSelectedBlockServer.class, SetSelectedBlockServer.class, 16, Side.SERVER);
+		BuildersBag.network.registerMessage(ModifyPaletteServer.class, ModifyPaletteServer.class, 17, Side.SERVER);
 
 		NetworkRegistry.INSTANCE.registerGuiHandler(BuildersBag.instance, new BagGuiHandler());
 		BuildersBagRegistry.registerModules();

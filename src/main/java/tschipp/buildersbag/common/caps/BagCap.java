@@ -3,13 +3,13 @@ package tschipp.buildersbag.common.caps;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 import com.google.common.collect.Lists;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.items.ItemStackHandler;
-import scala.actors.threadpool.Arrays;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.common.BuildersBagRegistry;
@@ -23,6 +23,7 @@ public class BagCap implements IBagCap
 	private ItemStackHandler inv = new ItemStackHandler(0);
 	private ItemStackHandler selected = new SelectedBlockHandler(1);
 	private String uuid;
+	private List<ItemStack> palette = new ArrayList<ItemStack>();
 	
 	public BagCap()
 	{
@@ -209,4 +210,15 @@ public class BagCap implements IBagCap
 		this.uuid = uuid;
 	}
 
+	@Override
+	public List<ItemStack> getPalette()
+	{
+		return this.palette;
+	}
+
+	@Override
+	public void setPalette(List<ItemStack> list)
+	{
+		this.palette = list;
+	}
 }
