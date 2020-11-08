@@ -8,6 +8,7 @@ import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.relauncher.Side;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.client.BuildersBagKeybinds;
@@ -17,7 +18,7 @@ import tschipp.buildersbag.common.item.BuildersBagItem;
 import tschipp.buildersbag.network.server.ModifyPaletteServer;
 import tschipp.buildersbag.network.server.SetSelectedBlockServer;
 
-@EventBusSubscriber(modid = BuildersBag.MODID)
+@EventBusSubscriber(modid = BuildersBag.MODID, value = Side.CLIENT)
 public class SelectionWheelEvents
 {
 	@SubscribeEvent
