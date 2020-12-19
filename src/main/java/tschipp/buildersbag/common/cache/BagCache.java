@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
@@ -56,7 +56,7 @@ public class BagCache
 	/**
 	 * This should ONLY be called from the server side
 	 */
-	public static int updateCachedBagStack(ItemStack bag, EntityPlayer player, ItemStack forStack, int preferredAmount)
+	public static int updateCachedBagStack(ItemStack bag, PlayerEntity player, ItemStack forStack, int preferredAmount)
 	{
 		IBagCap bagCap = CapHelper.getBagCap(bag);
 		int count = BagHelper.simulateProvideStackWithCount(forStack, preferredAmount, bag, player, null).size();
@@ -69,7 +69,7 @@ public class BagCache
 
 		Tuple<Boolean, Integer> slot = InventoryHelper.getSlotForStackWithBaubles(player, bag);
 		
-		BuildersBag.network.sendTo(new UpdateCacheClient(slot.getSecond(), slot.getFirst(), forStack, count), (EntityPlayerMP) player);
+		BuildersBag.network.sendTo(new UpdateCacheClient(slot.getSecond(), slot.getFirst(), forStack, count), (ServerPlayerEntity) player);
 		server_cache.put(bagCap.getUUID(), cachedBag);
 		return count;
 	}
@@ -78,7 +78,7 @@ public class BagCache
 	 * This should ONLY be called from the client side
 	 */
 	@SideOnly(Side.CLIENT)
-	public static void updateCachedBagStackWithAmount(ItemStack bag, EntityPlayer player, ItemStack forStack, int amount)
+	public static void updateCachedBagStackWithAmount(ItemStack bag, PlayerEntity player, ItemStack forStack, int amount)
 	{
 		
 		IBagCap bagCap = CapHelper.getBagCap(bag);
@@ -130,7 +130,7 @@ public class BagCache
 			cachedBag.stopSimulating();
 	}
 
-	public static int getCachedAmount(ItemStack bag, EntityPlayer player, ItemStack toCheck, int preferredAmount)
+	public static int getCachedAmount(ItemStack bag, PlayerEntity player, ItemStack toCheck, int preferredAmount)
 	{
 		Map<String, CachedBag> cache = player.world.isRemote ? client_cache : server_cache;
 		IBagCap bagCap = CapHelper.getBagCap(bag);
@@ -149,10 +149,10 @@ public class BagCache
 		return cachedBag.getCachedAmount(toCheck, preferredAmount);
 	}
 
-	public static void sendBagModificationToClient(ItemStack bag, ItemStack forStack, int delta, EntityPlayer player)
+	public static void sendBagModificationToClient(ItemStack bag, ItemStack forStack, int delta, PlayerEntity player)
 	{
 		Tuple<Boolean, Integer> slot = InventoryHelper.getSlotForStackWithBaubles(player, bag);
-		BuildersBag.network.sendTo(new ModifyCacheClient(slot.getSecond(), slot.getFirst(), forStack, delta), (EntityPlayerMP) player);
+		BuildersBag.network.sendTo(new ModifyCacheClient(slot.getSecond(), slot.getFirst(), forStack, delta), (ServerPlayerEntity) player);
 	}
 	
 	@SubscribeEvent

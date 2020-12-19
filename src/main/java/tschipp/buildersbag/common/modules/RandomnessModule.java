@@ -3,7 +3,7 @@ package tschipp.buildersbag.common.modules;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -24,7 +24,7 @@ public class RandomnessModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
+	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, PlayerEntity player)
 	{
 		NonNullList<ItemStack> list = NonNullList.create();
 		
@@ -32,7 +32,7 @@ public class RandomnessModule extends AbstractBagModule
 	}
 
 	@Override
-	public ItemStack getBlock(IBagCap bag, EntityPlayer player)
+	public ItemStack getBlock(IBagCap bag, PlayerEntity player)
 	{
 		Random rand = new Random();
 		NonNullList<ItemStack> list = BagHelper.getAllAvailableStacks(bag, player);
@@ -72,7 +72,7 @@ public class RandomnessModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player)
+	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, PlayerEntity player)
 	{
 		return NonNullList.create();
 	}

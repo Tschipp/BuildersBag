@@ -1,41 +1,43 @@
-buildersbag.module.buildersbag:random=Random Blocks
-buildersbag.module.buildersbag:chisel=Chisel
-buildersbag.module.buildersbag:crafting=Crafting
-buildersbag.module.buildersbag:littletiles=Little Tiles
-buildersbag.module.buildersbag:supplier=Supplier
-buildersbag.module.buildersbag:chiselsandbits=Chisels and Bits
+{
+    "buildersbag.module.buildersbag:random": "Random Blocks",
+    "buildersbag.module.buildersbag:chisel": "Chisel",
+    "buildersbag.module.buildersbag:crafting": "Crafting",
+    "buildersbag.module.buildersbag:littletiles": "Little Tiles",
+    "buildersbag.module.buildersbag:supplier": "Supplier",
+    "buildersbag.module.buildersbag:chiselsandbits": "Chisels and Bits",
 
-buildersbag.module.left=Left click 
-buildersbag.module.shiftleft=Shift + left click 
-buildersbag.module.toggle=to toggle slots
-buildersbag.module.to=to 
-buildersbag.module.from=from 
-buildersbag.module.enable=enable
-buildersbag.module.disable=disable
-buildersbag.module.add=add
-buildersbag.module.remove=remove
-buildersbag.module.palette=Palette
+    "buildersbag.module.left": "Left click",
+    "buildersbag.module.shiftleft": "Shift + left click",
+    "buildersbag.module.toggle": "to toggle slots",
+    "buildersbag.module.to": "to",
+    "buildersbag.module.from": "from",
+    "buildersbag.module.enable": "enable",
+    "buildersbag.module.disable": "disable",
+    "buildersbag.module.add": "add",
+    "buildersbag.module.remove": "remove",
+    "buildersbag.module.palette": "Palette",
 
-buildersbag.sort=Auto-Compact
+    "buildersbag.sort": "Auto-Compact",
 
-item.builders_bag_tier_one.name=Beginner Builder's Bag
-item.builders_bag_tier_two.name=Regular Builder's Bag
-item.builders_bag_tier_three.name=Advanced Builder's Bag
-item.builders_bag_tier_four.name=Masterful Builder's Bag
-item.builders_bag_tier_five.name=Expert Builder's Bag
+    "item.builders_bag_tier_one": "Beginner Builder's Bag",
+    "item.builders_bag_tier_two": "Regular Builder's Bag",
+    "item.builders_bag_tier_three": "Advanced Builder's Bag",
+    "item.builders_bag_tier_four": "Masterful Builder's Bag",
+    "item.builders_bag_tier_five": "Expert Builder's Bag",
 
-buildersbag.name=Builder's Bag
+    "buildersbag": "Builder's Bag",
 
-buildersbag.noblock=No block selected!
-buildersbag.cantplace=Can't place %s here!
-buildersbag.nomaterials=Not enough materials to place %s!
-buildersbag.bagprovides=Can be provided by the Builder's Bag
+    "buildersbag.noblock": "No block selected!",
+    "buildersbag.cantplace": "Can't place %s here!",
+    "buildersbag.nomaterials": "Not enough materials to place %s!",
+    "buildersbag.bagprovides": "Can be provided by the Builder's Bag",
 
-keybind.openBaubleBag=Open Bag in Bauble Slot
-keybind.openSelectionWheel=Open Selection Wheel
+    "keybind.openBaubleBag": "Open Bag in Bauble Slot",
+    "keybind.openSelectionWheel": "Open Selection Wheel",
 
-buildersbag.selectionwheel.selectblock=§5Left click§r to select §6%s§r
-buildersbag.selectionwheel.changepalette=§5Right click§r to %s%s§r §6%s§r %sPalette
-buildersbag.selectionwheel.setfilter=§5Click§r to set §6%s§r filter
-buildersbag.selectionwheel.allblocks=§5Click§r to view §6all blocks§r
-buildersbag.selectionwheel.deselect=§5Left Click§r to deselect
+    "buildersbag.selectionwheel.selectblock": "§5Left click§r to select §6%s§r",
+    "buildersbag.selectionwheel.changepalette": "§5Right click§r to %s%s§r §6%s§r %sPalette",
+    "buildersbag.selectionwheel.setfilter": "§5Click§r to set §6%s§r filter",
+    "buildersbag.selectionwheel.allblocks": "§5Click§r to view §6all blocks§r",
+    "buildersbag.selectionwheel.deselect": "§5Left Click§r to deselect"
+}

@@ -12,7 +12,7 @@ import java.util.List;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.Slot;
@@ -36,7 +36,7 @@ public class GuiBag extends GuiContainer
 {
 
 	private ContainerBag container;
-	private EntityPlayer player;
+	private PlayerEntity player;
 	private ItemStack bag;
 	private EnumHand hand;
 
@@ -55,7 +55,7 @@ public class GuiBag extends GuiContainer
 	
 	private boolean isNew = true;
 	
-	public GuiBag(ContainerBag container, EntityPlayer player)
+	public GuiBag(ContainerBag container, PlayerEntity player)
 	{
 		super(container);
 		this.container = container;

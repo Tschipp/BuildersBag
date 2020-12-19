@@ -14,7 +14,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.NonNullList;
@@ -101,7 +101,7 @@ public class RecipeRequirementList
 		this.tree.blacklistedRecipes.add(recipe);
 	}
 
-	public void finalizeRequirements(EntityPlayer player, IBagCap bag)
+	public void finalizeRequirements(PlayerEntity player, IBagCap bag)
 	{
 		Map<ItemContainer, Double> moreRequirements = new HashMap<ItemContainer, Double>();
 
@@ -120,7 +120,7 @@ public class RecipeRequirementList
 		}
 	}
 
-	private Map<ItemContainer, Integer> generateExactRequirementList(int amountToCraft, EntityPlayer player, IBagCap bag)
+	private Map<ItemContainer, Integer> generateExactRequirementList(int amountToCraft, PlayerEntity player, IBagCap bag)
 	{
 		int craftingOps = (int) Math.ceil(((double) amountToCraft) / creationCount);
 		int totalItemsCrafted = craftingOps * creationCount;
@@ -148,7 +148,7 @@ public class RecipeRequirementList
 		return exact;
 	}
 
-	// public CraftingOrderList generateCraftingOrderList(int amountToCraft, EntityPlayer player, IBagCap bag)
+	// public CraftingOrderList generateCraftingOrderList(int amountToCraft, PlayerEntity player, IBagCap bag)
 	// {
 	// CraftingOrderList orderList = new CraftingOrderList();
 	//
@@ -213,7 +213,7 @@ public class RecipeRequirementList
 	// return orderList;
 	// }
 
-	public CraftingOrderList generateCraftingOrderList(int amountToCraft, EntityPlayer player, IBagCap bag)
+	public CraftingOrderList generateCraftingOrderList(int amountToCraft, PlayerEntity player, IBagCap bag)
 	{
 		CraftingOrderList orderList = new CraftingOrderList();
 

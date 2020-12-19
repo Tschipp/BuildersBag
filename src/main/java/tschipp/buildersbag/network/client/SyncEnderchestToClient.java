@@ -2,9 +2,9 @@ package tschipp.buildersbag.network.client;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.InventoryEnderChest;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IThreadListener;
@@ -23,7 +23,7 @@ public class SyncEnderchestToClient implements IMessage, IMessageHandler<SyncEnd
 	{
 	}
 
-	public SyncEnderchestToClient(EntityPlayer player)
+	public SyncEnderchestToClient(PlayerEntity player)
 	{
 		enderchest = player.getInventoryEnderChest();
 	}
@@ -31,14 +31,14 @@ public class SyncEnderchestToClient implements IMessage, IMessageHandler<SyncEnd
 	@Override
 	public void fromBytes(ByteBuf buf)
 	{
-		NBTTagCompound tag = ByteBufUtils.readTag(buf);
+		CompoundNBT tag = ByteBufUtils.readTag(buf);
 		nbt = (NBTTagList) tag.getTag("list");
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf)
 	{
-		NBTTagCompound tag = new NBTTagCompound();
+		CompoundNBT tag = new CompoundNBT();
 		tag.setTag("list", enderchest.saveInventoryToNBT());
 		ByteBufUtils.writeTag(buf, tag);
 	}
@@ -50,7 +50,7 @@ public class SyncEnderchestToClient implements IMessage, IMessageHandler<SyncEnd
 
 		mainThread.addScheduledTask(() -> {
 
-			EntityPlayer player = BuildersBag.proxy.getPlayer();
+			PlayerEntity player = BuildersBag.proxy.getPlayer();
 			player.getInventoryEnderChest().loadInventoryFromNBT(message.nbt);
 
 		});

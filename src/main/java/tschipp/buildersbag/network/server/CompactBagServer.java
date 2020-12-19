@@ -2,8 +2,8 @@ package tschipp.buildersbag.network.server;
 
 import baubles.api.BaublesApi;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.Loader;
@@ -58,7 +58,7 @@ public class CompactBagServer implements IMessage, IMessageHandler<CompactBagSer
 
 		mainThread.addScheduledTask(() -> {
 
-			EntityPlayer player = ctx.getServerHandler().player;
+			PlayerEntity player = ctx.getServerHandler().player;
 			if (message.slot >= 0)
 			{
 				ItemStack stack = ItemStack.EMPTY;
@@ -76,7 +76,7 @@ public class CompactBagServer implements IMessage, IMessageHandler<CompactBagSer
 					IBagCap oldCap = CapHelper.getBagCap(stack);
 					
 					BagHelper.compactStacks(oldCap, player);
-					BuildersBag.network.sendTo(new SyncBagCapInventoryClient(oldCap, message.slot, message.isBauble), (EntityPlayerMP) player);
+					BuildersBag.network.sendTo(new SyncBagCapInventoryClient(oldCap, message.slot, message.isBauble), (ServerPlayerEntity) player);
 				}
 			}
 		});

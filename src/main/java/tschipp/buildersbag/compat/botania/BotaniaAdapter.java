@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.block.Block;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.InventoryEnderChest;
 import net.minecraft.item.Item;
@@ -30,7 +30,7 @@ public class BotaniaAdapter implements IBlockSourceAdapter
 	}
 
 	@Override
-	public ItemStack createBlock(ItemStack fromStack, ItemStack toCreate, EntityPlayer player, boolean simulate)
+	public ItemStack createBlock(ItemStack fromStack, ItemStack toCreate, PlayerEntity player, boolean simulate)
 	{
 		IBlockProvider provider = (IBlockProvider) fromStack.getItem();
 		if (provider.provideBlock(player, player.getHeldItem(EnumHand.MAIN_HAND), fromStack, Block.getBlockFromItem(toCreate.getItem()), toCreate.getMetadata(), !simulate || fromStack.getItem() instanceof ItemEnderHand))
@@ -39,7 +39,7 @@ public class BotaniaAdapter implements IBlockSourceAdapter
 	}
 
 	@Override
-	public List<ItemStack> getCreateableBlocks(ItemStack fromStack, EntityPlayer player)
+	public List<ItemStack> getCreateableBlocks(ItemStack fromStack, PlayerEntity player)
 	{
 		List<ItemStack> resultList = new ArrayList<ItemStack>();
 		Item item = fromStack.getItem();

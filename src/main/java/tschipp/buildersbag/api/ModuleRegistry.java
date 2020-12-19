@@ -18,7 +18,7 @@ public class ModuleRegistry
 	 */
 	public static void registerModule(String modid, ResourceLocation moduleName, Supplier<IBagModule> supplier, int... bagStages)
 	{
-		if(!modid.equals(moduleName.getResourceDomain()))
+		if(!modid.equals(moduleName.getNamespace()))
 			BuildersBag.LOGGER.warn("Invalid domain for bag module " + moduleName + "! Please make sure the mod registering the module uses its own modid as the domain!");
 			
 		BuildersBagRegistry.addModule(moduleName, supplier, bagStages);

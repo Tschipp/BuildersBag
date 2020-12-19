@@ -5,7 +5,7 @@ import java.util.HashSet;
 
 import com.mojang.authlib.GameProfile;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.WorldServer;
@@ -17,9 +17,9 @@ public class FakePlayerCopy extends FakePlayer
 {
 
 	public Collection<String> stages = new HashSet<String>();
-	public EntityPlayer original;
+	public PlayerEntity original;
 	
-	public FakePlayerCopy(WorldServer world, GameProfile name, EntityPlayer toCopyFrom)
+	public FakePlayerCopy(WorldServer world, GameProfile name, PlayerEntity toCopyFrom)
 	{
 		super(world, name);
 		this.inventory.readFromNBT(toCopyFrom.inventory.writeToNBT(new NBTTagList()).copy());

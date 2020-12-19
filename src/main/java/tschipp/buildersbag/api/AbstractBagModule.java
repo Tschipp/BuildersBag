@@ -1,6 +1,6 @@
 package tschipp.buildersbag.api;
 
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 
 public abstract class AbstractBagModule implements IBagModule
 {
@@ -45,7 +45,7 @@ public abstract class AbstractBagModule implements IBagModule
 	}
 	
 	@Override
-	public void deserializeNBT(NBTTagCompound nbt)
+	public void deserializeNBT(CompoundNBT nbt)
 	{
 		enabled = nbt.getBoolean("enabled");
 		expanded = nbt.getBoolean("expanded");
@@ -53,12 +53,12 @@ public abstract class AbstractBagModule implements IBagModule
 	}
 	
 	@Override
-	public NBTTagCompound serializeNBT()
+	public CompoundNBT serializeNBT()
 	{
-		NBTTagCompound tag = new NBTTagCompound();
-		tag.setBoolean("enabled", enabled);
-		tag.setBoolean("expanded", expanded);
-		tag.setString("name", name);
+		CompoundNBT tag = new CompoundNBT();
+		tag.putBoolean("enabled", enabled);
+		tag.putBoolean("expanded", expanded);
+		tag.putString("name", name);
 		return tag;
 	}
 

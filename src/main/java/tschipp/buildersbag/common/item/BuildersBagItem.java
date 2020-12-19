@@ -13,11 +13,11 @@ import baubles.api.IBauble;
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
@@ -67,7 +67,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 	}
 
 	@Override
-	public ICapabilityProvider initCapabilities(ItemStack stack, NBTTagCompound nbt)
+	public ICapabilityProvider initCapabilities(ItemStack stack, CompoundNBT nbt)
 	{
 		return new BagCapProvider(this.getTier());
 	}
@@ -79,10 +79,10 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 	}
 
 	@Override
-	public NBTTagCompound getNBTShareTag(ItemStack stack)
+	public CompoundNBT getNBTShareTag(ItemStack stack)
 	{
-		NBTTagCompound sub = new NBTTagCompound();
-		NBTTagCompound nbttags = super.getNBTShareTag(stack);
+		CompoundNBT sub = new CompoundNBT();
+		CompoundNBT nbttags = super.getNBTShareTag(stack);
 		if (nbttags != null)
 			sub.setTag("nbt", nbttags);
 
@@ -90,14 +90,14 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 
 		if (cap != null)
 		{
-			NBTTagCompound bagcap = (NBTTagCompound) BagCapProvider.BAG_CAPABILITY.getStorage().writeNBT(BagCapProvider.BAG_CAPABILITY, cap, null);
+			CompoundNBT bagcap = (CompoundNBT) BagCapProvider.BAG_CAPABILITY.getStorage().writeNBT(BagCapProvider.BAG_CAPABILITY, cap, null);
 			sub.setTag("bagcap", bagcap);
 		}
 		return sub;
 	}
 
 	@Override
-	public void readNBTShareTag(ItemStack stack, NBTTagCompound nbt)
+	public void readNBTShareTag(ItemStack stack, CompoundNBT nbt)
 	{
 		if (nbt != null)
 		{
@@ -110,7 +110,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 	}
 
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World world, EntityPlayer player, EnumHand hand)
+	public ActionResult<ItemStack> onItemRightClick(World world, PlayerEntity player, EnumHand hand)
 	{
 		ItemStack stack = player.getHeldItem(hand);
 
@@ -118,13 +118,13 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			player.openGui(BuildersBag.instance, 0, world, hand == EnumHand.MAIN_HAND ? 1 : 0, 0, 0);
 
 		if (!world.isRemote)
-			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
+			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (ServerPlayerEntity) player);
 
 		return new ActionResult<ItemStack>(EnumActionResult.PASS, stack);
 	}
 
 	@Override
-	public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
+	public EnumActionResult onItemUse(PlayerEntity player, World world, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
 	{
 		if (player.isSneaking())
 			return EnumActionResult.PASS;
@@ -159,7 +159,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			{
 				// Send these via packet
 				player.sendStatusMessage(new TextComponentString(TextFormatting.RED + I18n.translateToLocal("buildersbag.noblock")), true);
-				BuildersBag.network.sendTo(new PlayFailureSoundClient(),  (EntityPlayerMP) player);
+				BuildersBag.network.sendTo(new PlayFailureSoundClient(),  (ServerPlayerEntity) player);
 				return EnumActionResult.FAIL;
 			}
 
@@ -176,7 +176,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			if (!b)
 			{
 				player.sendStatusMessage(new TextComponentString(TextFormatting.RED + I18n.translateToLocalFormatted("buildersbag.cantplace", requestedStack.getDisplayName())), true);
-				BuildersBag.network.sendTo(new PlayFailureSoundClient(),  (EntityPlayerMP) player);
+				BuildersBag.network.sendTo(new PlayFailureSoundClient(),  (ServerPlayerEntity) player);
 				return EnumActionResult.FAIL;
 			}
 
@@ -190,7 +190,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			if (placementStack.isEmpty())
 			{
 				player.sendStatusMessage(new TextComponentString(TextFormatting.RED + I18n.translateToLocalFormatted("buildersbag.nomaterials", requestedStack.getDisplayName())), true);
-				BuildersBag.network.sendTo(new PlayFailureSoundClient(),  (EntityPlayerMP) player);
+				BuildersBag.network.sendTo(new PlayFailureSoundClient(),  (ServerPlayerEntity) player);
 				return EnumActionResult.FAIL;
 			}
 
@@ -205,8 +205,8 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 			else
 				player.swingArm(hand);
 
-			BuildersBag.network.sendTo(new SyncBagCapClient(bag, hand), (EntityPlayerMP) player);
-			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
+			BuildersBag.network.sendTo(new SyncBagCapClient(bag, hand), (ServerPlayerEntity) player);
+			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (ServerPlayerEntity) player);
 
 			
 			return result;
@@ -266,7 +266,7 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 
 	@Optional.Method(modid = "littletiles")
 	@Override
-	public void collect(HashMapList<String, ItemStack> list, ItemStack stack, EntityPlayer player)
+	public void collect(HashMapList<String, ItemStack> list, ItemStack stack, PlayerEntity player)
 	{
 		if (stack.getItem() instanceof BuildersBagItem)
 		{
@@ -284,14 +284,14 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 	 */
 	@Optional.Method(modid = "botania")
 	@Override
-	public boolean provideBlock(EntityPlayer player, ItemStack requestor, ItemStack stack, Block block, int meta, boolean doit)
+	public boolean provideBlock(PlayerEntity player, ItemStack requestor, ItemStack stack, Block block, int meta, boolean doit)
 	{
 		return BotaniaCompat.provideBlock(player, requestor, stack, block, meta, doit);
 	}
 
 	@Optional.Method(modid = "botania")
 	@Override
-	public int getBlockCount(EntityPlayer player, ItemStack requestor, ItemStack stack, Block block, int meta)
+	public int getBlockCount(PlayerEntity player, ItemStack requestor, ItemStack stack, Block block, int meta)
 	{
 		return BotaniaCompat.getBlockCount(player, requestor, stack, block, meta);
 	}

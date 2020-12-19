@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import tschipp.buildersbag.api.IBlockSourceAdapter;
 
@@ -28,7 +28,7 @@ public class BlockSourceAdapterHandler
 		return false;
 	}
 	
-	public static ItemStack createBlock(ItemStack fromStack, ItemStack toCreate, EntityPlayer player, boolean simulate)
+	public static ItemStack createBlock(ItemStack fromStack, ItemStack toCreate, PlayerEntity player, boolean simulate)
 	{
 		for(IBlockSourceAdapter adapter : adapters)
 		{
@@ -38,7 +38,7 @@ public class BlockSourceAdapterHandler
 		return ItemStack.EMPTY;
 	}
 	
-	public static List<ItemStack> getCreateableBlocks(ItemStack fromStack, EntityPlayer player)
+	public static List<ItemStack> getCreateableBlocks(ItemStack fromStack, PlayerEntity player)
 	{
 		for(IBlockSourceAdapter adapter : adapters)
 		{

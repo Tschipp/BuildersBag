@@ -17,7 +17,7 @@ import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
@@ -58,7 +58,7 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 	public void renderByItem(ItemStack stack, float partialTicks)
 	{
 
-		EntityPlayer player = Minecraft.getMinecraft().player;
+		PlayerEntity player = Minecraft.getMinecraft().player;
 		Minecraft mc = Minecraft.getMinecraft();
 		World world = player.world;
 		RenderItem render = mc.getRenderItem();

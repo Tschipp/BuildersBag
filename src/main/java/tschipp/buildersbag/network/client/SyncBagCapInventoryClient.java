@@ -3,9 +3,9 @@ package tschipp.buildersbag.network.client;
 import baubles.api.BaublesApi;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -24,7 +24,7 @@ public class SyncBagCapInventoryClient implements IMessage, IMessageHandler<Sync
 
 	private IBagCap bagCap;
 	public int slot;
-	public NBTTagCompound readTag;
+	public CompoundNBT readTag;
 	public boolean isBauble;
 	
 	public SyncBagCapInventoryClient()
@@ -55,7 +55,7 @@ public class SyncBagCapInventoryClient implements IMessage, IMessageHandler<Sync
 	@Override
 	public void toBytes(ByteBuf buf)
 	{
-		ByteBufUtils.writeTag(buf, (NBTTagCompound) BagCapProvider.BAG_CAPABILITY.writeNBT(bagCap, null));
+		ByteBufUtils.writeTag(buf, (CompoundNBT) BagCapProvider.BAG_CAPABILITY.writeNBT(bagCap, null));
 		buf.writeInt(slot);
 		buf.writeBoolean(isBauble);
 	}
@@ -67,7 +67,7 @@ public class SyncBagCapInventoryClient implements IMessage, IMessageHandler<Sync
 
 		mainThread.addScheduledTask(() -> {
 
-			EntityPlayer player = BuildersBag.proxy.getPlayer();
+			PlayerEntity player = BuildersBag.proxy.getPlayer();
 			if (message.slot >= 0)
 			{
 				ItemStack stack = ItemStack.EMPTY;

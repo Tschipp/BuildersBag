@@ -1,8 +1,8 @@
 package tschipp.buildersbag.network.server;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -51,12 +51,12 @@ public class RequestBagUpdateServer implements IMessage, IMessageHandler<Request
 
 		mainThread.addScheduledTask(() -> {
 
-			EntityPlayer player = ctx.getServerHandler().player;
+			PlayerEntity player = ctx.getServerHandler().player;
 			
 			ItemStack bag = InventoryHelper.getStackInSlot(player, message.slot, message.isBauble);
 			IBagCap cap = CapHelper.getBagCap(bag);
 			
-			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(cap, message.slot, message.isBauble), (EntityPlayerMP) player);
+			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(cap, message.slot, message.isBauble), (ServerPlayerEntity) player);
 		});
 
 		return null;

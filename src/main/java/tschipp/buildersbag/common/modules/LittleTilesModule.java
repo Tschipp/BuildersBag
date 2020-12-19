@@ -20,12 +20,12 @@ import com.creativemd.littletiles.common.util.ingredient.LittleIngredients;
 import com.creativemd.littletiles.common.util.ingredient.LittleInventory;
 
 import net.minecraft.block.Block;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.common.Optional;
@@ -51,7 +51,7 @@ public class LittleTilesModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
+	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, PlayerEntity player)
 	{
 		return NonNullList.create();
 	}
@@ -75,7 +75,7 @@ public class LittleTilesModule extends AbstractBagModule
 	}
 
 	@Optional.Method(modid = "littletiles")
-	public static strictfp void provideLittleIngredients(ItemStack stack, LittleIngredients ingredients, LittleIngredients overflow, EntityPlayer player, LittleInventory inventory)
+	public static strictfp void provideLittleIngredients(ItemStack stack, LittleIngredients ingredients, LittleIngredients overflow, PlayerEntity player, LittleInventory inventory)
 	{
 		BlockIngredient overflowBlk = new BlockIngredient();
 		IBagCap bag = CapHelper.getBagCap(stack);
@@ -225,7 +225,7 @@ public class LittleTilesModule extends AbstractBagModule
 		return ing;
 	}
 
-	public static void setAvailableIngredients(HashMapList<String, ItemStack> list, ItemStack bag, IBagCap bagCap, EntityPlayer player)
+	public static void setAvailableIngredients(HashMapList<String, ItemStack> list, ItemStack bag, IBagCap bagCap, PlayerEntity player)
 	{
 		NonNullList<ItemStack> allAvailable = BagHelper.getAllAvailableStacks(CapHelper.getBagCap(bag), player); // TODO: Get the player
 
@@ -277,7 +277,7 @@ public class LittleTilesModule extends AbstractBagModule
 
 	}
 
-	public static strictfp void addIngredients(ItemStack stack, LittleIngredients ing, EntityPlayer player)
+	public static strictfp void addIngredients(ItemStack stack, LittleIngredients ing, PlayerEntity player)
 	{
 		for (LittleIngredient i : ing)
 		{
@@ -296,11 +296,11 @@ public class LittleTilesModule extends AbstractBagModule
 		
 //		if(!player.world.isRemote)
 //		{
-//			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(stack, player), (EntityPlayerMP) player);
+//			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(stack, player), (ServerPlayerEntity) player);
 //		}
 	}
 
-	private static void insertIngredientsIntoBag(ItemStack stack, EntityPlayer player, BlockIngredientEntry ing)
+	private static void insertIngredientsIntoBag(ItemStack stack, PlayerEntity player, BlockIngredientEntry ing)
 	{
 		IBagCap bag = CapHelper.getBagCap(stack);
 		NonNullList<ItemStack> inventory = InventoryHelper.getStacks(bag.getBlockInventory());
@@ -328,7 +328,7 @@ public class LittleTilesModule extends AbstractBagModule
 		if (tileItemStack.isEmpty())
 			tileItemStack = new ItemStack(LittleTiles.blockIngredient);
 
-		tileItemStack.setTagCompound(new NBTTagCompound());
+		tileItemStack.setTagCompound(new CompoundNBT());
 		ItemBlockIngredient.saveIngredient(tileItemStack, ing);
 
 		BlockIngredientEntry entry = ItemBlockIngredient.loadIngredient(tileItemStack);
@@ -354,7 +354,7 @@ public class LittleTilesModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> getCompactedStacks(NonNullList<ItemStack> toCompact, EntityPlayer player)
+	public NonNullList<ItemStack> getCompactedStacks(NonNullList<ItemStack> toCompact, PlayerEntity player)
 	{
 		if (!this.isEnabled())
 			return toCompact;
@@ -376,7 +376,7 @@ public class LittleTilesModule extends AbstractBagModule
 		for (BlockIngredientEntry entry : ing)
 		{
 			ItemStack ingStack = new ItemStack(LittleTiles.blockIngredient);
-			ingStack.setTagCompound(new NBTTagCompound());
+			ingStack.setTagCompound(new CompoundNBT());
 			ItemBlockIngredient.saveIngredient(ingStack, entry);
 			stacks.add(ingStack);
 		}
@@ -386,7 +386,7 @@ public class LittleTilesModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player)
+	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, PlayerEntity player)
 	{
 		return NonNullList.create();
 	}

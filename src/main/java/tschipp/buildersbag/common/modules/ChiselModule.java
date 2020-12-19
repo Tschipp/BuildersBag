@@ -7,11 +7,11 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
@@ -37,7 +37,7 @@ public class ChiselModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
+	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, PlayerEntity player)
 	{
 		NonNullList<ItemStack> providedSacks = BagHelper.getAllAvailableStacksExcept(bag, player, this);
 		NonNullList<ItemStack> list = NonNullList.create();
@@ -77,15 +77,15 @@ public class ChiselModule extends AbstractBagModule
 	}
 
 	@Override
-	public NBTTagCompound serializeNBT()
+	public CompoundNBT serializeNBT()
 	{
-		NBTTagCompound tag = super.serializeNBT();
+		CompoundNBT tag = super.serializeNBT();
 		tag.setTag("Inventory", handler.serializeNBT());
 		return tag;
 	}
 
 	@Override
-	public void deserializeNBT(NBTTagCompound nbt)
+	public void deserializeNBT(CompoundNBT nbt)
 	{
 		super.deserializeNBT(nbt);
 		handler.deserializeNBT(nbt.getCompoundTag("Inventory"));
@@ -104,7 +104,7 @@ public class ChiselModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player)
+	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, PlayerEntity player)
 	{
 		NonNullList list = NonNullList.create();
 
@@ -151,7 +151,7 @@ public class ChiselModule extends AbstractBagModule
 			{
 				for (int i = 0; i < providedVariants.size(); i++)
 				{
-					if (!validTinkersChisel(chisel) || chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
+					if (!validTinkersChisel(chisel) || chisel.attemptDamageItem(1, new Random(), (ServerPlayerEntity) player))
 					{
 						list.add(stack.copy());
 
@@ -177,7 +177,7 @@ public class ChiselModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> getCompactedStacks(NonNullList<ItemStack> toCompact, EntityPlayer player)
+	public NonNullList<ItemStack> getCompactedStacks(NonNullList<ItemStack> toCompact, PlayerEntity player)
 	{
 		if (!isEnabled())
 			return toCompact;
@@ -254,7 +254,7 @@ public class ChiselModule extends AbstractBagModule
 
 						if (!player.world.isRemote)
 						{
-							if (chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
+							if (chisel.attemptDamageItem(1, new Random(), (ServerPlayerEntity) player))
 								chisel.shrink(1);
 						}
 
@@ -276,7 +276,7 @@ public class ChiselModule extends AbstractBagModule
 
 						if (!player.world.isRemote)
 						{
-							if (chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
+							if (chisel.attemptDamageItem(1, new Random(), (ServerPlayerEntity) player))
 								chisel.shrink(1);
 						}
 					}

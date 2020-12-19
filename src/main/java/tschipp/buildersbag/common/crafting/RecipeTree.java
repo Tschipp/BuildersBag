@@ -17,7 +17,7 @@ import java.util.Stack;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
@@ -90,7 +90,7 @@ public class RecipeTree
 		}
 	}
 
-	public CraftingStepList generateCraftingStepList(String toCreate, int createAmount, EntityPlayer player, IBagCap bag)
+	public CraftingStepList generateCraftingStepList(String toCreate, int createAmount, PlayerEntity player, IBagCap bag)
 	{
 		CraftingStepList result = null;
 		int craftAmount = 1;
@@ -127,7 +127,7 @@ public class RecipeTree
 		return result;
 	}
 
-	private CraftingStepList generateCraftingStepListInternal(String toCreate, int createAmount, @Nullable CraftingStepList stepList, EntityPlayer player, IBagCap bag, @Nullable Map<ItemContainer, Integer> ingredientsCallback)
+	private CraftingStepList generateCraftingStepListInternal(String toCreate, int createAmount, @Nullable CraftingStepList stepList, PlayerEntity player, IBagCap bag, @Nullable Map<ItemContainer, Integer> ingredientsCallback)
 	{
 		RecipeNode toCreateNode = this.nodes.get(toCreate);
 		RecipeNode parentNode = null;
@@ -330,7 +330,7 @@ public class RecipeTree
 	}
 
 	@Nullable
-	public RecipeRequirementList generateRequirementList(String toCreate, @Nullable RecipeRequirementList reqList, EntityPlayer player, IBagCap cap)
+	public RecipeRequirementList generateRequirementList(String toCreate, @Nullable RecipeRequirementList reqList, PlayerEntity player, IBagCap cap)
 	{
 		RecipeNode toCreateNode = this.nodes.get(toCreate);
 		RecipeNode parentNode = null;
@@ -504,7 +504,7 @@ public class RecipeTree
 		return reqList;
 	}
 
-	private boolean hasEnoughMaterialsForRoot(RecipeNode p, RecipeContainer recipeContainer, EntityPlayer player, IBagCap cap)
+	private boolean hasEnoughMaterialsForRoot(RecipeNode p, RecipeContainer recipeContainer, PlayerEntity player, IBagCap cap)
 	{
 		String[] split = p.id.split(";");
 		for (String str : split)

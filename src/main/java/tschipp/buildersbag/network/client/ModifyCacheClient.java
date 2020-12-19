@@ -3,7 +3,7 @@ package tschipp.buildersbag.network.client;
 import baubles.api.BaublesApi;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.Loader;
@@ -62,7 +62,7 @@ public class ModifyCacheClient implements IMessage, IMessageHandler<ModifyCacheC
 
 		mainThread.addScheduledTask(() -> {
 
-			EntityPlayer player = BuildersBag.proxy.getPlayer();
+			PlayerEntity player = BuildersBag.proxy.getPlayer();
 			
 			ItemStack bag = ItemStack.EMPTY;
 			if (message.isBauble)

@@ -3,7 +3,7 @@ package tschipp.buildersbag.common.helper;
 import java.util.List;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTTagString;
 import net.minecraft.util.NonNullList;
@@ -13,11 +13,11 @@ public class ItemHelper
 
 	public static void addLore(ItemStack stack, String... lines)
 	{
-		NBTTagCompound tag = stack.getTagCompound();
+		CompoundNBT tag = stack.getTagCompound();
 		if (tag == null)
-			tag = new NBTTagCompound();
+			tag = new CompoundNBT();
 	
-		NBTTagCompound display = tag.getCompoundTag("display");
+		CompoundNBT display = tag.getCompoundTag("display");
 		NBTTagList lore = display.getTagList("Lore", 8);
 		if (lore == null)
 			lore = new NBTTagList();

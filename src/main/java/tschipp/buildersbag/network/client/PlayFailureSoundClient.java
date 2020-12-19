@@ -2,7 +2,7 @@ package tschipp.buildersbag.network.client;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
@@ -29,7 +29,7 @@ public class PlayFailureSoundClient implements IMessage, IMessageHandler<PlayFai
 		mainThread.addScheduledTask(() ->
 		{
 
-			EntityPlayer player = BuildersBag.proxy.getPlayer();
+			PlayerEntity player = BuildersBag.proxy.getPlayer();
 
 			if (BuildersBagConfig.Settings.playFailSounds)
 				player.playSound(SoundEvents.BLOCK_NOTE_BASEDRUM, 0.5f, 0.1f);

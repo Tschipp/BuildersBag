@@ -4,8 +4,8 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
@@ -38,7 +38,7 @@ public class BlockEvents
 	@SubscribeEvent
 	public static void onBlockPlace(PlayerInteractEvent.RightClickBlock event)
 	{
-		EntityPlayer player = event.getEntityPlayer();
+		PlayerEntity player = event.getPlayerEntity();
 		World world = event.getWorld();
 		BlockPos pos = event.getPos();
 		EnumFacing facing = event.getFace();
@@ -78,8 +78,8 @@ public class BlockEvents
 								
 								if (!player.world.isRemote)
 								{
-									BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, triple.getLeft(), triple.getMiddle()), (EntityPlayerMP) player);
-									BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);	
+									BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, triple.getLeft(), triple.getMiddle()), (ServerPlayerEntity) player);
+									BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (ServerPlayerEntity) player);	
 								}
 								return;
 							}
@@ -99,10 +99,10 @@ public class BlockEvents
 	{
 		Entity e = event.getEntity();
 		World world = event.getWorld();
-		if(e instanceof EntityPlayer && !world.isRemote)
+		if(e instanceof PlayerEntity && !world.isRemote)
 		{
-			EntityPlayerMP player = (EntityPlayerMP) e;
-			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
+			ServerPlayerEntity player = (ServerPlayerEntity) e;
+			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (ServerPlayerEntity) player);
 		}
 	}
 

@@ -2,8 +2,8 @@ package tschipp.buildersbag;
 
 import java.lang.reflect.Field;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -119,7 +119,7 @@ public class CommonProxy
 
 	}
 
-	public EntityPlayer getPlayer()
+	public PlayerEntity getPlayer()
 	{
 		return null;
 	}
@@ -133,14 +133,14 @@ public class CommonProxy
 		return Thread.currentThread().getThreadGroup() == SidedThreadGroups.SERVER ? Side.SERVER : Side.CLIENT;
 	}
 
-	public void startWorking(String uuid, EntityPlayer player)
+	public void startWorking(String uuid, PlayerEntity player)
 	{
-		BuildersBag.network.sendTo(new SetWorkStateClient(uuid, true), (EntityPlayerMP) player);
+		BuildersBag.network.sendTo(new SetWorkStateClient(uuid, true), (ServerPlayerEntity) player);
 	}
 
-	public void stopWorking(String uuid, EntityPlayer player)
+	public void stopWorking(String uuid, PlayerEntity player)
 	{
-		BuildersBag.network.sendTo(new SetWorkStateClient(uuid, false), (EntityPlayerMP) player);
+		BuildersBag.network.sendTo(new SetWorkStateClient(uuid, false), (ServerPlayerEntity) player);
 	}
 
 }

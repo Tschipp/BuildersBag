@@ -1,51 +1,91 @@
 buildscript {
     repositories {
+        maven { url = 'https://files.minecraftforge.net/maven' }
         jcenter()
-        maven { url = "https://files.minecraftforge.net/maven" }
+        mavenCentral()
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
     }
 }
-
-plugins {
-  id "com.wynprice.cursemaven" version "2.1.1"
-}
-
-apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
 apply from: 'https://raw.githubusercontent.com/MinecraftModDevelopment/Gradle-Collection/22e7d543a18cd30675277fbfa3669e3d9e206010/generic/secrets.gradle'
 
+import net.minecraftforge.gradle.common.task.SignJar                      
+import groovy.json.JsonSlurper                       
 import groovy.json.JsonOutput
 
 if (project.hasProperty('secretFile')) {
     loadSecrets(new File((String) findProperty('secretFile')))
 }
 
-group = "tschipp.buildersbag" 
-archivesBaseName = "buildersbag-${minecraft_version}"
 version = "${version}"
+group = "tschipp.buildersbag"
+archivesBaseName = "buildersbag-${minecraft_version}"
+
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+
 
 if (System.getenv('BUILD_NUMBER') != null) {
     version += "." + System.getenv('BUILD_NUMBER')
 }
 
-sourceCompatibility = targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
-compileJava {
-    sourceCompatibility = targetCompatibility = '1.8'
-}
-
+println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
-    version = "${minecraft_version}-${forge_version}"
-    runDir = "run"
-    mappings = mcp_mappings
-	
-	replace 'GRADLE:VERSION', version
+    mappings channel: 'snapshot', version: "${mcp_mappings}"
+   
+    runs {
+        client {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+
+            property 'forge.logging.console.level', 'debug'
+
+            mods {
+                buildersbag {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+
+            property 'forge.logging.console.level', 'debug'
+
+            mods {
+                buildersbag {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        data {
+            workingDirectory project.file('run')
+
+            property 'forge.logging.markers', 'SCAN,REGISTRIES,REGISTRYDUMP'
+
+            property 'forge.logging.console.level', 'debug'
+
+            args '--mod', 'examplemod', '--all', '--output', file('src/generated/resources/'), '--existing', file('src/main/resources/')
+
+            mods {
+                buildersbag {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
 }
 
 repositories {
-
+	
 	maven { // Chisel, CTM
         name 'tterrag maven'
         url "https://maven.tterrag.com/"
@@ -67,43 +107,56 @@ repositories {
         name = "thiakil"
         url = "https://maven.thiakil.com" //Baubles
     }
+	
+	//Baubles
+	maven {
+		url 'https://jitpack.io'
+	}
+	
+	//Cursemaven
+	repositories {
+    maven {
+        url "https://www.cursemaven.com"
+    }
+}
 }
 
 dependencies {
-    
-	deobfCompile "team.chisel.ctm:CTM:${ctm_version}" //CTM
-	deobfCompile "team.chisel:Chisel:${chisel_version}" //Chisel
-	compile "curse.maven:littletiles:${littletiles_version}" //LT
-	compile "curse.maven:creativecore:${creativecore_version}" //Creative Core
-	compile "curse.maven:chisels-bits:${chisels_and_bits_version}" //C & B
-	compile "curse.maven:better-builders-wands:${bbw_version}" //Better Builder's Wands
-	compile "curse.maven:building-gadgets:${buildinggadgets_version}" //Building Gadgets
-	deobfCompile "tschipp.linear:linear-1.12.2:${linear_version}" //Linear
-	deobfCompile "vazkii.botania:Botania:${botania_version}" //Botania
-	deobfCompile "com.azanor.baubles:Baubles:${baubles_version}" //Baubles
-	compile "net.darkhax.gamestages:GameStages-1.12.2:${gamestage_version}" //Gamestages
-	compile "net.darkhax.itemstages:ItemStages-1.12.2:${itemstage_version}" //Itemstages
-	compile "net.darkhax.orestages:OreStages-1.12.2:${orestage_version}" //Orestages
-	compile "net.darkhax.bookshelf:Bookshelf-1.12.2:${bookshelf_version}" //Bookshelf
-   	compile "CraftTweaker2:CraftTweaker2-MC1120-Main:${ct_version}" //Crafttweaker
-   	runtime "CraftTweaker2:CraftTweaker2-MC1120-Mod-JEI:${ct_version}" //Crafttweaker-JEI compat
-
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+	
+	compileOnly fg.deobf("team.chisel.ctm:CTM:${ctm_version}") //CTM
+	//deobfCompile "team.chisel:Chisel:${chisel_version}" //Chisel
+	//compile "curse.maven:littletiles:${littletiles_version}" //LT
+	//compile "curse.maven:creativecore:${creativecore_version}" //Creative Core
+	compileOnly fg.deobf("curse.maven:chisels-bits-231095:${chisels_and_bits_version}") //C & B
+	//compile "curse.maven:better-builders-wands:${bbw_version}" //Better Builder's Wands
+	compileOnly fg.deobf("curse.maven:building-gadgets-298187:${buildinggadgets_version}") //Building Gadgets
+	//deobfCompile "tschipp.linear:linear-1.12.2:${linear_version}" //Linear
+	compileOnly fg.deobf("vazkii.botania:Botania:${botania_version}") //Botania
+	compileOnly fg.deobf("com.github.lazyMods:Baubles:${baubles_version}:api") //Baubles
+	compileOnly fg.deobf("net.darkhax.gamestages:GameStages-1.16.4:${gamestage_version}") //Gamestages
+	//compile "net.darkhax.itemstages:ItemStages-1.12.2:${itemstage_version}" //Itemstages
+	//compile "net.darkhax.orestages:OreStages-1.12.2:${orestage_version}" //Orestages
+	compileOnly fg.deobf("net.darkhax.bookshelf:Bookshelf-1.12.2:${bookshelf_version}") //Bookshelf
+   	compileOnly fg.deobf("com.blamejared.crafttweaker:CraftTweaker-1.16.4:${ct_version}") //Crafttweaker
 }
 
-processResources {
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft_version
-
-    from(sourceSets.main.resources.srcDirs) {
-        include 'mcmod.info'
-                
-        expand 'version':project.version, 'mcversion':project.minecraft_version
-    }
-        
-    from(sourceSets.main.resources.srcDirs) {
-        exclude 'mcmod.info'
+// Example for how to get properties into the manifest for reading by the runtime..
+jar {
+    manifest {
+        attributes([
+            "Specification-Title": "buildersbag",
+            "Specification-Vendor": "Builder's Bag",
+            "Specification-Version": "1", // We are version 1 of ourselves
+            "Implementation-Title": project.name,
+            "Implementation-Version": "${version}",
+            "Implementation-Vendor" :"Builder's Bag",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
     }
 }
+
+jar.finalizedBy('reobfJar') 
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     description = 'Creates a JAR containing the source code.'
@@ -128,6 +181,7 @@ artifacts {
     archives javadocJar
     archives deobfJar
 }
+
 
 publishing {
 
@@ -175,8 +229,7 @@ publishing {
     }
 }
 
-task signJar(type: SignJar, dependsOn: reobfJar) {
-
+task signJar(type: SignJar, dependsOn: jar) {
     // Skips if the keyStore property is missing.
     onlyIf {
         project.hasProperty('modkeyStore')
@@ -195,5 +248,3 @@ task signJar(type: SignJar, dependsOn: reobfJar) {
 
 // Runs this task automatically when build is ran. 
 build.dependsOn signJar
-
-

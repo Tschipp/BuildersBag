@@ -6,7 +6,7 @@ import java.util.Collection;
 import net.darkhax.gamestages.GameStageHelper;
 import net.darkhax.gamestages.data.IStageData;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Tuple;
@@ -39,7 +39,7 @@ public class StageHelper
 				gameStageHelper = Class.forName("net.darkhax.gamestages.GameStageHelper");
 				iStageData = Class.forName("net.darkhax.gamestages.data.IStageData");
 
-				getPlayerData = ReflectionHelper.findMethod(gameStageHelper, "getPlayerData", null, EntityPlayer.class);
+				getPlayerData = ReflectionHelper.findMethod(gameStageHelper, "getPlayerData", null, PlayerEntity.class);
 				hasStage = ReflectionHelper.findMethod(iStageData, "hasStage", null, String.class);
 
 			} catch (Exception e)
@@ -49,7 +49,7 @@ public class StageHelper
 					playerDataHandler = Class.forName("net.darkhax.gamestages.capabilities.PlayerDataHandler");
 					iStageData = Class.forName("net.darkhax.gamestages.capabilities.PlayerDataHandler$IStageData");
 
-					getStageData = ReflectionHelper.findMethod(playerDataHandler, "getStageData", null, EntityPlayer.class);
+					getStageData = ReflectionHelper.findMethod(playerDataHandler, "getStageData", null, PlayerEntity.class);
 					hasUnlockedStage = ReflectionHelper.findMethod(iStageData, "hasUnlockedStage", null, String.class);
 
 					usesNewVersion = false;
@@ -75,13 +75,13 @@ public class StageHelper
 		return new Tuple("", Blocks.AIR.getDefaultState());
 	}
 	
-	public static Collection<String> getStages(EntityPlayer player)
+	public static Collection<String> getStages(PlayerEntity player)
 	{
 		IStageData data = GameStageHelper.getPlayerData(player);
 		return data.getStages();
 	}
 	
-	public static boolean hasStage(EntityPlayer player, String stage)
+	public static boolean hasStage(PlayerEntity player, String stage)
 	{
 		if (Loader.isModLoaded("gamestages"))
 		{

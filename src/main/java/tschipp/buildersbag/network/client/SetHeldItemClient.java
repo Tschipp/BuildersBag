@@ -2,7 +2,7 @@ package tschipp.buildersbag.network.client;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IThreadListener;
@@ -51,7 +51,7 @@ public class SetHeldItemClient implements IMessage, IMessageHandler<SetHeldItemC
 		
 		mainThread.addScheduledTask(() -> {
 			
-			EntityPlayer player = BuildersBag.proxy.getPlayer();
+			PlayerEntity player = BuildersBag.proxy.getPlayer();
 			EnumHand hand = message.right ? EnumHand.MAIN_HAND : EnumHand.OFF_HAND;
 			
 			player.setHeldItem(hand, message.stack);

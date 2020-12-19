@@ -6,7 +6,7 @@ import java.util.UUID;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
@@ -24,9 +24,9 @@ public class BagCapStorage implements IStorage<IBagCap>
 	@Override
 	public NBTBase writeNBT(Capability<IBagCap> capability, IBagCap instance, EnumFacing side)
 	{
-		NBTTagCompound tag = new NBTTagCompound();
-		NBTTagCompound inventory = instance.getBlockInventory().serializeNBT();
-		NBTTagCompound selected = instance.getSelectedInventory().serializeNBT();
+		CompoundNBT tag = new CompoundNBT();
+		CompoundNBT inventory = instance.getBlockInventory().serializeNBT();
+		CompoundNBT selected = instance.getSelectedInventory().serializeNBT();
 		NBTTagList modules = new NBTTagList();
 		NBTTagList palette = new NBTTagList();
 
@@ -55,9 +55,9 @@ public class BagCapStorage implements IStorage<IBagCap>
 	@Override
 	public void readNBT(Capability<IBagCap> capability, IBagCap instance, EnumFacing side, NBTBase nbt)
 	{	
-		NBTTagCompound tag = (NBTTagCompound) nbt;
-		NBTTagCompound inventory = tag.getCompoundTag("inventory");
-		NBTTagCompound selected = tag.getCompoundTag("selected");
+		CompoundNBT tag = (CompoundNBT) nbt;
+		CompoundNBT inventory = tag.getCompoundTag("inventory");
+		CompoundNBT selected = tag.getCompoundTag("selected");
 		NBTTagList modules = tag.getTagList("modules", 10);
 		NBTTagList palette = tag.getTagList("palette", 10);
 		String uuid = tag.getString("uuid");
@@ -78,7 +78,7 @@ public class BagCapStorage implements IStorage<IBagCap>
 		List<IBagModule> parsedModules = new ArrayList<IBagModule>();
 		for(int i = 0; i < modules.tagCount(); i++)
 		{
-			NBTTagCompound module = modules.getCompoundTagAt(i);
+			CompoundNBT module = modules.getCompoundTagAt(i);
 			IBagModule mod = BuildersBagRegistry.getModule(new ResourceLocation(module.getString("name")));
 			if(mod != null)
 			{
@@ -91,7 +91,7 @@ public class BagCapStorage implements IStorage<IBagCap>
 		List<ItemStack> paletteList = new ArrayList<ItemStack>();
 		for(int i = 0; i < palette.tagCount(); i++)
 		{
-			NBTTagCompound stacktag = palette.getCompoundTagAt(i);
+			CompoundNBT stacktag = palette.getCompoundTagAt(i);
 			ItemStack stack = new ItemStack(stacktag);
 			if(!stack.isEmpty())
 				paletteList.add(stack);

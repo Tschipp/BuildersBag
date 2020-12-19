@@ -1,7 +1,7 @@
 package tschipp.buildersbag.client.selectionwheel;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.MouseEvent;
@@ -71,7 +71,7 @@ public class SelectionWheelEvents
 
 		if (event.getDwheel() > 0 || event.getDwheel() < 0 && Minecraft.getMinecraft().player != null)
 		{
-			EntityPlayer player = Minecraft.getMinecraft().player;
+			PlayerEntity player = Minecraft.getMinecraft().player;
 
 			if (player.isSneaking())
 			{

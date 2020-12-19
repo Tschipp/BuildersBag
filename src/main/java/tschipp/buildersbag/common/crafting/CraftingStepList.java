@@ -9,7 +9,7 @@ import java.util.Stack;
 
 import javax.annotation.Nullable;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import tschipp.buildersbag.api.IBagCap;
@@ -24,12 +24,12 @@ public class CraftingStepList implements Iterable<CraftingStep>
 	private Stack<CraftingStep> craftingstack = new Stack<CraftingStep>();
 
 	private RecipeTree tree;
-	private EntityPlayer player;
+	private PlayerEntity player;
 	private IBagCap bag;
 	NonNullList<ItemStack> bagInventory = NonNullList.create();
 	private RecipeContainer creationRecipe = null;
 
-	public CraftingStepList(EntityPlayer player, IBagCap bag, RecipeTree tree)
+	public CraftingStepList(PlayerEntity player, IBagCap bag, RecipeTree tree)
 	{
 		this.player = player;
 		this.bag = bag;

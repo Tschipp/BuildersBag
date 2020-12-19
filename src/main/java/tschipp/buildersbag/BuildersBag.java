@@ -24,8 +24,8 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import tschipp.buildersbag.common.config.BuildersBagConfig;
 
-@EventBusSubscriber
-@Mod(modid = BuildersBag.MODID, name = BuildersBag.NAME, version = BuildersBag.VERSION, dependencies = BuildersBag.DEPENDENCIES, acceptedMinecraftVersions = BuildersBag.ACCEPTED_VERSIONS, guiFactory = "tschipp.buildersbag.client.gui.GuiFactoryBuildersBag", certificateFingerprint = BuildersBag.CERTIFICATE)
+@EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
+@Mod(BuildersBag.MODID)
 public class BuildersBag
 {
 

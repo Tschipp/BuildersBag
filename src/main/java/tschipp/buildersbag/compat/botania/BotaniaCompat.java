@@ -3,8 +3,8 @@ package tschipp.buildersbag.compat.botania;
 import java.util.Random;
 
 import net.minecraft.block.Block;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import tschipp.buildersbag.BuildersBag;
@@ -23,7 +23,7 @@ public class BotaniaCompat
 	private static int lastCount = 0;
 	private static ItemStack lastSelected = ItemStack.EMPTY;
 
-	public static int getBlockCount(EntityPlayer player, ItemStack requestor, ItemStack stack, Block block, int meta)
+	public static int getBlockCount(PlayerEntity player, ItemStack requestor, ItemStack stack, Block block, int meta)
 	{
 		Random rand = new Random();
 		ItemStack requestedStack = new ItemStack(block, 1, meta);
@@ -61,7 +61,7 @@ public class BotaniaCompat
 		return lastCount;
 	}
 
-	public static boolean provideBlock(EntityPlayer player, ItemStack requestor, ItemStack stack, Block block, int meta, boolean doit)
+	public static boolean provideBlock(PlayerEntity player, ItemStack requestor, ItemStack stack, Block block, int meta, boolean doit)
 	{
 		ItemStack requestedStack = new ItemStack(block, 1, meta);
 		IBagCap bag = CapHelper.getBagCap(stack);
@@ -74,7 +74,7 @@ public class BotaniaCompat
 			if (provided.isEmpty())
 				return false;
 
-//			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, InventoryHelper.getSlotForStack(player, stack)), (EntityPlayerMP) player);
+//			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, InventoryHelper.getSlotForStack(player, stack)), (ServerPlayerEntity) player);
 			return true;
 		} else
 		{

@@ -1,6 +1,7 @@
 package tschipp.buildersbag.client;
 
 
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.input.Keyboard;
 
 import net.minecraft.client.Minecraft;
@@ -36,7 +37,7 @@ public class BuildersBagKeybinds
 
 	public static void registerKeybinds()
 	{
-		openSelectionWheel = new KeyBinding("keybind.openSelectionWheel", NO_CONFLICT, Keyboard.KEY_LMENU, "buildersbag.name");
+		openSelectionWheel = new KeyBinding("keybind.openSelectionWheel", NO_CONFLICT, GLFW.GLFW_KEY_LEFT_ALT, "buildersbag.name");
 		ClientRegistry.registerKeyBinding(openSelectionWheel);
 		
 		if(Loader.isModLoaded("baubles"))

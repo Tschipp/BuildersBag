@@ -6,7 +6,7 @@ import java.util.Map.Entry;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
@@ -34,7 +34,7 @@ public class CraftingModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
+	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, PlayerEntity player)
 	{
 		return CraftingHandler.getPossibleBlocks(InventoryHelper.getInventoryStacks(bag, player), true);
 	}
@@ -57,7 +57,7 @@ public class CraftingModule extends AbstractBagModule
 		return DISPLAY;
 	}
 
-	public NonNullList<ItemStack> createStackWithRecipeTree(ItemStack stack, int count, IBagCap bag, EntityPlayer player, @Nullable RecipeTree subTree, @Nonnull ItemStack root)
+	public NonNullList<ItemStack> createStackWithRecipeTree(ItemStack stack, int count, IBagCap bag, PlayerEntity player, @Nullable RecipeTree subTree, @Nonnull ItemStack root)
 	{
 		boolean newTree = subTree == null;
 
@@ -382,7 +382,7 @@ public class CraftingModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player)
+	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, PlayerEntity player)
 	{
 		return createStackWithRecipeTree(stack, count, bag, player, null, ItemStack.EMPTY);
 	}

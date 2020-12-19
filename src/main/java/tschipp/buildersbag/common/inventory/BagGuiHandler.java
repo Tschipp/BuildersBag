@@ -1,7 +1,7 @@
 package tschipp.buildersbag.common.inventory;
 
 import baubles.api.BaublesApi;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.world.World;
@@ -14,7 +14,7 @@ public class BagGuiHandler implements IGuiHandler
 {
 
 	@Override
-	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int offhand, int y, int z)
+	public Object getServerGuiElement(int ID, PlayerEntity player, World world, int offhand, int y, int z)
 	{
 		if (ID == 0)
 		{
@@ -35,7 +35,7 @@ public class BagGuiHandler implements IGuiHandler
 	}
 
 	@Override
-	public Object getClientGuiElement(int ID, EntityPlayer player, World world, int offhand, int y, int z)
+	public Object getClientGuiElement(int ID, PlayerEntity player, World world, int offhand, int y, int z)
 	{
 		if (ID == 0)
 		{

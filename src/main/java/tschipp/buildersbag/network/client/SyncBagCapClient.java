@@ -2,9 +2,9 @@ package tschipp.buildersbag.network.client;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -21,7 +21,7 @@ public class SyncBagCapClient implements IMessage, IMessageHandler<SyncBagCapCli
 
 	private IBagCap bagCap;
 	public boolean right;
-	public NBTTagCompound readTag;
+	public CompoundNBT readTag;
 
 	public SyncBagCapClient()
 	{
@@ -43,7 +43,7 @@ public class SyncBagCapClient implements IMessage, IMessageHandler<SyncBagCapCli
 	@Override
 	public void toBytes(ByteBuf buf)
 	{
-		ByteBufUtils.writeTag(buf, (NBTTagCompound) BagCapProvider.BAG_CAPABILITY.writeNBT(bagCap, null));
+		ByteBufUtils.writeTag(buf, (CompoundNBT) BagCapProvider.BAG_CAPABILITY.writeNBT(bagCap, null));
 		buf.writeBoolean(right);
 	}
 
@@ -54,7 +54,7 @@ public class SyncBagCapClient implements IMessage, IMessageHandler<SyncBagCapCli
 
 		mainThread.addScheduledTask(() -> {
 
-			EntityPlayer player = BuildersBag.proxy.getPlayer();
+			PlayerEntity player = BuildersBag.proxy.getPlayer();
 			ItemStack stack = message.right ? player.getHeldItemMainhand() : player.getHeldItemOffhand();
 	
 			IBagCap oldCap = CapHelper.getBagCap(stack);

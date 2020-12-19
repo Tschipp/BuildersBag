@@ -3,7 +3,7 @@ package tschipp.buildersbag.api;
 import java.util.List;
 
 import net.minecraft.block.Block;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 
 /**
@@ -21,7 +21,7 @@ public interface IBlockSource
 	 * @param simulate 
 	 * @return The block as an ItemStack, or ItemStack.EMPTY if it can't be created.
 	 */
-	public ItemStack createBlock(ItemStack fromStack, ItemStack toCreate, EntityPlayer player, boolean simulate);
+	public ItemStack createBlock(ItemStack fromStack, ItemStack toCreate, PlayerEntity player, boolean simulate);
 
 	/**
 	 * Gets a list of all createable ItemStacks. This should be simulated, so the state of <code>fromStack</code> shouldn't be changed.
@@ -29,5 +29,5 @@ public interface IBlockSource
 	 * @param player
 	 * @return A list of stacks, or an emtpy list if none can be created.
 	 */
-	public List<ItemStack> getCreateableBlocks(ItemStack fromStack, EntityPlayer player);
+	public List<ItemStack> getCreateableBlocks(ItemStack fromStack, PlayerEntity player);
 }

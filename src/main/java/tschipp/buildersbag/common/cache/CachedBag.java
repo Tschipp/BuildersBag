@@ -10,7 +10,7 @@ import java.util.Set;
 
 import com.google.common.collect.Maps;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
@@ -23,7 +23,7 @@ import tschipp.buildersbag.network.server.RequestCacheUpdateServer;
 
 public class CachedBag
 {
-	private EntityPlayer player;
+	private PlayerEntity player;
 	private ItemStack bag;
 	private IBagCap bagCap;
 	private Map<ItemContainer, CachedAmount> cachedStacks = new HashMap<ItemContainer, CachedAmount>();
@@ -32,7 +32,7 @@ public class CachedBag
 	private Set<ItemContainer> pendingRequests = new HashSet<ItemContainer>();
 	private Map<ItemContainer, CachedAmount> dirtyClientCache = new HashMap<ItemContainer, CachedAmount>();
 
-	public CachedBag(EntityPlayer player, ItemStack bag)
+	public CachedBag(PlayerEntity player, ItemStack bag)
 	{
 		this.bagCap = CapHelper.getBagCap(bag);
 		this.bag = bag;
@@ -47,7 +47,7 @@ public class CachedBag
 		dirtyClientCache.clear();
 	}
 
-	public void updatePlayer(EntityPlayer player)
+	public void updatePlayer(PlayerEntity player)
 	{
 		this.player = player;
 	}

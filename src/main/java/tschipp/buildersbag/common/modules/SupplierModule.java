@@ -1,6 +1,6 @@
 package tschipp.buildersbag.common.modules;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
@@ -21,7 +21,7 @@ public class SupplierModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
+	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, PlayerEntity player)
 	{
 		return NonNullList.create();
 	}
@@ -51,7 +51,7 @@ public class SupplierModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player)
+	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, PlayerEntity player)
 	{
 		return BagHelper.getOrProvideStackWithCount(stack, count, bag, player, this);
 	}

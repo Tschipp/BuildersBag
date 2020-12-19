@@ -4,7 +4,7 @@ import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
 import baubles.api.BaublesApi;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
@@ -104,7 +104,7 @@ public class InventoryHelper
 		return maximum;
 	}
 
-	public static NonNullList<ItemStack> getInventoryStacks(IBagCap bag, EntityPlayer player)
+	public static NonNullList<ItemStack> getInventoryStacks(IBagCap bag, PlayerEntity player)
 	{
 		NonNullList<ItemStack> list = NonNullList.create();
 		list.addAll(getStacks(bag.getBlockInventory()));
@@ -136,7 +136,7 @@ public class InventoryHelper
 		return list;
 	}
 
-	public static NonNullList<Triple<Integer, Boolean, ItemStack>> getBagsInInventory(EntityPlayer player)
+	public static NonNullList<Triple<Integer, Boolean, ItemStack>> getBagsInInventory(PlayerEntity player)
 	{
 		NonNullList<Triple<Integer, Boolean, ItemStack>> list = NonNullList.create();
 
@@ -240,7 +240,7 @@ public class InventoryHelper
 		return list;
 	}
 
-	public static int getSlotForStack(EntityPlayer player, ItemStack stack)
+	public static int getSlotForStack(PlayerEntity player, ItemStack stack)
 	{
 		for (int i = 0; i < player.inventory.getSizeInventory(); i++)
 		{
@@ -251,7 +251,7 @@ public class InventoryHelper
 		return -1;
 	}
 
-	public static ItemStack getStackInSlot(EntityPlayer player, int slot, boolean isBauble)
+	public static ItemStack getStackInSlot(PlayerEntity player, int slot, boolean isBauble)
 	{
 		ItemStack stack = ItemStack.EMPTY;
 
@@ -266,7 +266,7 @@ public class InventoryHelper
 
 	}
 
-	public static Tuple<Boolean, Integer> getSlotForStackWithBaubles(EntityPlayer player, ItemStack stack)
+	public static Tuple<Boolean, Integer> getSlotForStackWithBaubles(PlayerEntity player, ItemStack stack)
 	{
 		for (int i = 0; i < player.inventory.getSizeInventory(); i++)
 		{

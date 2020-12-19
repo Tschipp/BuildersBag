@@ -18,13 +18,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 
 import baubles.api.BaublesApi;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.fml.common.Loader;
@@ -43,7 +43,7 @@ public class ContainerBag extends Container
 {
 	public ItemStack bag;
 	public IBagCap bagCap;
-	private EntityPlayer player;
+	private PlayerEntity player;
 	public EnumHand hand;
 	private ItemStackHandler inv;
 
@@ -59,20 +59,20 @@ public class ContainerBag extends Container
 
 	public int leftOffset = 0;
 
-	public ContainerBag(EntityPlayer player, ItemStack bag, EnumHand hand)
+	public ContainerBag(PlayerEntity player, ItemStack bag, EnumHand hand)
 	{
 		this(player, bag);
 		this.hand = hand;
 	}
 
-	public ContainerBag(EntityPlayer player, ItemStack bag, int baubleSlot)
+	public ContainerBag(PlayerEntity player, ItemStack bag, int baubleSlot)
 	{
 		this(player, bag);
 		this.slot = baubleSlot;
 		this.isBauble = true;
 	}
 
-	private ContainerBag(EntityPlayer player, ItemStack bag)
+	private ContainerBag(PlayerEntity player, ItemStack bag)
 	{
 		this.player = player;
 		this.bag = bag;
@@ -216,7 +216,7 @@ public class ContainerBag extends Container
 	}
 
 	@Override
-	public ItemStack transferStackInSlot(EntityPlayer playerIn, int index)
+	public ItemStack transferStackInSlot(PlayerEntity playerIn, int index)
 	{
 		ItemStack itemstack = ItemStack.EMPTY;
 		Slot slot = this.inventorySlots.get(index);
@@ -393,7 +393,7 @@ public class ContainerBag extends Container
 		return !(slot instanceof SelectedBlockSlot);
 	}
 
-	public void updateModule(String name, NBTTagCompound nbt)
+	public void updateModule(String name, CompoundNBT nbt)
 	{
 		modules.forEach((module, triple) ->
 		{
@@ -419,14 +419,14 @@ public class ContainerBag extends Container
 		if (!player.world.isRemote)
 		{
 			if (isBauble)
-				BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, slot, true), (EntityPlayerMP) player);
+				BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, slot, true), (ServerPlayerEntity) player);
 			else
-				BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (EntityPlayerMP) player);
+				BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (ServerPlayerEntity) player);
 		}
 	}
 
 	@Override
-	public boolean canInteractWith(EntityPlayer player)
+	public boolean canInteractWith(PlayerEntity player)
 	{
 		if (Loader.isModLoaded("baubles"))
 		{
@@ -436,7 +436,7 @@ public class ContainerBag extends Container
 	}
 
 	@Override
-	public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, EntityPlayer player)
+	public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, PlayerEntity player)
 	{
 		if (slotId == selectedBlockSlot.slotNumber)
 		{
@@ -459,7 +459,7 @@ public class ContainerBag extends Container
 	}
 
 	@Override
-	public void onContainerClosed(EntityPlayer playerIn)
+	public void onContainerClosed(PlayerEntity playerIn)
 	{
 		super.onContainerClosed(playerIn);
 

@@ -1,7 +1,7 @@
 package tschipp.buildersbag.compat.bbw;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import portablejim.bbw.BetterBuildersWandsMod;
@@ -22,7 +22,7 @@ public class ContainerHandlerBuildersBag implements IContainerHandler
 	private long lastFailureTime = 0;
 	
 	@Override
-	public int countItems(EntityPlayer player, ItemStack stack, ItemStack inventoryStack)
+	public int countItems(PlayerEntity player, ItemStack stack, ItemStack inventoryStack)
 	{
 //		String nbt = inventoryStack.serializeNBT().toString();
 //		if(nbt.equals(lastTag) && ItemStack.areItemsEqual(lastSelected, stack))
@@ -56,7 +56,7 @@ public class ContainerHandlerBuildersBag implements IContainerHandler
 	}
 
 	@Override
-	public boolean matches(EntityPlayer player, ItemStack stack, ItemStack inventoryStack)
+	public boolean matches(PlayerEntity player, ItemStack stack, ItemStack inventoryStack)
 	{
 		if(inventoryStack.getItem() instanceof BuildersBagItem)
 		{
@@ -68,7 +68,7 @@ public class ContainerHandlerBuildersBag implements IContainerHandler
 	}
 
 	@Override
-	public int useItems(EntityPlayer player, ItemStack stack, ItemStack inventoryStack, int count)
+	public int useItems(PlayerEntity player, ItemStack stack, ItemStack inventoryStack, int count)
 	{
 		if(hasFailed && System.currentTimeMillis() - lastFailureTime <= 1000 && ItemStack.areItemsEqual(stack, lastFailureStack))
 		{
@@ -83,7 +83,7 @@ public class ContainerHandlerBuildersBag implements IContainerHandler
 		
 		IBagCap bag = CapHelper.getBagCap(inventoryStack);
 		NonNullList<ItemStack> provided = BagHelper.getOrProvideStackWithCount(stack, count, bag, player, null);
-//		BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, InventoryHelper.getSlotForStack(player, inventoryStack)), (EntityPlayerMP) player);
+//		BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, InventoryHelper.getSlotForStack(player, inventoryStack)), (ServerPlayerEntity) player);
 		
 		if(provided.size() == 0)
 		{

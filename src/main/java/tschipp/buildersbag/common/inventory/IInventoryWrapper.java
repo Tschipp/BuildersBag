@@ -1,6 +1,6 @@
 package tschipp.buildersbag.common.inventory;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.ITextComponent;
@@ -93,18 +93,18 @@ public class IInventoryWrapper implements IInventory
 	}
 
 	@Override
-	public boolean isUsableByPlayer(EntityPlayer player)
+	public boolean isUsableByPlayer(PlayerEntity player)
 	{
 		return true;
 	}
 
 	@Override
-	public void openInventory(EntityPlayer player)
+	public void openInventory(PlayerEntity player)
 	{
 	}
 
 	@Override
-	public void closeInventory(EntityPlayer player)
+	public void closeInventory(PlayerEntity player)
 	{		
 	}
 

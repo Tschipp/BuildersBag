@@ -1,0 +1,32 @@
+modLoader="javafml" #mandatory
+loaderVersion="[35,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
+license="GNU LGPLv3"
+issueTrackerURL="https://github.com/Tschipp/BuildersBag" #optional
+
+[[mods]] #mandatory
+	modId="buildersbag" #mandatory
+	version="${file.jarVersion}" #mandatory
+	displayName="Builder's Bag" #mandatory
+	logoFile="logo.png" #optional
+	authors="Tschipp" #optional
+	# The description text for the mod (multi line!) (#mandatory)
+	description="Builder's Bag provides a useful bag which unifies many building mods."
+# A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
+[[dependencies.buildersbag]] #optional
+    # the modid of the dependency
+    modId="forge" #mandatory
+    # Does this dependency have to exist - if not, ordering below must be specified
+    mandatory=true #mandatory
+    # The version range of the dependency
+    versionRange="[35,)" #mandatory
+    # An ordering relationship for the dependency - BEFORE or AFTER required if the relationship is not mandatory
+    ordering="NONE"
+    # Side this dependency is applied on - BOTH, CLIENT or SERVER
+    side="BOTH"
+# Here's another dependency
+[[dependencies.buildersbag]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.16.4,1.17)"
+    ordering="NONE"
+    side="BOTH"

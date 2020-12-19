@@ -2,10 +2,10 @@ package tschipp.buildersbag.compat.buildinggadgets;
 
 import static net.minecraftforge.items.CapabilityItemHandler.ITEM_HANDLER_CAPABILITY;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
@@ -36,7 +36,7 @@ public class BagProviderCapProvider implements ICapabilitySerializable
 	@Override
 	public NBTBase serializeNBT()
 	{
-		return new NBTTagCompound();
+		return new CompoundNBT();
 	}
 
 	@Override

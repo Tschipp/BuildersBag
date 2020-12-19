@@ -1,7 +1,7 @@
 package tschipp.buildersbag;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -34,7 +34,7 @@ public class ClientProxy extends CommonProxy
 	}
 	
 	@Override
-	public EntityPlayer getPlayer()
+	public PlayerEntity getPlayer()
 	{
 		return Minecraft.getMinecraft().player;
 	}
@@ -46,13 +46,13 @@ public class ClientProxy extends CommonProxy
 	}
 	
 	@Override
-	public void startWorking(String uuid, EntityPlayer player)
+	public void startWorking(String uuid, PlayerEntity player)
 	{
 		BagItemStackRenderer.working.add(uuid);
 	}
 	
 	@Override
-	public void stopWorking(String uuid, EntityPlayer player)
+	public void stopWorking(String uuid, PlayerEntity player)
 	{
 		BagItemStackRenderer.working.remove(uuid);
 	}

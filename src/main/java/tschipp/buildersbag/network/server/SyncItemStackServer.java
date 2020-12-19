@@ -1,7 +1,7 @@
 package tschipp.buildersbag.network.server;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IThreadListener;
@@ -34,7 +34,7 @@ public class SyncItemStackServer implements IMessage, IMessageHandler<SyncItemSt
 		
 		mainThread.addScheduledTask(() -> {
 			
-			EntityPlayer player = ctx.getServerHandler().player;
+			PlayerEntity player = ctx.getServerHandler().player;
 			ItemStack stack = message.right ? player.getHeldItemMainhand() : player.getHeldItemOffhand();
 			
 			stack.deserializeNBT(message.stack.serializeNBT());

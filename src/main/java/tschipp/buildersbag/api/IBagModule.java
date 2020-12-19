@@ -1,13 +1,13 @@
 package tschipp.buildersbag.api;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.items.ItemStackHandler;
 
-public interface IBagModule extends INBTSerializable<NBTTagCompound>
+public interface IBagModule extends INBTSerializable<CompoundNBT>
 {
 
 	/**
@@ -17,7 +17,7 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 	 * @param player
 	 * @return the possible stacks with size 1, or an empty list.
 	 */
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player);
+	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, PlayerEntity player);
 		
 	
 	/**
@@ -28,7 +28,7 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 	 * @param player
 	 * @return the newly created stack, with size 1
 	 */
-	default ItemStack createStack(ItemStack stack, IBagCap bag, EntityPlayer player)
+	default ItemStack createStack(ItemStack stack, IBagCap bag, PlayerEntity player)
 	{
 		NonNullList<ItemStack> list = createStackWithCount(stack, 1, bag, player);
 		if(list.isEmpty())
@@ -45,7 +45,7 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 	 * @param player
 	 * @return A list of the created stacks, all with size 1. If stacks cannot be created, return an empty list.
 	 */
-	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player);
+	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, PlayerEntity player);
 	
 	/**
 	 * Toggles this module
@@ -99,7 +99,7 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 	/**
 	 * Selects a block based on some criteria. Only fired on dominating Modules
 	 */
-	default ItemStack getBlock(IBagCap bag, EntityPlayer player)
+	default ItemStack getBlock(IBagCap bag, PlayerEntity player)
 	{
 		return ItemStack.EMPTY;
 	}
@@ -117,7 +117,7 @@ public interface IBagModule extends INBTSerializable<NBTTagCompound>
 	 * @param toCompact
 	 * @return a new, compacted list, or <code>toCompact</code> if it does nothing
 	 */
-	default NonNullList<ItemStack> getCompactedStacks(NonNullList<ItemStack> toCompact, EntityPlayer player)
+	default NonNullList<ItemStack> getCompactedStacks(NonNullList<ItemStack> toCompact, PlayerEntity player)
 	{
 		return toCompact;
 	}

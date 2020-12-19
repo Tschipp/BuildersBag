@@ -2,9 +2,9 @@ package tschipp.buildersbag.compat.buildinggadgets;
 
 import com.direwolf20.buildinggadgets.common.integration.IItemAccess;
 
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.IBagCap;
@@ -22,7 +22,7 @@ public class BagProviderItemHandler extends ItemStackHandler implements IItemAcc
 	}
 
 	@Override
-	public int extractItems(ItemStack toExtract, int count, EntityPlayer player)
+	public int extractItems(ItemStack toExtract, int count, PlayerEntity player)
 	{
 		long time = System.currentTimeMillis();
 				
@@ -37,7 +37,7 @@ public class BagProviderItemHandler extends ItemStackHandler implements IItemAcc
 	}
 
 	@Override
-	public int getItemsForExtraction(ItemStack toCount, EntityPlayer player)
+	public int getItemsForExtraction(ItemStack toCount, PlayerEntity player)
 	{
 		IBagCap cap = CapHelper.getBagCap(bag);
 		if(!cap.hasModuleAndEnabled("buildersbag:supplier"))
@@ -83,13 +83,13 @@ public class BagProviderItemHandler extends ItemStackHandler implements IItemAcc
 
 
 	@Override
-	public NBTTagCompound serializeNBT()
+	public CompoundNBT serializeNBT()
 	{
-		return new NBTTagCompound();
+		return new CompoundNBT();
 	}
 	
 	@Override
-	public void deserializeNBT(NBTTagCompound nbt)
+	public void deserializeNBT(CompoundNBT nbt)
 	{
 	}
 	

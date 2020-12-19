@@ -7,7 +7,7 @@ import baubles.api.BaublesApi;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemBlock;
@@ -48,7 +48,7 @@ public class ClientEvents
 	@SubscribeEvent
 	public static void onMousePressed(MouseEvent event)
 	{
-		EntityPlayer player = Minecraft.getMinecraft().player;
+		PlayerEntity player = Minecraft.getMinecraft().player;
 
 		if (!event.isButtonstate())
 			return;
@@ -113,7 +113,7 @@ public class ClientEvents
 	@SubscribeEvent
 	public static void onKeyPress(InputEvent.KeyInputEvent event)
 	{
-		EntityPlayer player = Minecraft.getMinecraft().player;
+		PlayerEntity player = Minecraft.getMinecraft().player;
 
 		if (Loader.isModLoaded("baubles") && BuildersBagKeybinds.openBaubleBag.isPressed() && FMLClientHandler.instance().getClient().inGameHasFocus)
 		{

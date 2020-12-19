@@ -28,12 +28,12 @@ import mod.chiselsandbits.network.packets.PacketChisel;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -87,7 +87,7 @@ public class ChiselsBitsModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, EntityPlayer player)
+	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, PlayerEntity player)
 	{
 		return NonNullList.create();
 	}
@@ -111,21 +111,21 @@ public class ChiselsBitsModule extends AbstractBagModule
 	}
 
 	@Override
-	public NBTTagCompound serializeNBT()
+	public CompoundNBT serializeNBT()
 	{
-		NBTTagCompound tag = super.serializeNBT();
+		CompoundNBT tag = super.serializeNBT();
 		tag.setTag("Inventory", handler.serializeNBT());
 		return tag;
 	}
 
 	@Override
-	public void deserializeNBT(NBTTagCompound nbt)
+	public void deserializeNBT(CompoundNBT nbt)
 	{
 		super.deserializeNBT(nbt);
 		handler.deserializeNBT(nbt.getCompoundTag("Inventory"));
 	}
 
-	public static void checkAndProvideBits(PacketChisel packet, EntityPlayer player)
+	public static void checkAndProvideBits(PacketChisel packet, PlayerEntity player)
 	{
 		try
 		{
@@ -249,7 +249,7 @@ public class ChiselsBitsModule extends AbstractBagModule
 								NonNullList<ItemStack> provided = BagHelper.getOrProvideStackWithCount(required, rounded, cap, player, null);
 								rounded -= provided.size();
 
-								if (chisel.attemptDamageItem(provided.size() * 16 * 16 * 16, new Random(), (EntityPlayerMP) player))
+								if (chisel.attemptDamageItem(provided.size() * 16 * 16 * 16, new Random(), (ServerPlayerEntity) player))
 									chisel.shrink(1);
 
 								ItemStack providedBits = ItemChiseledBit.createStack(placeStateID, (provided.size() * 16 * 16 * 16) + (needsExtra ? 0 : placedBits - 64), true);
@@ -286,7 +286,7 @@ public class ChiselsBitsModule extends AbstractBagModule
 						
 						ItemStack providedBits = ItemChiseledBit.createStack(placeStateID, 64, true);
 						player.setHeldItem(hand, providedBits);
-						BuildersBag.network.sendTo(new SetHeldItemClient(providedBits, hand), (EntityPlayerMP) player);
+						BuildersBag.network.sendTo(new SetHeldItemClient(providedBits, hand), (ServerPlayerEntity) player);
 					}
 
 					player.addTag("chiselPacket");
@@ -320,7 +320,7 @@ public class ChiselsBitsModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player)
+	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, PlayerEntity player)
 	{
 		return NonNullList.create();
 	}

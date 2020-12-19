@@ -2,7 +2,7 @@ package tschipp.buildersbag.network.client;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IThreadListener;
@@ -34,7 +34,7 @@ public class GrowItemClient implements IMessage, IMessageHandler<GrowItemClient,
 
 		mainThread.addScheduledTask(() -> {
 
-			EntityPlayer player = BuildersBag.proxy.getPlayer();
+			PlayerEntity player = BuildersBag.proxy.getPlayer();
 			ItemStack s = player.getHeldItem(message.hand);
 			s.grow(message.growthAmount);
 

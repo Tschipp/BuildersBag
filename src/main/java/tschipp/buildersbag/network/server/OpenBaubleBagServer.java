@@ -1,7 +1,7 @@
 package tschipp.buildersbag.network.server;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -32,7 +32,7 @@ public class OpenBaubleBagServer implements IMessage, IMessageHandler<OpenBauble
 
 		mainThread.addScheduledTask(() -> {
 
-			EntityPlayer player = ctx.getServerHandler().player;
+			PlayerEntity player = ctx.getServerHandler().player;
 
 			player.openGui(BuildersBag.instance, 1, player.world, message.bagSlot, 0, 0);
 

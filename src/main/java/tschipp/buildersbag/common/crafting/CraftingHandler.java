@@ -17,7 +17,7 @@ import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.nbt.NBTException;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
@@ -261,7 +261,7 @@ public class CraftingHandler
 			{
 				String nbtString = IDToNBTCache.get(Long.parseLong(nbt));
 				
-				NBTTagCompound tag;
+				CompoundNBT tag;
 
 				tag = JsonToNBT.getTagFromJson(nbtString);
 				stack.setTagCompound(tag);

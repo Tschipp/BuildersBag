@@ -7,8 +7,8 @@ import org.apache.commons.lang3.tuple.Triple;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.item.EntityArmorStand;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumFacing;
@@ -58,7 +58,7 @@ public class LinearEvents
 	public static void onLinearRequest(LinearRequestEvent event)
 	{
 		ItemStack stack = event.getItemStack();
-		EntityPlayer player = event.getPlayer();
+		PlayerEntity player = event.getPlayer();
 		int requested = event.getRequestedBlocks();
 
 		requested -= event.getProvidedBlocks();
@@ -169,7 +169,7 @@ public class LinearEvents
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public static void onLinearPlace(LinearPlaceBlockEvent event)
 	{
-		EntityPlayer player = event.getPlayer();
+		PlayerEntity player = event.getPlayer();
 		ItemStack stack = event.getItemStack();
 		World world = event.getWorld();
 		BlockPos pos = event.getPos();
@@ -194,8 +194,8 @@ public class LinearEvents
 						if (!result.isEmpty())
 							stack.grow(1);
 
-						BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, triple.getLeft(), triple.getMiddle()), (EntityPlayerMP) player);
-						BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
+						BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, triple.getLeft(), triple.getMiddle()), (ServerPlayerEntity) player);
+						BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (ServerPlayerEntity) player);
 
 						return;
 					}
@@ -256,12 +256,12 @@ public class LinearEvents
 
 						result.onItemUse(fake, world, pos, hand, facing, hit[0], hit[1], hit[2]);
 
-						BuildersBag.network.sendTo(new SyncBagCapClient(bag, hand), (EntityPlayerMP) player);
+						BuildersBag.network.sendTo(new SyncBagCapClient(bag, hand), (ServerPlayerEntity) player);
 					}
 				}
 			}
 
-			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (EntityPlayerMP) player);
+			BuildersBag.network.sendTo(new SyncEnderchestToClient(player), (ServerPlayerEntity) player);
 
 		}
 
@@ -271,7 +271,7 @@ public class LinearEvents
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public static void onlinearRequestState(LinearBlockStateEvent event)
 	{
-		EntityPlayer player = event.getPlayer();
+		PlayerEntity player = event.getPlayer();
 		ItemStack stack = event.getStack();
 		World world = player.world;
 
@@ -317,7 +317,7 @@ public class LinearEvents
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public static void onlinearRequestClientState(LinearRenderBlockStateEvent event)
 	{
-		EntityPlayer player = event.getPlayer();
+		PlayerEntity player = event.getPlayer();
 		ItemStack stack = event.getStack();
 		World world = player.world;
 		EnumHand hand = event.getHand();

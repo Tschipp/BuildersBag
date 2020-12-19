@@ -1,9 +1,9 @@
 package tschipp.buildersbag.network.server;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.IThreadListener;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
@@ -16,7 +16,7 @@ import tschipp.buildersbag.common.inventory.ContainerBag;
 public class SyncModuleStateServer implements IMessage, IMessageHandler<SyncModuleStateServer, IMessage>
 {
 
-	private NBTTagCompound tag;
+	private CompoundNBT tag;
 	private String name;
 	
 	public SyncModuleStateServer()
@@ -36,7 +36,7 @@ public class SyncModuleStateServer implements IMessage, IMessageHandler<SyncModu
 		
 		mainThread.addScheduledTask(() -> {
 			
-			EntityPlayer player = ctx.getServerHandler().player;
+			PlayerEntity player = ctx.getServerHandler().player;
 			if(player.openContainer instanceof ContainerBag)
 				((ContainerBag) player.openContainer).updateModule(message.name, message.tag);
 			
