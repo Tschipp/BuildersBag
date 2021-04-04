@@ -36,7 +36,33 @@ public class BagCache
 		client_cache.clear();
 		server_cache.clear();
 	}
+
+	public static boolean isCacheEnabled(ItemStack bag)
+	{
+		Side side = BuildersBag.proxy.getSide();
+		Map<String, CachedBag> cache = side == Side.CLIENT ? client_cache : server_cache;
+		IBagCap bagCap = CapHelper.getBagCap(bag);
+		if(bagCap != null)
+		{
+			CachedBag cachedBag = cache.get(bagCap.getUUID());
+			if (cachedBag != null)
+				return !cachedBag.disabled;
+		}
+		return true;
+	}
 	
+	public static void changeCacheState(ItemStack bag, boolean state)
+	{
+		Side side = BuildersBag.proxy.getSide();
+		Map<String, CachedBag> cache = side == Side.CLIENT ? client_cache : server_cache;
+		IBagCap bagCap = CapHelper.getBagCap(bag);
+		if(bagCap != null)
+		{
+			CachedBag cachedBag = cache.get(bagCap.getUUID());
+			if (cachedBag != null)
+				cachedBag.disabled = state;
+		}
+	}
 	
 	public static void clearBagCache(ItemStack bag)
 	{
@@ -44,14 +70,13 @@ public class BagCache
 		Map<String, CachedBag> cache = side == Side.CLIENT ? client_cache : server_cache;
 		IBagCap bagCap = CapHelper.getBagCap(bag);
 
-		if(bagCap == null)
+		if (bagCap == null)
 			return;
-		
+
 		CachedBag cachedBag = cache.get(bagCap.getUUID());
 		if (cachedBag != null)
 			cachedBag.clearCache();
 	}
-	
 
 	/**
 	 * This should ONLY be called from the server side
@@ -68,7 +93,7 @@ public class BagCache
 		cachedBag.updateCachedAmount(forStack, count);
 
 		Tuple<Boolean, Integer> slot = InventoryHelper.getSlotForStackWithBaubles(player, bag);
-		
+
 		BuildersBag.network.sendTo(new UpdateCacheClient(slot.getSecond(), slot.getFirst(), forStack, count), (EntityPlayerMP) player);
 		server_cache.put(bagCap.getUUID(), cachedBag);
 		return count;
@@ -80,7 +105,7 @@ public class BagCache
 	@SideOnly(Side.CLIENT)
 	public static void updateCachedBagStackWithAmount(ItemStack bag, EntityPlayer player, ItemStack forStack, int amount)
 	{
-		
+
 		IBagCap bagCap = CapHelper.getBagCap(bag);
 		CachedBag cachedBag = client_cache.get(bagCap.getUUID());
 		if (cachedBag == null)
@@ -96,9 +121,12 @@ public class BagCache
 		Map<String, CachedBag> cache = side == Side.CLIENT ? client_cache : server_cache;
 		IBagCap bagCap = CapHelper.getBagCap(bag);
 
-		CachedBag cachedBag = cache.get(bagCap.getUUID());
-		if (cachedBag != null)
-			cachedBag.modifyCachedAmount(forStack, delta);
+		if (bagCap != null)
+		{
+			CachedBag cachedBag = cache.get(bagCap.getUUID());
+			if (cachedBag != null)
+				cachedBag.modifyCachedAmount(forStack, delta);
+		}
 	}
 
 	public static void startSimulation(ItemStack bag)
@@ -107,14 +135,17 @@ public class BagCache
 		Map<String, CachedBag> cache = side == Side.CLIENT ? client_cache : server_cache;
 		IBagCap bagCap = CapHelper.getBagCap(bag);
 
-		CachedBag cachedBag = cache.get(bagCap.getUUID());
-		if (cachedBag != null)
-			cachedBag.startSimulation();
-		else
+		if (bagCap != null)
 		{
-			CachedBag newBag = new CachedBag(null, bag);
-			cache.put(bagCap.getUUID(), newBag);
-			newBag.startSimulation();
+			CachedBag cachedBag = cache.get(bagCap.getUUID());
+			if (cachedBag != null)
+				cachedBag.startSimulation();
+			else
+			{
+				CachedBag newBag = new CachedBag(null, bag);
+				cache.put(bagCap.getUUID(), newBag);
+				newBag.startSimulation();
+			}
 		}
 
 	}
@@ -125,28 +156,35 @@ public class BagCache
 		Map<String, CachedBag> cache = side == Side.CLIENT ? client_cache : server_cache;
 		IBagCap bagCap = CapHelper.getBagCap(bag);
 
-		CachedBag cachedBag = cache.get(bagCap.getUUID());
-		if (cachedBag != null)
-			cachedBag.stopSimulating();
+		if (bagCap != null)
+		{
+			CachedBag cachedBag = cache.get(bagCap.getUUID());
+			if (cachedBag != null)
+				cachedBag.stopSimulating();
+		}
 	}
 
 	public static int getCachedAmount(ItemStack bag, EntityPlayer player, ItemStack toCheck, int preferredAmount)
 	{
 		Map<String, CachedBag> cache = player.world.isRemote ? client_cache : server_cache;
 		IBagCap bagCap = CapHelper.getBagCap(bag);
-		
-		CachedBag cachedBag = cache.get(bagCap.getUUID());
-		if (cachedBag == null)
-		{
-			CachedBag newBag = new CachedBag(player, bag);
-			newBag.requestCacheUpdate(toCheck, preferredAmount);
-			cache.put(bagCap.getUUID(), newBag);
-			return 0;
-		}
 
-		cachedBag.updatePlayer(player);
-		
-		return cachedBag.getCachedAmount(toCheck, preferredAmount);
+		if (bagCap != null)
+		{
+			CachedBag cachedBag = cache.get(bagCap.getUUID());
+			if (cachedBag == null)
+			{
+				CachedBag newBag = new CachedBag(player, bag);
+				newBag.requestCacheUpdate(toCheck, preferredAmount);
+				cache.put(bagCap.getUUID(), newBag);
+				return 0;
+			}
+
+			cachedBag.updatePlayer(player);
+
+			return cachedBag.getCachedAmount(toCheck, preferredAmount);
+		}
+		return 0;
 	}
 
 	public static void sendBagModificationToClient(ItemStack bag, ItemStack forStack, int delta, EntityPlayer player)
@@ -154,14 +192,14 @@ public class BagCache
 		Tuple<Boolean, Integer> slot = InventoryHelper.getSlotForStackWithBaubles(player, bag);
 		BuildersBag.network.sendTo(new ModifyCacheClient(slot.getSecond(), slot.getFirst(), forStack, delta), (EntityPlayerMP) player);
 	}
-	
+
 	@SubscribeEvent
 	public static void onWorldTick(TickEvent.WorldTickEvent event)
 	{
 		World world = event.world;
 		Map<String, CachedBag> cache = world.isRemote ? client_cache : server_cache;
 
-		for(CachedBag entry : cache.values())
+		for (CachedBag entry : cache.values())
 		{
 			entry.removeOldCaches();
 		}

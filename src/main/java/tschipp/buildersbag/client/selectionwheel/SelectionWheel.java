@@ -180,6 +180,8 @@ public class SelectionWheel
 			timer.reset();
 		timer.start();
 		isAnimating = true;
+
+		doLastSelectionCheck();
 	}
 
 	public static void draw(float partialTicks, ScaledResolution res)
@@ -225,6 +227,37 @@ public class SelectionWheel
 		GlStateManager.popMatrix();
 		mc.getTextureManager().bindTexture(VANILLA);
 
+	}
+
+	private static void doLastSelectionCheck()
+	{
+		ScaledResolution res = new ScaledResolution(mc);
+		int mouseX = (int) ((Mouse.getX() / res.getScaleFactor() - res.getScaledWidth() / 2) / globalScale);
+		int mouseY = (int) ((Mouse.getY() / res.getScaleFactor() - res.getScaledHeight() / 2) / globalScale);
+
+		SelectionPage page = activePageList.size() > 0 ? activePageList.get(activePage) : null;
+
+		for (int i = 0; i < wheelCorners.size(); i++)
+		{
+			if (isInTriangle(mouseX, mouseY, new Tuple(0, 0), wheelCorners.get(i), wheelCorners.get((i + 1) % wheelCorners.size())))
+			{
+				ItemStack selected = ItemStack.EMPTY;
+				if (page != null && i < page.items.size())
+				{
+					selected = page.items.get(i);
+				}
+
+				if (!selected.isEmpty() && !ItemStack.areItemsEqual(cap.getSelectedInventory().getStackInSlot(0), selected))
+				{
+					cap.getSelectedInventory().setStackInSlot(0, selected.copy());
+					BuildersBag.network.sendToServer(new SetSelectedBlockServer(cap.getUUID(), selected));
+					if (BuildersBagConfig.Settings.playPickBlockSounds)
+						mc.player.playSound(SoundEvents.BLOCK_NOTE_HAT, 0.5f, 0.1f);
+				}
+
+				return;
+			}
+		}
 	}
 
 	public static void onClick(boolean isRight)
@@ -371,8 +404,7 @@ public class SelectionWheel
 
 		boolean selectedHover = isInPolygon(mouseX, mouseY, selectedCorners);
 
-		separate(97, 19 - (ease * 97), () ->
-		{
+		separate(97, 19 - (ease * 97), () -> {
 			Gui.drawModalRectWithCustomSizedTexture(-14, -19, 119 + (selectedHover ? 69 : 0), 1192, 68, 78, 500, 1500);
 			GlStateManager.scale(2.5, 2.5, 2.5);
 			drawItem(selected);
@@ -426,8 +458,7 @@ public class SelectionWheel
 			String filtername = filterNames.get(i);
 			if (isInPolygon(mouseX, mouseY, filterPoints.get(i)))
 			{
-				separate(mouseX, -mouseY, () ->
-				{
+				separate(mouseX, -mouseY, () -> {
 					GlStateManager.scale(1.5, 1.5, 1.5);
 					if (activeFilter.equals(filtername))
 						drawHoveringText(I18n.translateToLocal("buildersbag.selectionwheel.allblocks"));
@@ -437,8 +468,7 @@ public class SelectionWheel
 			}
 			if (selectedHover && !cap.getSelectedInventory().getStackInSlot(0).isEmpty())
 			{
-				separate(mouseX, -mouseY, () ->
-				{
+				separate(mouseX, -mouseY, () -> {
 					ItemStack currentStack = cap.getSelectedInventory().getStackInSlot(0);
 					boolean add = ItemHelper.containsStack(currentStack, cap.getPalette()).isEmpty();
 					GlStateManager.scale(1.5, 1.5, 1.5);
@@ -469,8 +499,7 @@ public class SelectionWheel
 
 		if (!activeFilter.isEmpty())
 		{
-			separate(() ->
-			{
+			separate(() -> {
 				if (activeFilter.equals("palette"))
 				{
 					GlStateManager.translate(119 - 16, 121 - 20, 0);
@@ -505,8 +534,7 @@ public class SelectionWheel
 				ItemStack currentStack = currentPage.items.get(i);
 				final int k = i;
 
-				separate(119, 121, () ->
-				{
+				separate(119, 121, () -> {
 					GlStateManager.translate(itemPoint.x, -itemPoint.y, 0);
 					GlStateManager.scale(2.0, 2.0, 2.0);
 					drawItem(currentStack);
@@ -521,8 +549,7 @@ public class SelectionWheel
 			}
 
 			String page = (activePage + 1) + "/" + activePageList.size();
-			separate(119 - mc.fontRenderer.getStringWidth(page), 240, () ->
-			{
+			separate(119 - mc.fontRenderer.getStringWidth(page), 240, () -> {
 				GlStateManager.scale(2, 2, 2);
 				mc.fontRenderer.drawStringWithShadow(page, 0, 0, 0xFFFFFF);
 			});
@@ -533,8 +560,7 @@ public class SelectionWheel
 				if (isInTriangle(mouseX, mouseY, new Tuple(0, 0), wheelCorners.get(i), wheelCorners.get((i + 1) % wheelCorners.size())))
 				{
 					boolean add = !currentPage.paletteIndices.contains(i);
-					separate(119 + mouseX, 121 - mouseY, () ->
-					{
+					separate(119 + mouseX, 121 - mouseY, () -> {
 						GlStateManager.scale(1.5, 1.5, 1.5);
 						drawHoveringText(I18n.translateToLocalFormatted("buildersbag.selectionwheel.selectblock", currentStack.getDisplayName()), I18n.translateToLocalFormatted("buildersbag.selectionwheel.changepalette", add ? TextFormatting.GREEN : TextFormatting.RED, add ? I18n.translateToLocal("buildersbag.module.add") : I18n.translateToLocal("buildersbag.module.remove"), currentStack.getDisplayName(), add ? I18n.translateToLocal("buildersbag.module.to") : I18n.translateToLocal("buildersbag.module.from")));
 					});
@@ -548,7 +574,7 @@ public class SelectionWheel
 	private static void transform(float partialTicks, ScaledResolution res)
 	{
 		globalScale = SCALE * ease * (res.getScaledHeight_double() / 350);
-									
+
 		GlStateManager.enableAlpha();
 		GlStateManager.enableBlend();
 
@@ -690,21 +716,21 @@ public class SelectionWheel
 		boolean add = i == -1 || activeFilter.equals("palette") ? ItemHelper.containsStack(selected, cap.getPalette()).isEmpty() : !page.paletteIndices.contains(i);
 
 		BuildersBag.network.sendToServer(new ModifyPaletteServer(cap.getUUID(), selected, add));
-		
+
 		List<SelectionPage> it = new ArrayList<SelectionPage>();
 		it.addAll(unfilteredPageList);
 		filters.forEach((key, filter) -> it.addAll(filter.pages));
-		
+
 		if (add)
 		{
 			palette.add(selected.copy());
 			if (i != -1)
 				page.paletteIndices.add(i);
-			for(SelectionPage selPage : it)
+			for (SelectionPage selPage : it)
 			{
-				for(int j = 0; j < selPage.items.size(); j++)
+				for (int j = 0; j < selPage.items.size(); j++)
 				{
-					if(ItemStack.areItemStacksEqual(selPage.items.get(j), selected))
+					if (ItemStack.areItemStacksEqual(selPage.items.get(j), selected))
 					{
 						selPage.paletteIndices.add(j);
 						break;
@@ -724,12 +750,12 @@ public class SelectionWheel
 			}
 			if (i != -1)
 				page.paletteIndices.remove(i);
-			
-			for(SelectionPage selPage : it)
+
+			for (SelectionPage selPage : it)
 			{
-				for(int j = 0; j < selPage.items.size(); j++)
+				for (int j = 0; j < selPage.items.size(); j++)
 				{
-					if(ItemStack.areItemStacksEqual(selPage.items.get(j), selected))
+					if (ItemStack.areItemStacksEqual(selPage.items.get(j), selected))
 					{
 						selPage.paletteIndices.remove(j);
 						break;

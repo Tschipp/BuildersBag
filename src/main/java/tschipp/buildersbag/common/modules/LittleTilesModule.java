@@ -138,9 +138,9 @@ public class LittleTilesModule extends AbstractBagModule
 
 					List<ItemStack> providedBlocks = BagHelper.getOrProvideStackWithCount(blockStack, req, CapHelper.getBagCap(stack), player, null);
 
-					double leftover = entry.value - providedBlocks.size();
+					double more_needed = entry.value - providedBlocks.size();
 
-					if (leftover > 0)
+					if (more_needed > 0)
 					{
 						overflowBlk.add(IngredientUtils.getBlockIngredient(block, meta, entry.value - providedBlocks.size()));
 						BlockIngredient subIng = new BlockIngredient();
@@ -151,7 +151,7 @@ public class LittleTilesModule extends AbstractBagModule
 					}
 					else
 					{
-						if (leftover < 0)
+						if (more_needed < 0)
 						{
 
 							BlockIngredientEntry toAdd = IngredientUtils.getBlockIngredient(block, meta, 1.0 - (entry.value % 1));

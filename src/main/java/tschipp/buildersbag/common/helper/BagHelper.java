@@ -38,29 +38,29 @@ public class BagHelper
 	private static RecipeTree cachedTree = null;
 	private static long treeCacheTime = 0;
 	private static ItemStack cachedRoot = ItemStack.EMPTY;
-	
+
 	public static NonNullList<ItemStack> getOrProvideStackWithTree(ItemStack stack, int count, IBagCap bag, EntityPlayer player, @Nullable IBagModule exclude, @Nullable RecipeTree tree, @Nonnull ItemStack root)
-	{			
+	{
 		ItemStack bagStack = BagHelper.getStackFromCap(player, bag);
-	
+
 		NonNullList<ItemStack> providedList = NonNullList.create();
-	
-		if(tree == null && cachedTree != null && ItemStack.areItemsEqual(cachedRoot, stack) && System.currentTimeMillis() - treeCacheTime <= 1000)
+
+		if (tree == null && cachedTree != null && ItemStack.areItemsEqual(cachedRoot, stack) && System.currentTimeMillis() - treeCacheTime <= 1000)
 		{
 			tree = cachedTree;
 			root = cachedRoot;
 		}
-		
-		if (player.world.isRemote)
+
+		if (player.world.isRemote && BagCache.isCacheEnabled(bagStack))
 		{
 			int amount = BagCache.getCachedAmount(bagStack, player, stack, count);
-	
+
 			BagCache.modifyCachedAmount(bagStack, stack, -Math.min(amount, count));
 			return ItemHelper.listOf(stack, Math.min(amount, count));
 		}
-	
+
 		providedList.addAll(getStackDontProvide(stack, count, bag, player));
-	
+
 		for (IBagModule module : BagHelper.getSortedModules(bag))
 		{
 			if (module.isEnabled() && !module.isSupplier() && (exclude == null ? true : exclude != module))
@@ -70,16 +70,17 @@ public class BagHelper
 					BuildersBag.proxy.stopWorking(bag.getUUID(), player);
 					return providedList;
 				}
-	
+
 				if (BagHelper.incrementRecursionDepth(player))
 				{
 					NonNullList<ItemStack> provided = module instanceof CraftingModule ? ((CraftingModule) module).createStackWithRecipeTree(stack, count - providedList.size(), bag, player, tree, root) : module.createStackWithCount(stack, count, bag, player);
-	
+
 					BagHelper.resetRecursionDepth(player);
-					BagCache.sendBagModificationToClient(bagStack, stack, -provided.size(), player);
-	
+					if (!player.world.isRemote)
+						BagCache.sendBagModificationToClient(bagStack, stack, -provided.size(), player);
+
 					providedList.addAll(provided);
-	
+
 				}
 				else
 				{
@@ -87,14 +88,13 @@ public class BagHelper
 					return providedList;
 				}
 			}
-	
+
 		}
-		
-	
+
 		BuildersBag.proxy.stopWorking(bag.getUUID(), player);
 		return providedList;
 	}
-	
+
 	public static NonNullList<ItemStack> getStackDontProvide(ItemStack stack, int count, IBagCap bag, EntityPlayer player)
 	{
 		ItemStack bagStack = BagHelper.getStackFromCap(player, bag);
@@ -102,11 +102,11 @@ public class BagHelper
 		NonNullList<ItemStack> providedList = NonNullList.create();
 		ItemStack foundStack = ItemStack.EMPTY;
 		NonNullList<ItemStack> availableBlocks = InventoryHelper.getStacks(bag.getBlockInventory());
-	
+
 		BuildersBag.proxy.startWorking(bag.getUUID(), player);
-		
+
 		providedList.addAll(InventoryHelper.removeMatchingStacksWithSizeOne(stack, count, availableBlocks));
-		
+
 		for (ItemStack available : availableBlocks)
 		{
 			if (available.getItem() instanceof IBlockSource)
@@ -116,7 +116,7 @@ public class BagHelper
 					BuildersBag.proxy.stopWorking(bag.getUUID(), player);
 					return providedList;
 				}
-	
+
 				int toProvide = count - providedList.size();
 				for (int i = 0; i < toProvide; i++)
 				{
@@ -135,7 +135,7 @@ public class BagHelper
 					BuildersBag.proxy.stopWorking(bag.getUUID(), player);
 					return providedList;
 				}
-	
+
 				int toProvide = count - providedList.size();
 				for (int i = 0; i < toProvide; i++)
 				{
@@ -148,7 +148,7 @@ public class BagHelper
 				}
 			}
 		}
-		
+
 		return providedList;
 	}
 
@@ -159,19 +159,19 @@ public class BagHelper
 			if (mod != null && mod.getName().equals(name))
 				return mod;
 		}
-	
+
 		return null;
 	}
 
 	public static int getAllAvailableStacksCount(IBagCap bag, EntityPlayer player)
 	{
 		NonNullList<ItemStack> list = getAllAvailableStacks(bag, player);
-	
+
 		int count = 0;
-	
+
 		for (ItemStack s : list)
 			count += s.getCount();
-	
+
 		return count;
 	}
 
@@ -179,11 +179,11 @@ public class BagHelper
 	{
 		return getAllAvailableStacksExcept(bag, player, null);
 	}
-	
+
 	public static NonNullList<ItemStack> getAllProvideableStacksExcept(IBagCap bag, EntityPlayer player, @Nullable IBagModule exclude)
 	{
 		NonNullList<ItemStack> list = NonNullList.create();
-		
+
 		for (IBagModule module : getSortedModules(bag))
 		{
 			if (module.isEnabled() && module != exclude)
@@ -195,7 +195,7 @@ public class BagHelper
 	public static NonNullList<ItemStack> getAllAvailableStacksExcept(IBagCap bag, EntityPlayer player, @Nullable IBagModule exclude)
 	{
 		NonNullList<ItemStack> list = NonNullList.create();
-	
+
 		list.addAll(InventoryHelper.getInventoryStacks(bag, player));
 		list.addAll(BagHelper.getAllProvideableStacksExcept(bag, player, exclude));
 		return list;
@@ -206,16 +206,16 @@ public class BagHelper
 		Integer i = recursion_depth.get(player.getUniqueID().toString());
 		if (i == null)
 			i = new Integer(0);
-	
+
 		i++;
-	
+
 		recursion_depth.put(player.getUniqueID().toString(), i);
-	
+
 		if (i > BuildersBagConfig.Settings.maximumRecursionDepth)
 		{
 			return false;
 		}
-	
+
 		return true;
 	}
 
@@ -229,7 +229,7 @@ public class BagHelper
 		NonNullList<ItemStack> list = getOrProvideStackWithTree(stack, 1, bag, player, exclude, null, ItemStack.EMPTY);
 		if (list.isEmpty())
 			return ItemStack.EMPTY;
-	
+
 		return list.get(0);
 	}
 
@@ -242,21 +242,22 @@ public class BagHelper
 	}
 
 	/*
-	 * Tries to provide the given amount of stacks. If it can't, it will give you those that it managed to make.
+	 * Tries to provide the given amount of stacks. If it can't, it will give
+	 * you those that it managed to make.
 	 */
 	public static NonNullList<ItemStack> getOrProvideStackWithCount(ItemStack stack, int count, IBagCap bag, EntityPlayer player, @Nullable IBagModule exclude)
-	{	
+	{
 		NonNullList<ItemStack> list = getOrProvideStackWithTree(stack, count, bag, player, exclude, null, ItemStack.EMPTY);
-		
+
 		return list;
 	}
 
 	public static NonNullList<ItemStack> getOrProvideStackWithCountDominating(int count, IBagCap bag, EntityPlayer player)
 	{
 		NonNullList<ItemStack> provided = NonNullList.create();
-	
+
 		IBagModule dominatingModule = null;
-	
+
 		for (IBagModule module : getSortedModules(bag))
 		{
 			if (module.isEnabled() && module.isDominating())
@@ -265,7 +266,7 @@ public class BagHelper
 				break;
 			}
 		}
-	
+
 		if (dominatingModule != null)
 		{
 			for (int i = 0; i < count; i++)
@@ -273,36 +274,36 @@ public class BagHelper
 				ItemStack s = BagHelper.getOrProvideStack(dominatingModule.getBlock(bag, player), bag, player, null);
 				if (s.isEmpty())
 					break;
-	
+
 				provided.add(s);
 			}
 		}
-	
+
 		return provided;
 	}
 
 	public static NonNullList<ItemStack> simulateProvideStackWithCount(ItemStack stack, int count, ItemStack bag, EntityPlayer player, @Nullable IBagModule exclude)
 	{
 		IBagCap bagCopy = CapHelper.getBagCap(bag.copy());
-//		bagCopy.setUUID(UUID.randomUUID().toString());
-		
+		// bagCopy.setUUID(UUID.randomUUID().toString());
+
 		return getOrProvideStackWithCount(stack, count, bagCopy, new FakePlayerCopy((WorldServer) player.world, player.getGameProfile(), player), exclude);
 	}
 
 	public static void compactStacks(IBagCap cap, EntityPlayer player)
 	{
 		NonNullList<ItemStack> stacks = InventoryHelper.getStacks(cap.getBlockInventory());
-	
+
 		for (IBagModule module : getSortedModules(cap))
 		{
 			stacks = module.getCompactedStacks(stacks, player);
 		}
-	
+
 		for (int i = 0; i < cap.getBlockInventory().getSlots(); i++)
 		{
 			cap.getBlockInventory().setStackInSlot(i, ItemStack.EMPTY);
 		}
-	
+
 		for (ItemStack s : stacks)
 		{
 			addStack(s, cap, player);
@@ -313,24 +314,24 @@ public class BagHelper
 	{
 		int stacks = count / 64;
 		int rest = count % 64;
-		
-		for(int i = 0; i < stacks; i++)
+
+		for (int i = 0; i < stacks; i++)
 		{
 			ItemStack s = stack.copy();
 			s.setCount(64);
 			addStack(s, cap, player);
 		}
-		
+
 		ItemStack s = stack.copy();
 		s.setCount(rest);
 		addStack(s, cap, player);
 	}
-	
+
 	public static void addStack(ItemStack stack, IBagCap cap, EntityPlayer player)
 	{
 		if (player == null || player.isCreative())
 			return;
-	
+
 		ItemStackHandler handler = cap.getBlockInventory();
 		for (int i = 0; i < handler.getSlots(); i++)
 		{
@@ -341,8 +342,8 @@ public class BagHelper
 					addStack(rest, cap, player);
 				return;
 			}
-		}	
-	
+		}
+
 		if (!player.addItemStackToInventory(stack))
 		{
 			player.dropItem(stack, false);
@@ -353,7 +354,7 @@ public class BagHelper
 	{
 		if (player.isCreative())
 			return;
-	
+
 		ItemStackHandler handler = cap.getBlockInventory();
 		for (int i = 0; i < handler.getSlots(); i++)
 		{
@@ -365,7 +366,7 @@ public class BagHelper
 				return;
 			}
 		}
-	
+
 		if (!player.addItemStackToInventory(stack))
 		{
 			player.dropItem(stack, false);
@@ -376,7 +377,7 @@ public class BagHelper
 	{
 		if (player.isCreative())
 			return;
-	
+
 		if (!player.world.isRemote)
 		{
 			EntityItem eItem = new EntityItem(player.world, player.posX, player.posY, player.posZ, stack);
@@ -395,7 +396,7 @@ public class BagHelper
 					return s;
 			}
 		}
-	
+
 		if (Loader.isModLoaded("baubles"))
 		{
 			ItemStack bauble = BaublesApi.getBaubles(player).getStackInSlot(3);
@@ -405,9 +406,9 @@ public class BagHelper
 					return bauble;
 			}
 		}
-	
+
 		return ItemStack.EMPTY;
-	
+
 	}
 
 	public static List<IBagModule> getSortedModules(IBagCap cap)
@@ -423,20 +424,18 @@ public class BagHelper
 		cachedRoot = root;
 		treeCacheTime = System.currentTimeMillis();
 	}
-	
+
 	public static void clearTreeBlacklist()
 	{
-		cachedTree.blacklistedRecipes.clear();
+		if (cachedTree != null)
+			cachedTree.blacklistedRecipes.clear();
 	}
-	
+
 	private static boolean botaniaCheck(ItemStack stack)
 	{
 		if (Loader.isModLoaded("botania"))
 			return BotaniaCompat.isEnderHand(stack);
 		return false;
 	}
-	
-	
-
 
 }

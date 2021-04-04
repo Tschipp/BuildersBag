@@ -1,5 +1,7 @@
 package tschipp.buildersbag.common.item;
 
+import java.util.Arrays;
+
 import javax.annotation.Nonnull;
 
 import com.creativemd.creativecore.common.utils.type.HashMapList;
@@ -38,6 +40,7 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.common.cache.BagCache;
 import tschipp.buildersbag.common.caps.BagCapProvider;
 import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
@@ -236,10 +239,14 @@ public class BuildersBagItem extends Item implements ILittleIngredientSupplier, 
 	{
 		IBagCap bag = CapHelper.getBagCap(stack);
 
+//		System.out.println(Arrays.toString(ingredients.getContent()) + ", " + inventory.isSimulation());
+		BagCache.changeCacheState(stack, true);
 		if (bag.hasModuleAndEnabled("buildersbag:littletiles"))
 		{
 			LittleTilesModule.provideLittleIngredients(stack, ingredients, overflow, inventory.getPlayer(), inventory);
 		}
+		BagCache.changeCacheState(stack, false);
+
 	}
 
 	@Optional.Method(modid = "littletiles")

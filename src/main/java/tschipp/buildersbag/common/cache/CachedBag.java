@@ -32,6 +32,8 @@ public class CachedBag
 	private Set<ItemContainer> pendingRequests = new HashSet<ItemContainer>();
 	private Map<ItemContainer, CachedAmount> dirtyClientCache = new HashMap<ItemContainer, CachedAmount>();
 
+	public boolean disabled = false;
+	
 	public CachedBag(EntityPlayer player, ItemStack bag)
 	{
 		this.bagCap = CapHelper.getBagCap(bag);
@@ -59,6 +61,7 @@ public class CachedBag
 
 	public int getCachedAmount(ItemStack forStack, int preferredAmount)
 	{
+		
 		ItemContainer ic = ItemContainer.forStack(forStack);
 		CachedAmount amount = cachedStacks.get(ic);
 		if (amount == null)
@@ -69,9 +72,13 @@ public class CachedBag
 			requestCacheUpdate(forStack, preferredAmount);
 			
 			CachedAmount c = new CachedAmount();
-			c.value = 100;
+			c.value = disabled ? 0 : 100;
 
 			dirtyClientCache.put(ic, c);
+			
+			if(disabled)
+				return 0;
+			
 			return 100;
 		}
 
@@ -83,6 +90,7 @@ public class CachedBag
 
 	public void modifyCachedAmount(ItemStack forStack, int delta)
 	{
+		
 		CachedAmount amount = cachedStacks.get(ItemContainer.forStack(forStack));
 		if (amount == null)
 			return;
@@ -97,6 +105,7 @@ public class CachedBag
 
 	public void requestCacheUpdate(ItemStack forStack, int preferredAmount)
 	{
+		
 		if (!pendingRequests.contains(ItemContainer.forStack(forStack)))
 		{
 			pendingRequests.add(ItemContainer.forStack(forStack));

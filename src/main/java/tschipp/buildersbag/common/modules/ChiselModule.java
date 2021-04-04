@@ -118,8 +118,7 @@ public class ChiselModule extends AbstractBagModule
 			return list;
 
 		NonNullList<ItemStack> availableBlocks = InventoryHelper.getStacks(bag.getBlockInventory());
-		NonNullList<ItemStack> createableBlocks = BagHelper.getAllAvailableStacksExcept(bag, player, this);
-		
+
 		NonNullList<ItemStack> providedVariants = NonNullList.create();
 
 		for (ICarvingVariation variant : group)
@@ -135,11 +134,23 @@ public class ChiselModule extends AbstractBagModule
 					break;
 			}
 		}
+		
+		NonNullList<ItemStack> createableBlocks = BagHelper.getAllProvideableStacksExcept(bag, player, this);
 
 		for (ICarvingVariation variant : group)
 		{
-			if (providedVariants.size() < count && !ItemHelper.containsStack(variant.getStack(), createableBlocks).isEmpty()) //This extra availability check is for performance. Remove if causes issues
-			{	
+			if (providedVariants.size() < count && !ItemHelper.containsStack(variant.getStack(), createableBlocks).isEmpty()) // This
+																																// extra
+																																// availability
+																																// check
+																																// is
+																																// for
+																																// performance.
+																																// Remove
+																																// if
+																																// causes
+																																// issues
+			{
 				NonNullList<ItemStack> provided = BagHelper.getOrProvideStackWithCount(variant.getStack(), count - providedVariants.size(), bag, player, this);
 				providedVariants.addAll(provided);
 			}
@@ -147,27 +158,26 @@ public class ChiselModule extends AbstractBagModule
 
 		if (!providedVariants.isEmpty())
 		{
-			if (!player.world.isRemote)
+
+			for (int i = 0; i < providedVariants.size(); i++)
 			{
-				for (int i = 0; i < providedVariants.size(); i++)
+				if (!player.world.isRemote && (!validTinkersChisel(chisel) || chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player)))
 				{
-					if (!validTinkersChisel(chisel) || chisel.attemptDamageItem(1, new Random(), (EntityPlayerMP) player))
+					list.add(stack.copy());
+
+					if (!chisel.getItem().getRegistryName().toString().equals("tcomplement:chisel"))
+						chisel.shrink(1);
+
+					for (int j = i; j < providedVariants.size(); j++)
 					{
-						list.add(stack.copy());
-
-						if (!chisel.getItem().getRegistryName().toString().equals("tcomplement:chisel"))
-							chisel.shrink(1);
-
-						for (int j = i; j < providedVariants.size(); j++)
-						{
-							BagHelper.addStack(providedVariants.get(j), bag, player);
-						}
-
-						break;
+						BagHelper.addStack(providedVariants.get(j), bag, player);
 					}
-					else
-						list.add(stack.copy());
+
+					break;
 				}
+				else
+					list.add(stack.copy());
+
 			}
 
 			return list;
@@ -284,7 +294,8 @@ public class ChiselModule extends AbstractBagModule
 				else
 					chiselEmpty = true;
 
-				if (chiselEmpty) // Chisel was destroyed during the process, so we need to readd the other materials.
+				if (chiselEmpty) // Chisel was destroyed during the process, so
+									// we need to readd the other materials.
 				{
 					for (Entry<ICarvingVariation, Integer> mapEntry : map.entrySet())
 					{
