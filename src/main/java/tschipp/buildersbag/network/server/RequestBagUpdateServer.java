@@ -1,29 +1,31 @@
 package tschipp.buildersbag.network.server;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.PlayerEntity;
+import java.util.function.Supplier;
+
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.fml.network.PacketDistributor;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
+import tschipp.buildersbag.network.NetworkMessage;
 import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
 
-public class RequestBagUpdateServer implements IMessage, IMessageHandler<RequestBagUpdateServer, IMessage>
+public class RequestBagUpdateServer implements NetworkMessage
 {
 
 	public int slot;
 	public boolean isBauble;
-	
-	public RequestBagUpdateServer()
+
+	public RequestBagUpdateServer(PacketBuffer buf)
 	{
+		slot = buf.readInt();
+		isBauble = buf.readBoolean();
 	}
-	
+
 	public RequestBagUpdateServer(int slot, boolean isBauble)
 	{
 		this.slot = slot;
@@ -31,35 +33,28 @@ public class RequestBagUpdateServer implements IMessage, IMessageHandler<Request
 	}
 
 	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		slot = buf.readInt();
-		isBauble = buf.readBoolean();
-	}
-
-	@Override
-	public void toBytes(ByteBuf buf)
+	public void toBytes(PacketBuffer buf)
 	{
 		buf.writeInt(slot);
 		buf.writeBoolean(isBauble);
 	}
 	
 	@Override
-	public IMessage onMessage(RequestBagUpdateServer message, MessageContext ctx)
+	public void handle(Supplier<NetworkEvent.Context> ctx)
 	{
-		final IThreadListener mainThread = (IThreadListener)ctx.getServerHandler().player.world;
+		if (ctx.get().getDirection().getReceptionSide().isServer())
+		{
+			ctx.get().enqueueWork(() -> {
 
-		mainThread.addScheduledTask(() -> {
+				ServerPlayerEntity player = ctx.get().getSender();
 
-			PlayerEntity player = ctx.getServerHandler().player;
-			
-			ItemStack bag = InventoryHelper.getStackInSlot(player, message.slot, message.isBauble);
-			IBagCap cap = CapHelper.getBagCap(bag);
-			
-			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(cap, message.slot, message.isBauble), (ServerPlayerEntity) player);
-		});
-
-		return null;
+				ItemStack bag = InventoryHelper.getStackInSlot(player, slot, isBauble);
+				IBagCap cap = CapHelper.getBagCap(bag);
+				BuildersBag.network.send(PacketDistributor.PLAYER.with(() ->  (ServerPlayerEntity) player), new SyncBagCapInventoryClient(cap, slot, isBauble));
+				
+				ctx.get().setPacketHandled(true);
+			});
+		}
 	}
 
 }

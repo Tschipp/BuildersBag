@@ -3,19 +3,21 @@ package tschipp.buildersbag.common.helper;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 
-import baubles.api.BaublesApi;
+import com.lazy.baubles.api.cap.IBaublesItemHandler;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
-import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.api.IBlockSource;
-import tschipp.buildersbag.common.data.Tuple;
+import tschipp.buildersbag.api.datastructures.Tuple;
 import tschipp.buildersbag.common.item.BuildersBagItem;
+import tschipp.buildersbag.compat.baubles.BaubleHelper;
 import tschipp.buildersbag.compat.blocksourceadapter.BlockSourceAdapterHandler;
 
 public class InventoryHelper
@@ -158,10 +160,10 @@ public class InventoryHelper
 			}
 		}
 
-		if (Loader.isModLoaded("baubles"))
+		if (ModList.get().isLoaded("baubles"))
 		{
-			IInventory baubles = BaublesApi.getBaubles(player);
-			for (int i = 0; i < baubles.getSizeInventory(); i++)
+			IBaublesItemHandler baubles = BaubleHelper.getBaubles(player);
+			for (int i = 0; i < baubles.getSlots(); i++)
 			{
 				ItemStack s = baubles.getStackInSlot(i);
 				if (s.getItem() instanceof BuildersBagItem)
@@ -255,9 +257,9 @@ public class InventoryHelper
 	{
 		ItemStack stack = ItemStack.EMPTY;
 
-		if (isBauble && Loader.isModLoaded("baubles"))
+		if (isBauble && ModList.get().isLoaded("baubles"))
 		{
-			BaublesApi.getBaubles(player).getStackInSlot(slot);
+			BaubleHelper.getBauble(player, slot);
 		}
 		else
 			stack = player.inventory.getStackInSlot(slot);
@@ -281,9 +283,9 @@ public class InventoryHelper
 				return new Tuple(false, i);
 		}
 
-		if (Loader.isModLoaded("baubles"))
+		if (ModList.get().isLoaded("baubles"))
 		{
-			ItemStack inSlot = BaublesApi.getBaubles(player).getStackInSlot(3);
+			ItemStack inSlot = BaubleHelper.getBauble(player, 3);
 			if (inSlot.getItem() instanceof BuildersBagItem && stack.getItem() instanceof BuildersBagItem)
 			{
 				if (CapHelper.areCapsEqual(CapHelper.getBagCap(stack), CapHelper.getBagCap(inSlot)))

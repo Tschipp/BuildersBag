@@ -1,14 +1,13 @@
 package tschipp.buildersbag.common.modules;
 
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.AbstractBagModule;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.helper.BagHelper;
-import tschipp.buildersbag.common.helper.InventoryHelper;
 
 public class SupplierModule extends AbstractBagModule
 {

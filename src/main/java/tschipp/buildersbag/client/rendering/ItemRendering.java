@@ -1,9 +1,8 @@
 package tschipp.buildersbag.client.rendering;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.init.Items;
+import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.model.ModelLoader;
 import tschipp.buildersbag.common.BuildersBagRegistry;
@@ -12,15 +11,15 @@ public class ItemRendering
 {
 	public static void regItemRenders()
 	{
-		register(BuildersBagRegistry.tier1);
-		register(BuildersBagRegistry.tier2);
-		register(BuildersBagRegistry.tier3);
-		register(BuildersBagRegistry.tier4);
-		register(BuildersBagRegistry.tier5);
+		register(BuildersBagRegistry.TIER_1);
+		register(BuildersBagRegistry.TIER_2);
+		register(BuildersBagRegistry.TIER_3);
+		register(BuildersBagRegistry.TIER_4);
+		register(BuildersBagRegistry.TIER_5);
 		
 		ResourceLocation loc = new ModelResourceLocation("buildersbag:gears", "inventory");
 		ModelLoader.registerItemVariants(Items.AIR, loc);
-//		Minecraft.getMinecraft().getRenderItem().getItemModelMesher().register(item, definition);
+//		Minecraft.getInstance().getRenderItem().getItemModelMesher().register(item, definition);
 	}
 	
 	

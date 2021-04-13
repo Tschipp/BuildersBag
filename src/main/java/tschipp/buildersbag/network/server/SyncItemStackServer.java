@@ -1,62 +1,53 @@
 package tschipp.buildersbag.network.server;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import tschipp.buildersbag.common.inventory.ContainerBag;
+import java.util.function.Supplier;
 
-public class SyncItemStackServer implements IMessage, IMessageHandler<SyncItemStackServer, IMessage>
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.Hand;
+import net.minecraftforge.fml.network.NetworkEvent;
+import tschipp.buildersbag.network.NetworkMessage;
+
+public class SyncItemStackServer implements NetworkMessage
 {
 
 	private ItemStack stack;
 	private boolean right;
-	
-	public SyncItemStackServer()
-	{
-	}
-	
-	public SyncItemStackServer(ItemStack stack, EnumHand hand)
-	{
-		this.stack = stack;
-		this.right = hand == EnumHand.MAIN_HAND;
-	}
-	
-	@Override
-	public IMessage onMessage(SyncItemStackServer message, MessageContext ctx)
-	{
-		final IThreadListener mainThread = (IThreadListener)ctx.getServerHandler().player.world;
-		
-		mainThread.addScheduledTask(() -> {
-			
-			PlayerEntity player = ctx.getServerHandler().player;
-			ItemStack stack = message.right ? player.getHeldItemMainhand() : player.getHeldItemOffhand();
-			
-			stack.deserializeNBT(message.stack.serializeNBT());
-//			((ContainerBag)player.openContainer).processUpdate(stack);
-			
-		});
-		
-		return null;
-	}
 
-	@Override
-	public void fromBytes(ByteBuf buf)
+	public SyncItemStackServer(PacketBuffer buf)
 	{
-		stack = ByteBufUtils.readItemStack(buf);
+		stack = buf.readItemStack();
 		right = buf.readBoolean();
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf)
+	public SyncItemStackServer(ItemStack stack, Hand hand)
 	{
-		ByteBufUtils.writeItemStack(buf, stack);
+		this.stack = stack;
+		this.right = hand == Hand.MAIN_HAND;
+	}
+
+	@Override
+	public void toBytes(PacketBuffer buf)
+	{
+		buf.writeItemStack(stack);
 		buf.writeBoolean(right);
 	}
 
+	@Override
+	public void handle(Supplier<NetworkEvent.Context> ctx)
+	{
+		if (ctx.get().getDirection().getReceptionSide().isServer())
+		{
+			ctx.get().enqueueWork(() -> {
+
+				ServerPlayerEntity player = ctx.get().getSender();
+
+				ItemStack stack = right ? player.getHeldItemMainhand() : player.getHeldItemOffhand();
+				stack.deserializeNBT(stack.serializeNBT());
+
+				ctx.get().setPacketHandled(true);
+			});
+		}
+	}
 }

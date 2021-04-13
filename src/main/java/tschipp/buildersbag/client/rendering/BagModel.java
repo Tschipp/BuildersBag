@@ -1,18 +1,18 @@
 package tschipp.buildersbag.client.rendering;
 
 import java.util.List;
+import java.util.Random;
 
-import javax.vecmath.Matrix4f;
+import com.mojang.blaze3d.matrix.MatrixStack;
 
-import org.apache.commons.lang3.tuple.Pair;
-
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
-import net.minecraft.client.renderer.block.model.ItemOverrideList;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.renderer.model.BakedQuad;
+import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
+import net.minecraft.client.renderer.model.ItemOverrideList;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
+import net.minecraftforge.client.model.data.IModelData;
 
 public class BagModel implements IBakedModel
 {
@@ -26,9 +26,15 @@ public class BagModel implements IBakedModel
 	}
 
 	@Override
-	public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long rand)
+	public List<BakedQuad> getQuads(BlockState state, Direction side, Random rand, IModelData extraData)
 	{
-		return old.getQuads(state, side, rand);
+		return old.getQuads(state, side, rand, extraData);
+	}
+
+	@Override
+	public boolean isSideLit()
+	{
+		return old.isSideLit();
 	}
 
 	@Override
@@ -59,23 +65,39 @@ public class BagModel implements IBakedModel
 		this.old = internal;
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public TextureAtlasSprite getParticleTexture()
 	{
 		return old.getParticleTexture();
 	}
+	
+	@Override
+	public TextureAtlasSprite getParticleTexture(IModelData data)
+	{
+		return old.getParticleTexture(data);
+	}
 
 	@Override
 	public ItemOverrideList getOverrides()
 	{
-		return ItemOverrideList.NONE;
+		return ItemOverrideList.EMPTY;
 	}
 	
 	@Override
-	public Pair<? extends IBakedModel, Matrix4f> handlePerspective(TransformType cameraTransformType)
+	public IBakedModel handlePerspective(TransformType cameraTransformType, MatrixStack mat)
 	{
 		BagItemStackRenderer.transform = cameraTransformType;
-		return Pair.of(this, old.handlePerspective(cameraTransformType).getRight());
+		return old.handlePerspective(cameraTransformType, mat);
 	}
+
+	@SuppressWarnings("deprecation")
+	@Override
+	public List<BakedQuad> getQuads(BlockState state, Direction side, Random rand)
+	{
+		return old.getQuads(state, side, rand);
+	}
+
+	
 
 }

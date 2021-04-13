@@ -1,14 +1,14 @@
 package tschipp.buildersbag.common.caps;
 
-import net.minecraft.dispenser.IPosition;
-import net.minecraft.nbt.NBTBase;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.nbt.INBT;
+import net.minecraft.util.Direction;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
+import net.minecraftforge.common.util.LazyOptional;
 import tschipp.buildersbag.api.IBagCap;
 
-public class BagCapProvider implements ICapabilitySerializable {
+public class BagCapProvider implements ICapabilitySerializable<INBT> {
 
 	@CapabilityInject(IBagCap.class)
 	public static final Capability<IBagCap> BAG_CAPABILITY = null;
@@ -19,25 +19,27 @@ public class BagCapProvider implements ICapabilitySerializable {
 	{
 		this.instance.reInit(tier);
 	}
-	
+
+	@SuppressWarnings("unchecked")
 	@Override
-	public boolean hasCapability(Capability<?> capability, EnumFacing facing) {
-		return capability == BAG_CAPABILITY;
+	public <T> LazyOptional<T> getCapability(Capability<T> cap, Direction side)
+	{
+		if(cap == BAG_CAPABILITY)
+			return (LazyOptional<T>) LazyOptional.of(() -> instance);
+		else
+			return LazyOptional.empty();
 	}
 
 	@Override
-	public <T> T getCapability(Capability<T> capability, EnumFacing facing) {
-		return capability == BAG_CAPABILITY ? BAG_CAPABILITY.cast(instance) : null;
-	}
-
-	@Override
-	public NBTBase serializeNBT() {
+	public INBT serializeNBT()
+	{
 		return BAG_CAPABILITY.getStorage().writeNBT(BAG_CAPABILITY, instance, null);
 	}
 
 	@Override
-	public void deserializeNBT(NBTBase nbt) {
-		BAG_CAPABILITY.getStorage().readNBT(BAG_CAPABILITY, instance, null, nbt);
+	public void deserializeNBT(INBT nbt)
+	{
+		BAG_CAPABILITY.getStorage().readNBT(BAG_CAPABILITY, instance, null, nbt);		
 	}
 
 }

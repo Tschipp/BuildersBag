@@ -2,16 +2,16 @@ package tschipp.buildersbag.common.helper;
 
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 public class MapHelper
 {
+	@SuppressWarnings("unchecked")
 	public static <K, V extends Number> void add(Map<K, V> map, K key, V value)
 	{
 		if(value.doubleValue() == 0)
 			return;
 		
-		Number n = (Number) map.get(key);
+		Number n = map.get(key);
 		if (n == null)
 			n = 0;
 		if (n instanceof Integer)
@@ -24,11 +24,12 @@ public class MapHelper
 	/**
 	 * Returns actual amount removed
 	 */
+	@SuppressWarnings("unchecked")
 	public static <K, V extends Number> V removeAtMost(Map<K, V> map, K key, V max)
 	{
-		Number n = (Number) map.get(key);
+		Number n = map.get(key);
 		if (n == null)
-			return (V) new Integer(0);
+			return (V) Integer.valueOf(0);
 		Number toRemove;
 		if (n instanceof Integer)
 		{

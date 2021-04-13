@@ -1,27 +1,28 @@
 package tschipp.buildersbag.network.server;
 
 import java.util.List;
+import java.util.function.Supplier;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.helper.CapHelper;
+import tschipp.buildersbag.network.NetworkMessage;
 
-public class ModifyPaletteServer implements IMessage, IMessageHandler<ModifyPaletteServer, IMessage>
+public class ModifyPaletteServer implements NetworkMessage
 {
 
 	private ItemStack sel;
 	private String uuid;
 	private boolean add;
 	
-	public ModifyPaletteServer()
+	public ModifyPaletteServer(PacketBuffer buf)
 	{
+		uuid = buf.readString();
+		sel = buf.readItemStack();
+		add = buf.readBoolean();
 	}
 	
 	public ModifyPaletteServer(String uuid, ItemStack selected, boolean add)
@@ -32,53 +33,48 @@ public class ModifyPaletteServer implements IMessage, IMessageHandler<ModifyPale
 	}
 	
 	@Override
-	public IMessage onMessage(ModifyPaletteServer message, MessageContext ctx)
+	public void toBytes(PacketBuffer buf)
 	{
-		final IThreadListener mainThread = (IThreadListener)ctx.getServerHandler().player.world;
-		
-		mainThread.addScheduledTask(() -> {
-			
-			PlayerEntity player = ctx.getServerHandler().player;
-			ItemStack main = player.getHeldItemMainhand();
-			ItemStack off = player.getHeldItemOffhand();
-			
-			IBagCap cap;
-			if((cap = CapHelper.getBagCap(main)) != null && cap.getUUID().equals(message.uuid));
-			else if((cap = CapHelper.getBagCap(off)) != null && cap.getUUID().equals(message.uuid));
-			
-			List<ItemStack> palette = cap.getPalette();
-			if(message.add)
-				palette.add(message.sel.copy());
-			else
-			{
-				for(int i = 0; i < palette.size(); i++)
-				{
-					if(ItemStack.areItemStacksEqual(message.sel, palette.get(i)))
-					{
-						palette.remove(i);
-						break;
-					}
-				}
-			}
-		});
-		
-		return null;
-	}
-
-	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		uuid = ByteBufUtils.readUTF8String(buf);
-		sel = ByteBufUtils.readItemStack(buf);
-		add = buf.readBoolean();
-	}
-
-	@Override
-	public void toBytes(ByteBuf buf)
-	{
-		ByteBufUtils.writeUTF8String(buf, uuid);
-		ByteBufUtils.writeItemStack(buf, sel);
+		buf.writeString(uuid);
+		buf.writeItemStack(sel);
 		buf.writeBoolean(add);
 	}
 
+	@Override
+	public void handle(Supplier<NetworkEvent.Context> ctx)
+	{
+		if (ctx.get().getDirection().getReceptionSide().isServer())
+		{
+			ctx.get().enqueueWork(() -> {
+
+				ServerPlayerEntity player = ctx.get().getSender();
+				
+				ItemStack main = player.getHeldItemMainhand();
+				ItemStack off = player.getHeldItemOffhand();
+				
+				IBagCap cap;
+				if((cap = CapHelper.getBagCap(main)) != null && cap.getUUID().equals(uuid));
+				else if((cap = CapHelper.getBagCap(off)) != null && cap.getUUID().equals(uuid));
+				
+				List<ItemStack> palette = cap.getPalette();
+				if(add)
+					palette.add(sel.copy());
+				else
+				{
+					for(int i = 0; i < palette.size(); i++)
+					{
+						if(ItemStack.areItemStacksEqual(sel, palette.get(i)))
+						{
+							palette.remove(i);
+							break;
+						}
+					}
+				}
+				
+				ctx.get().setPacketHandled(true);
+				
+			});
+		}
+	}
+	
 }

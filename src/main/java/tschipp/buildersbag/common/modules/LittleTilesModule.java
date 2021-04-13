@@ -6,40 +6,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.creativemd.creativecore.common.utils.mc.BlockUtils;
-import com.creativemd.creativecore.common.utils.type.HashMapList;
-import com.creativemd.littletiles.LittleTiles;
-import com.creativemd.littletiles.common.action.LittleAction;
-import com.creativemd.littletiles.common.item.ItemBlockIngredient;
-import com.creativemd.littletiles.common.util.grid.LittleGridContext;
-import com.creativemd.littletiles.common.util.ingredient.BlockIngredient;
-import com.creativemd.littletiles.common.util.ingredient.BlockIngredientEntry;
-import com.creativemd.littletiles.common.util.ingredient.IngredientUtils;
-import com.creativemd.littletiles.common.util.ingredient.LittleIngredient;
-import com.creativemd.littletiles.common.util.ingredient.LittleIngredients;
-import com.creativemd.littletiles.common.util.ingredient.LittleInventory;
-
 import net.minecraft.block.Block;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
-import net.minecraft.util.text.translation.I18n;
-import net.minecraftforge.fml.common.Optional;
 import net.minecraftforge.items.ItemStackHandler;
-import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.AbstractBagModule;
 import tschipp.buildersbag.api.IBagCap;
-import tschipp.buildersbag.common.data.ItemContainer;
+import tschipp.buildersbag.api.datastructures.ItemContainer;
 import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.helper.ItemHelper;
 import tschipp.buildersbag.compat.littletiles.NonModifiableLittleIngredients;
-import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
 
 public class LittleTilesModule extends AbstractBagModule
 {
@@ -98,9 +81,9 @@ public class LittleTilesModule extends AbstractBagModule
 					NonNullList<ItemStack> inv = InventoryHelper.getStacks(bag.getBlockInventory());
 					for (ItemStack invStack : inv)
 					{
-						if (invStack.getItem() instanceof ItemBlockIngredient)
+						if (invStack.getItem() instanceof BlockItemIngredient)
 						{
-							BlockIngredientEntry invBlockIng = ItemBlockIngredient.loadIngredient(invStack);
+							BlockIngredientEntry invBlockIng = BlockItemIngredient.loadIngredient(invStack);
 
 							if (invBlockIng != null)
 							{
@@ -115,7 +98,7 @@ public class LittleTilesModule extends AbstractBagModule
 										if (!player.world.isRemote && !inventory.isSimulation())
 										{
 											invBlockIng.value -= entry.value;
-											ItemBlockIngredient.saveIngredient(invStack, invBlockIng);
+											BlockItemIngredient.saveIngredient(invStack, invBlockIng);
 										}
 										if (invBlockIng.value <= 0)
 											invStack.shrink(1);
@@ -186,14 +169,14 @@ public class LittleTilesModule extends AbstractBagModule
 
 		for (ItemStack available : allAvailable)
 		{
-			if (available.getItem() instanceof ItemBlock)
+			if (available.getItem() instanceof BlockItem)
 			{
 				if (LittleAction.isBlockValid(BlockUtils.getState(available)))
 					blIng.add(IngredientUtils.getBlockIngredient(Block.getBlockFromItem(available.getItem()), available.getMetadata(), 1));
 			}
-			else if (available.getItem() instanceof ItemBlockIngredient)
+			else if (available.getItem() instanceof BlockItemIngredient)
 			{
-				LittleIngredients av = ((ItemBlockIngredient) available.getItem()).getInventory(available);
+				LittleIngredients av = ((BlockItemIngredient) available.getItem()).getInventory(available);
 				if (av != null)
 				{
 					av = av.copy();
@@ -233,9 +216,9 @@ public class LittleTilesModule extends AbstractBagModule
 
 		for (ItemStack stack : allAvailable)
 		{
-			if (stack.getItem() instanceof ItemBlockIngredient)
+			if (stack.getItem() instanceof BlockItemIngredient)
 			{
-				BlockIngredientEntry entry = ItemBlockIngredient.loadIngredient(stack);
+				BlockIngredientEntry entry = BlockItemIngredient.loadIngredient(stack);
 				ItemContainer cont = ItemContainer.forStack(new ItemStack(entry.block, 1, entry.meta));
 
 				Double amount = amounts.get(cont);
@@ -296,7 +279,7 @@ public class LittleTilesModule extends AbstractBagModule
 		
 //		if(!player.world.isRemote)
 //		{
-//			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(stack, player), (ServerPlayerEntity) player);
+//			BuildersBag.network.send(PacketDistributor.PLAYER.with(() ->  (ServerPlayerEntity) player), new SyncBagCapInventoryClient(stack, player));
 //		}
 	}
 
@@ -311,9 +294,9 @@ public class LittleTilesModule extends AbstractBagModule
 
 		for (ItemStack invStack : inventory)
 		{
-			if (!invStack.isEmpty() && invStack.getItem() instanceof ItemBlockIngredient)
+			if (!invStack.isEmpty() && invStack.getItem() instanceof BlockItemIngredient)
 			{
-				BlockIngredientEntry loadedIngredient = ItemBlockIngredient.loadIngredient(invStack);
+				BlockIngredientEntry loadedIngredient = BlockItemIngredient.loadIngredient(invStack);
 				if (loadedIngredient.block == ing.block && loadedIngredient.meta == ing.meta)
 				{
 					tileItemStack = invStack;
@@ -329,9 +312,9 @@ public class LittleTilesModule extends AbstractBagModule
 			tileItemStack = new ItemStack(LittleTiles.blockIngredient);
 
 		tileItemStack.setTagCompound(new CompoundNBT());
-		ItemBlockIngredient.saveIngredient(tileItemStack, ing);
+		BlockItemIngredient.saveIngredient(tileItemStack, ing);
 
-		BlockIngredientEntry entry = ItemBlockIngredient.loadIngredient(tileItemStack);
+		BlockIngredientEntry entry = BlockItemIngredient.loadIngredient(tileItemStack);
 		if (entry.value >= 1.0)
 		{
 			int fullblocks = (int) entry.value;
@@ -345,7 +328,7 @@ public class LittleTilesModule extends AbstractBagModule
 			}
 			else
 			{
-				ItemBlockIngredient.saveIngredient(tileItemStack, entry);
+				BlockItemIngredient.saveIngredient(tileItemStack, entry);
 			}
 		}
 
@@ -365,9 +348,9 @@ public class LittleTilesModule extends AbstractBagModule
 
 		for (ItemStack s : toCompact)
 		{
-			if (s.getItem() instanceof ItemBlockIngredient)
+			if (s.getItem() instanceof BlockItemIngredient)
 			{
-				ing.add(ItemBlockIngredient.loadIngredient(s));
+				ing.add(BlockItemIngredient.loadIngredient(s));
 			}
 			else
 				stacks.add(s);
@@ -377,7 +360,7 @@ public class LittleTilesModule extends AbstractBagModule
 		{
 			ItemStack ingStack = new ItemStack(LittleTiles.blockIngredient);
 			ingStack.setTagCompound(new CompoundNBT());
-			ItemBlockIngredient.saveIngredient(ingStack, entry);
+			BlockItemIngredient.saveIngredient(ingStack, entry);
 			stacks.add(ingStack);
 		}
 

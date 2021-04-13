@@ -1,18 +1,6 @@
 package tschipp.buildersbag.compat.crafttweaker;
 
-import crafttweaker.CraftTweakerAPI;
-import crafttweaker.annotations.ZenRegister;
-import crafttweaker.api.item.IIngredient;
-import crafttweaker.api.item.IItemStack;
-import crafttweaker.api.minecraft.CraftTweakerMC;
-import crafttweaker.api.recipes.ICraftingInventory;
-import crafttweaker.api.recipes.IRecipeAction;
-import crafttweaker.api.recipes.IRecipeFunction;
 import net.minecraft.item.ItemStack;
-import stanhebben.zenscript.annotations.Optional;
-import stanhebben.zenscript.annotations.ZenClass;
-import stanhebben.zenscript.annotations.ZenMethod;
-import stanhebben.zenscript.annotations.ZenProperty;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.item.BuildersBagItem;

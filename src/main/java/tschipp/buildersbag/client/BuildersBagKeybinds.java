@@ -2,15 +2,14 @@ package tschipp.buildersbag.client;
 
 
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.input.Keyboard;
 
+import net.java.games.input.Keyboard;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.common.Loader;
 import tschipp.buildersbag.common.item.BuildersBagItem;
 
 public class BuildersBagKeybinds
@@ -40,7 +39,7 @@ public class BuildersBagKeybinds
 		openSelectionWheel = new KeyBinding("keybind.openSelectionWheel", NO_CONFLICT, GLFW.GLFW_KEY_LEFT_ALT, "buildersbag.name");
 		ClientRegistry.registerKeyBinding(openSelectionWheel);
 		
-		if(Loader.isModLoaded("baubles"))
+		if(ModList.get().isLoaded("baubles"))
 		{
 			openBaubleBag = new KeyBinding("keybind.openBaubleBag", Keyboard.KEY_R, "buildersbag.name");
 			ClientRegistry.registerKeyBinding(openBaubleBag);
@@ -51,24 +50,24 @@ public class BuildersBagKeybinds
 	
 	public static boolean isMenuKeyPressed()
 	{
-		if(Minecraft.getMinecraft().currentScreen != null)
+		if(Minecraft.getInstance().currentScreen != null)
 		{
 			return false;
 		}
 		
-		ItemStack main = Minecraft.getMinecraft().player.getHeldItemMainhand();
-		ItemStack off = Minecraft.getMinecraft().player.getHeldItemOffhand();
+		ItemStack main = Minecraft.getInstance().player.getHeldItemMainhand();
+		ItemStack off = Minecraft.getInstance().player.getHeldItemOffhand();
 		if(!(main.getItem() instanceof BuildersBagItem) && !(off.getItem() instanceof BuildersBagItem))
 			return false;
 		
-		if(KeyModifier.ALT.matches(openSelectionWheel.getKeyCode()))
+		if(KeyModifier.ALT.matches(openSelectionWheel.getKey()))
 		{
 			return KeyModifier.ALT.isActive(NO_CONFLICT);
 		}
-		else if(KeyModifier.CONTROL.matches(openSelectionWheel.getKeyCode()))
+		else if(KeyModifier.CONTROL.matches(openSelectionWheel.getKey()))
 		{
 			return KeyModifier.CONTROL.isActive(NO_CONFLICT);
-		}else if(KeyModifier.SHIFT.matches(openSelectionWheel.getKeyCode()))
+		}else if(KeyModifier.SHIFT.matches(openSelectionWheel.getKey()))
 		{
 			return KeyModifier.SHIFT.isActive(NO_CONFLICT);
 		}

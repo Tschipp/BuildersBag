@@ -8,11 +8,7 @@ public class CapHelper
 {
 	public static IBagCap getBagCap(ItemStack stack)
 	{
-		if(stack.hasCapability(BagCapProvider.BAG_CAPABILITY, null))
-		{
-			return stack.getCapability(BagCapProvider.BAG_CAPABILITY, null);
-		}
-		return null;
+		return stack.getCapability(BagCapProvider.BAG_CAPABILITY).orElse(null);
 	}
 	
 	public static boolean areCapsEqual(IBagCap one, IBagCap other)

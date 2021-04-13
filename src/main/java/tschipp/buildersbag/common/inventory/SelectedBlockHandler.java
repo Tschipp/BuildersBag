@@ -1,6 +1,6 @@
 package tschipp.buildersbag.common.inventory;
 
-import net.minecraft.item.ItemBlock;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.ItemStackHandler;
@@ -50,7 +50,7 @@ public class SelectedBlockHandler extends ItemStackHandler
 	@Override
 	public boolean isItemValid(int slot, ItemStack stack)
 	{
-		boolean b = stack.getItem() instanceof ItemBlock;
+		boolean b = stack.getItem() instanceof BlockItem;
 		return b;
 	}
 

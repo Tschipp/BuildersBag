@@ -9,24 +9,22 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.platform.GlStateManager;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderItem;
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms.TransformType;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
+import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.model.ItemCameraTransforms.TransformType;
+import net.minecraft.client.renderer.model.ModelResourceLocation;
+import net.minecraft.client.renderer.tileentity.ItemStackTileEntityRenderer;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemBlock;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.ForgeHooksClient;
+import net.minecraftforge.event.TickEvent.ClientTickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import net.minecraftforge.fml.relauncher.Side;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.config.BuildersBagConfig;
@@ -34,8 +32,8 @@ import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.item.BuildersBagItem;
 
-@EventBusSubscriber(modid = BuildersBag.MODID, value = Side.CLIENT)
-public class BagItemStackRenderer extends TileEntityItemStackRenderer
+@EventBusSubscriber(modid = BuildersBag.MODID, value = Dist.CLIENT)
+public class BagItemStackRenderer extends ItemStackTileEntityRenderer
 {
 	public static TransformType transform;
 
@@ -58,8 +56,8 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 	public void renderByItem(ItemStack stack, float partialTicks)
 	{
 
-		PlayerEntity player = Minecraft.getMinecraft().player;
-		Minecraft mc = Minecraft.getMinecraft();
+		PlayerEntity player = Minecraft.getInstance().player;
+		Minecraft mc = Minecraft.getInstance();
 		World world = player.world;
 		RenderItem render = mc.getRenderItem();
 		IBakedModel gears = render.getItemModelMesher().getModelManager().getModel(new ModelResourceLocation("buildersbag:gears", "inventory"));
@@ -179,7 +177,7 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 					renderModel(render, selectedModel, -1, selected);
 					GlStateManager.popMatrix();
 
-					if (BuildersBagConfig.Settings.drawWorkingState && this.working.contains(bag.getUUID()))
+					if (BuildersBagConfig.Settings.drawWorkingState && BagItemStackRenderer.working.contains(bag.getUUID()))
 					{
 						GlStateManager.disableLighting();
 						mc.getTextureManager().bindTexture(mc.getTextureMapBlocks().LOCATION_BLOCKS_TEXTURE);
@@ -212,7 +210,7 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 				GlStateManager.pushMatrix();
 				GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 				GlStateManager.enableRescaleNormal();
-				TileEntityItemStackRenderer.instance.renderByItem(stack);
+				TileItemEntityStackRenderer.instance.renderByItem(stack);
 				GlStateManager.popMatrix();
 			}
 			else
@@ -234,7 +232,7 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 		{
 			this.possibleItems.clear();
 			this.renderStack.clear();
-			this.renderTotal = 0;
+			BagItemStackRenderer.renderTotal = 0;
 		}
 
 		List<ItemStack> list = possibleItems.get(bagStack.hashCode());
@@ -247,9 +245,9 @@ public class BagItemStackRenderer extends TileEntityItemStackRenderer
 			return;
 
 		list.clear();
-		for (ItemStack s : BagHelper.getAllAvailableStacks(cap, Minecraft.getMinecraft().player))
+		for (ItemStack s : BagHelper.getAllAvailableStacks(cap, Minecraft.getInstance().player))
 		{
-			if (s.getItem() instanceof ItemBlock)
+			if (s.getItem() instanceof BlockItem)
 				list.add(s);
 		}
 

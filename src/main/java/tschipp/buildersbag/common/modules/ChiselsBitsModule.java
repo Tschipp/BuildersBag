@@ -23,29 +23,29 @@ import mod.chiselsandbits.items.ItemChisel;
 import mod.chiselsandbits.items.ItemChiseledBit;
 import mod.chiselsandbits.modes.ChiselMode;
 import mod.chiselsandbits.network.ModPacket;
-import mod.chiselsandbits.network.NetworkRouter;
 import mod.chiselsandbits.network.packets.PacketChisel;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.block.Blocks;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Direction;
+import net.minecraft.util.Hand;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
+import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.AbstractBagModule;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.api.datastructures.RequirementListener;
 import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
@@ -132,9 +132,9 @@ public class ChiselsBitsModule extends AbstractBagModule
 			BitLocation from = (BitLocation) fromF.get(packet);
 			BitLocation to = (BitLocation) toF.get(packet);
 			BitOperation place = (BitOperation) placeF.get(packet);
-			EnumFacing side = (EnumFacing) sideF.get(packet);
+			Direction side = (Direction) sideF.get(packet);
 			ChiselMode mode = (ChiselMode) modeF.get(packet);
-			EnumHand hand = (EnumHand) handF.get(packet);
+			Hand hand = (Hand) handF.get(packet);
 			World world = player.world;
 
 			final int minX = Math.min(from.blockPos.getX(), to.blockPos.getX());
@@ -253,7 +253,7 @@ public class ChiselsBitsModule extends AbstractBagModule
 									chisel.shrink(1);
 
 								ItemStack providedBits = ItemChiseledBit.createStack(placeStateID, (provided.size() * 16 * 16 * 16) + (needsExtra ? 0 : placedBits - 64), true);
-								EntityItem entityBits = new EntityItem(world, player.posX, player.posY, player.posZ, providedBits);
+								ItemEntity entityBits = new ItemEntity(world, player.getPosX(), player.getPosY(), player.getPosZ(), providedBits);
 
 
 								List<BagPos> bitBags = ItemBitBag.getBags(player.inventory);
@@ -286,7 +286,7 @@ public class ChiselsBitsModule extends AbstractBagModule
 						
 						ItemStack providedBits = ItemChiseledBit.createStack(placeStateID, 64, true);
 						player.setHeldItem(hand, providedBits);
-						BuildersBag.network.sendTo(new SetHeldItemClient(providedBits, hand), (ServerPlayerEntity) player);
+						BuildersBag.network.send(PacketDistributor.PLAYER.with(() ->  (ServerPlayerEntity) player), new SetHeldItemClient(providedBits, hand));
 					}
 
 					player.addTag("chiselPacket");
@@ -301,7 +301,7 @@ public class ChiselsBitsModule extends AbstractBagModule
 
 	}
 
-	private static ChiselIterator getIterator(final VoxelRegionSrc vb, final BlockPos pos, final BitOperation place, ChiselMode mode, BitLocation from, BitLocation to, EnumFacing side)
+	private static ChiselIterator getIterator(final VoxelRegionSrc vb, final BlockPos pos, final BitOperation place, ChiselMode mode, BitLocation from, BitLocation to, Direction side)
 	{
 		if (mode == ChiselMode.DRAWN_REGION)
 		{

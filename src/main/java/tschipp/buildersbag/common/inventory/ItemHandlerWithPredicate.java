@@ -1,7 +1,6 @@
 package tschipp.buildersbag.common.inventory;
 
 import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;

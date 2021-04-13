@@ -1,16 +1,20 @@
 buildscript {
     repositories {
         maven { url = 'https://files.minecraftforge.net/maven' }
+		maven { url = 'https://repo.spongepowered.org/maven' }
         jcenter()
         mavenCentral()
     }
     dependencies {
         classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+		classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply plugin: 'maven'
 
 apply from: 'https://raw.githubusercontent.com/MinecraftModDevelopment/Gradle-Collection/22e7d543a18cd30675277fbfa3669e3d9e206010/generic/secrets.gradle'
 
@@ -123,22 +127,22 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
-	
-	compileOnly fg.deobf("team.chisel.ctm:CTM:${ctm_version}") //CTM
+
+	//compile fg.deobf("team.chisel.ctm:CTM:${ctm_version}") //CTM
 	//deobfCompile "team.chisel:Chisel:${chisel_version}" //Chisel
 	//compile "curse.maven:littletiles:${littletiles_version}" //LT
 	//compile "curse.maven:creativecore:${creativecore_version}" //Creative Core
-	compileOnly fg.deobf("curse.maven:chisels-bits-231095:${chisels_and_bits_version}") //C & B
+	//compile fg.deobf("curse.maven:chisels-bits-231095:${chisels_and_bits_version}") //C & B
 	//compile "curse.maven:better-builders-wands:${bbw_version}" //Better Builder's Wands
-	compileOnly fg.deobf("curse.maven:building-gadgets-298187:${buildinggadgets_version}") //Building Gadgets
-	//deobfCompile "tschipp.linear:linear-1.12.2:${linear_version}" //Linear
-	compileOnly fg.deobf("vazkii.botania:Botania:${botania_version}") //Botania
-	compileOnly fg.deobf("com.github.lazyMods:Baubles:${baubles_version}:api") //Baubles
-	compileOnly fg.deobf("net.darkhax.gamestages:GameStages-1.16.4:${gamestage_version}") //Gamestages
-	//compile "net.darkhax.itemstages:ItemStages-1.12.2:${itemstage_version}" //Itemstages
-	//compile "net.darkhax.orestages:OreStages-1.12.2:${orestage_version}" //Orestages
-	compileOnly fg.deobf("net.darkhax.bookshelf:Bookshelf-1.12.2:${bookshelf_version}") //Bookshelf
-   	compileOnly fg.deobf("com.blamejared.crafttweaker:CraftTweaker-1.16.4:${ct_version}") //Crafttweaker
+	//compile fg.deobf("curse.maven:building-gadgets-298187:${buildinggadgets_version}") //Building Gadgets
+	//deobfCompile "tschipp.linear:linear-1.16.4:${linear_version}" //Linear
+	//compile fg.deobf("vazkii.botania:Botania:${botania_version}") //Botania
+	compile fg.deobf("com.github.lazyMods:Baubles:${baubles_version}:api") //Baubles 
+	//compile fg.deobf("net.darkhax.gamestages:GameStages-1.16.4:${gamestage_version}") //Gamestages
+	//compile "net.darkhax.itemstages:ItemStages-1.16.4:${itemstage_version}" //Itemstages
+	//compile "net.darkhax.orestages:OreStages-1.16.4:${orestage_version}" //Orestage
+	//compile fg.deobf("net.darkhax.bookshelf:Bookshelf-1.16.4:${bookshelf_version}") //Bookshelf
+    //compile fg.deobf("com.blamejared.crafttweaker:CraftTweaker-1.16.4:${ct_version}") //Crafttweaker
 }
 
 // Example for how to get properties into the manifest for reading by the runtime..

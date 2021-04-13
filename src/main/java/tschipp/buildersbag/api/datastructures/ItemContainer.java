@@ -1,4 +1,4 @@
-package tschipp.buildersbag.common.data;
+package tschipp.buildersbag.api.datastructures;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -11,19 +11,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.nbt.JsonToNBT;
-import net.minecraft.nbt.NBTException;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.JsonToNBT;
 import net.minecraft.util.NonNullList;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.registry.ForgeRegistries;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import net.minecraftforge.oredict.OreDictionary;
-import net.minecraftforge.oredict.OreIngredient;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.registries.ForgeRegistries;
 
 public class CraftingHandler
 {
@@ -44,7 +40,7 @@ public class CraftingHandler
 
 	public static void generateRecipes()
 	{
-		for (IRecipe recipe : ForgeRegistries.RECIPES)
+		for (IRecipe recipe : ForgeRegistries.)
 		{
 			for(Ingredient ing : recipe.getIngredients())
 			{
@@ -99,7 +95,7 @@ public class CraftingHandler
 	{
 		String name = getItemString(stack);
 		if (recipes.get(name) == null)
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		else
 			return recipes.get(name);
 	}
@@ -117,7 +113,7 @@ public class CraftingHandler
 
 		NonNullList<ItemStack> blocks = NonNullList.create();
 
-		blocks.addAll(items.stream().filter(stack -> stack.getItem() instanceof ItemBlock).collect(Collectors.toList()));
+		blocks.addAll(items.stream().filter(stack -> stack.getItem() instanceof BlockItem).collect(Collectors.toList()));
 
 		return blocks;
 	}
@@ -137,7 +133,7 @@ public class CraftingHandler
 	public static String getTierIfStaged(IRecipe recipe)
 	{
 
-		if (Loader.isModLoaded("recipestages"))
+		if (ModList.get().isLoaded("recipestages"))
 		{
 			try
 			{

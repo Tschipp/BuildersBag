@@ -9,17 +9,10 @@ import java.util.Optional;
 import com.google.common.collect.Lists;
 
 import net.minecraft.util.ResourceLocation;
-import net.minecraftforge.common.config.Config;
-import net.minecraftforge.common.config.ConfigManager;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;
-import net.minecraftforge.fml.client.config.IConfigElement;
-import net.minecraftforge.fml.client.event.ConfigChangedEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.common.BuildersBagRegistry;
-import tschipp.buildersbag.common.helper.ReflectionUtil;
 
 @Config(modid = BuildersBag.MODID)
 public class BuildersBagConfig

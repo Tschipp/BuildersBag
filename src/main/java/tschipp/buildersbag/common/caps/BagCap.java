@@ -1,17 +1,16 @@
 package tschipp.buildersbag.common.caps;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import com.google.common.collect.Lists;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.api.datastructures.BagComplex;
 import tschipp.buildersbag.common.BuildersBagRegistry;
 import tschipp.buildersbag.common.config.BuildersBagConfig;
 import tschipp.buildersbag.common.inventory.BagItemStackHandler;
@@ -24,6 +23,7 @@ public class BagCap implements IBagCap
 	private ItemStackHandler selected = new SelectedBlockHandler(1);
 	private String uuid;
 	private List<ItemStack> palette = new ArrayList<ItemStack>();
+	private BagComplex complex = null;
 	
 	public BagCap()
 	{
@@ -58,8 +58,7 @@ public class BagCap implements IBagCap
 			break;
 		}
 	
-		List<Integer> list = Collections.EMPTY_LIST;
-		
+		this.complex = new BagComplex(this);
 	}
 	
 	private void initModules(String[] modules)
@@ -220,5 +219,11 @@ public class BagCap implements IBagCap
 	public void setPalette(List<ItemStack> list)
 	{
 		this.palette = list;
+	}
+
+	@Override
+	public BagComplex getComplex()
+	{
+		return complex;
 	}
 }

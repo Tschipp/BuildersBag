@@ -6,10 +6,13 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.common.util.INBTSerializable;
 import net.minecraftforge.items.ItemStackHandler;
+import tschipp.buildersbag.api.datastructures.CreateableItemsManager;
 
 public interface IBagModule extends INBTSerializable<CompoundNBT>
 {
 
+	public CreateableItemsManager getCreateableItemsManager();
+	
 	/**
 	 * Gets a list of all stacks that this module can create using all other stacks,
 	 * so most of the time {@link tschipp.buildersbag.common.helper.BagHelper#getAllAvailableStacksExcept} is used to find the stacks of all other modules first.
@@ -86,6 +89,9 @@ public interface IBagModule extends INBTSerializable<CompoundNBT>
 	 * The name of the module, mostly the same as the registry name
 	 */
 	public String getName();
+	
+	
+	public BagModuleType<? extends IBagModule> getType();
 	
 	/**
 	 * Whether this module "dominates" other modules, meaning it has its own rule for supplying blocks.

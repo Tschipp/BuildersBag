@@ -19,7 +19,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.NonNullList;
 import tschipp.buildersbag.api.IBagCap;
-import tschipp.buildersbag.common.data.ItemContainer;
+import tschipp.buildersbag.api.datastructures.ItemContainer;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 
 public class RecipeRequirementList
@@ -138,7 +138,7 @@ public class RecipeRequirementList
 				int totalItemsAlreadyThere = InventoryHelper.getMatchingStacksWithSizeOne(out, InventoryHelper.getInventoryStacks(bag, player)).size();
 
 				double minNeeded = (entry.getValue() * totalItemsCrafted);
-				int recipeOps = (int) Math.ceil(((double) minNeeded) / outCount);
+				int recipeOps = (int) Math.ceil((minNeeded) / outCount);
 				int actualNeeded = recipeOps * outCount;
 
 				exact.put(entry.getKey(), Math.max(actualNeeded - totalItemsAlreadyThere, 0));

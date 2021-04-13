@@ -16,26 +16,33 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
+import com.lazy.baubles.api.BaublesAPI;
 
-import baubles.api.BaublesApi;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.ClickType;
-import net.minecraft.inventory.Container;
-import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.container.ClickType;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.text.translation.I18n;
-import net.minecraftforge.fml.common.Loader;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.Hand;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.network.IContainerFactory;
+import net.minecraftforge.fml.network.PacketDistributor;
 import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.SlotItemHandler;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.common.BuildersBagRegistry;
 import tschipp.buildersbag.common.cache.BagCache;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
+import tschipp.buildersbag.compat.baubles.BaubleHelper;
 import tschipp.buildersbag.network.client.SyncBagCapClient;
 import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
 
@@ -44,7 +51,7 @@ public class ContainerBag extends Container
 	public ItemStack bag;
 	public IBagCap bagCap;
 	private PlayerEntity player;
-	public EnumHand hand;
+	public Hand hand;
 	private ItemStackHandler inv;
 
 	public boolean isBauble = false;
@@ -54,26 +61,28 @@ public class ContainerBag extends Container
 	private Slot selectedBlockSlot;
 
 	public int invSize;
-	public String name;
+	public ITextComponent name;
 	public ImmutableMap<IBagModule, Triple<Integer, Integer, Boolean>> modules;
 
 	public int leftOffset = 0;
 
-	public ContainerBag(PlayerEntity player, ItemStack bag, EnumHand hand)
+	public ContainerBag(int windowID, PlayerEntity player, ItemStack bag, Hand hand)
 	{
-		this(player, bag);
+		this(windowID, player, bag);
 		this.hand = hand;
 	}
 
-	public ContainerBag(PlayerEntity player, ItemStack bag, int baubleSlot)
+	public ContainerBag(int windowID, PlayerEntity player, ItemStack bag, int baubleSlot)
 	{
-		this(player, bag);
+		this(windowID, player, bag);
 		this.slot = baubleSlot;
 		this.isBauble = true;
 	}
 
-	private ContainerBag(PlayerEntity player, ItemStack bag)
+	private ContainerBag(int windowID, PlayerEntity player, ItemStack bag)
 	{
+		super(BuildersBagRegistry.BAG_CONTAINER_TYPE, windowID);
+
 		this.player = player;
 		this.bag = bag;
 		this.bagCap = CapHelper.getBagCap(bag);
@@ -86,8 +95,42 @@ public class ContainerBag extends Container
 		if (bag.hasDisplayName())
 			name = bag.getDisplayName();
 		else
-			name = I18n.translateToLocal("buildersbag.name");
+			name = new TranslationTextComponent("buildersbag.name");
 
+		setupInventories();
+	}
+
+	public ContainerBag(int windowID, PlayerInventory inv, PacketBuffer data)
+	{
+		super(BuildersBagRegistry.BAG_CONTAINER_TYPE, windowID);
+		CompoundNBT tag = data.readCompoundTag();
+		PlayerEntity player = inv.player;
+		
+		if(tag.contains("isBauble"))
+		{
+			this.slot = tag.getInt("slot");
+			this.isBauble = true;
+			this.bag = BaublesAPI.getBauble(slot);
+		}
+		else
+		{
+			this.hand = tag.getBoolean("hand") ? Hand.MAIN_HAND : Hand.OFF_HAND;
+			this.bag = player.getHeldItem(hand);
+			this.slot = InventoryHelper.getSlotForStack(player, bag);
+		}
+		
+		this.player = player;
+		this.bagCap = CapHelper.getBagCap(bag);
+		this.inv = bagCap.getBlockInventory();
+		this.invSize = this.inv.getSlots();
+
+		this.leftOffset = Math.max(InventoryHelper.getBagExtraLeft(CapHelper.getBagCap(bag)), InventoryHelper.getBagExtraRight(CapHelper.getBagCap(bag)));
+
+		if (bag.hasDisplayName())
+			name = bag.getDisplayName();
+		else
+			name = new TranslationTextComponent("buildersbag.name");
+		
 		setupInventories();
 	}
 
@@ -112,13 +155,13 @@ public class ContainerBag extends Container
 			for (int j = 0; j < 9; j++)
 			{
 				if (slotIndex < invSize)
-					inventoryBagSlots.add(addSlotToContainer(new SlotItemHandler(inv, slotIndex++, x + j * 18 + leftOffset, y + i * 18)));
+					inventoryBagSlots.add(addSlot(new SlotItemHandler(inv, slotIndex++, x + j * 18 + leftOffset, y + i * 18)));
 				else
 					break;
 			}
 		}
 
-		selectedBlockSlot = addSlotToContainer(new SelectedBlockSlot(bagCap.getSelectedInventory(), 0, 80 + leftOffset, -24));
+		selectedBlockSlot = addSlot(new SelectedBlockSlot(bagCap.getSelectedInventory(), 0, 80 + leftOffset, -24));
 	}
 
 	private void setupPlayerInventory()
@@ -135,7 +178,7 @@ public class ContainerBag extends Container
 		{
 			for (int j = 0; j < 9; j++)
 			{
-				addSlotToContainer(new Slot(player.inventory, slotIndex++, x + j * 18 + leftOffset, y + i * 18));
+				addSlot(new Slot(player.inventory, slotIndex++, x + j * 18 + leftOffset, y + i * 18));
 			}
 		}
 
@@ -145,7 +188,7 @@ public class ContainerBag extends Container
 
 		for (int j = 0; j < 9; j++)
 		{
-			addSlotToContainer(new Slot(player.inventory, slotIndex++, x + j * 18 + leftOffset, y));
+			addSlot(new Slot(player.inventory, slotIndex++, x + j * 18 + leftOffset, y));
 		}
 	}
 
@@ -178,7 +221,7 @@ public class ContainerBag extends Container
 				ItemStackHandler handler = module.getInventory();
 				for (int j = 0; j < handler.getSlots(); j++)
 				{
-					addSlotToContainer(new ToggleableSlot(handler, slotIndex++, x + j * 18 + leftOffset, y).setSlotEnabled(module.isExpanded()));
+					addSlot(new ToggleableSlot(handler, slotIndex++, x + j * 18 + leftOffset, y).setSlotEnabled(module.isExpanded()));
 				}
 			}
 
@@ -203,12 +246,12 @@ public class ContainerBag extends Container
 				ItemStackHandler handler = module.getInventory();
 				for (int j = 0; j < handler.getSlots(); j++)
 				{
-					addSlotToContainer(new ToggleableSlot(handler, slotIndex++, x - j * 18 - 16 + leftOffset, y).setSlotEnabled(module.isExpanded()));
+					addSlot(new ToggleableSlot(handler, slotIndex++, x - j * 18 - 16 + leftOffset, y).setSlotEnabled(module.isExpanded()));
 				}
 			}
 			else
-
 				x = -41;
+
 			y += 34;
 		}
 
@@ -249,11 +292,11 @@ public class ContainerBag extends Container
 		return itemstack;
 	}
 
+	@Override
 	protected boolean mergeItemStack(ItemStack stack, int startIndex, int endIndex, boolean reverseDirection)
 	{
 		boolean flag = false;
 		int i = startIndex;
-
 		if (reverseDirection)
 		{
 			i = endIndex - 1;
@@ -277,21 +320,10 @@ public class ContainerBag extends Container
 
 				Slot slot = this.inventorySlots.get(i);
 				ItemStack itemstack = slot.getStack();
-
-				if (slot instanceof ToggleableSlot && !((ToggleableSlot) slot).isSlotEnabled())
-				{
-					if (reverseDirection)
-						i--;
-					else
-						i++;
-					continue;
-				}
-
-				if (!itemstack.isEmpty() && itemstack.getItem() == stack.getItem() && (!stack.getHasSubtypes() || stack.getMetadata() == itemstack.getMetadata()) && ItemStack.areItemStackTagsEqual(stack, itemstack) && slot.isItemValid(stack))
+				if (!itemstack.isEmpty() && areItemsAndTagsEqual(stack, itemstack) && (slot instanceof ToggleableSlot ? ((ToggleableSlot) slot).isSlotEnabled() : true))
 				{
 					int j = itemstack.getCount() + stack.getCount();
 					int maxSize = Math.min(slot.getSlotStackLimit(), stack.getMaxStackSize());
-
 					if (j <= maxSize)
 					{
 						stack.setCount(0);
@@ -345,27 +377,16 @@ public class ContainerBag extends Container
 				}
 
 				Slot slot1 = this.inventorySlots.get(i);
-
-				if (slot1 instanceof ToggleableSlot && !((ToggleableSlot) slot1).isSlotEnabled())
-				{
-					if (reverseDirection)
-						i--;
-					else
-						i++;
-					continue;
-				}
-
 				ItemStack itemstack1 = slot1.getStack();
-
-				if (itemstack1.isEmpty() && slot1.isItemValid(stack))
+				if (itemstack1.isEmpty() && slot1.isItemValid(stack) && (slot1 instanceof ToggleableSlot ? ((ToggleableSlot) slot1).isSlotEnabled() : true))
 				{
 					if (stack.getCount() > slot1.getSlotStackLimit())
 					{
-						slot1.putStack(stack.splitStack(slot1.getSlotStackLimit()));
+						slot1.putStack(stack.split(slot1.getSlotStackLimit()));
 					}
 					else
 					{
-						slot1.putStack(stack.splitStack(stack.getCount()));
+						slot1.putStack(stack.split(stack.getCount()));
 					}
 
 					slot1.onSlotChanged();
@@ -395,8 +416,7 @@ public class ContainerBag extends Container
 
 	public void updateModule(String name, CompoundNBT nbt)
 	{
-		modules.forEach((module, triple) ->
-		{
+		modules.forEach((module, triple) -> {
 			if (module.getName().equals(name))
 			{
 				module.deserializeNBT(nbt);
@@ -409,7 +429,6 @@ public class ContainerBag extends Container
 	public void update()
 	{
 		inventorySlots.clear();
-		inventoryItemStacks.clear();
 
 		setupInventories();
 	}
@@ -419,18 +438,18 @@ public class ContainerBag extends Container
 		if (!player.world.isRemote)
 		{
 			if (isBauble)
-				BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bagCap, slot, true), (ServerPlayerEntity) player);
+				BuildersBag.network.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player), new SyncBagCapInventoryClient(bagCap, slot, true));
 			else
-				BuildersBag.network.sendTo(new SyncBagCapClient(bagCap, hand), (ServerPlayerEntity) player);
+				BuildersBag.network.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player), new SyncBagCapClient(bagCap, hand));
 		}
 	}
 
 	@Override
 	public boolean canInteractWith(PlayerEntity player)
 	{
-		if (Loader.isModLoaded("baubles"))
+		if (ModList.get().isLoaded("baubles"))
 		{
-			return isBauble ? BaublesApi.getBaubles(player).getStackInSlot(this.slot) == bag : !player.getHeldItem(hand).isEmpty() && player.getHeldItem(hand) == bag;
+			return isBauble ? BaubleHelper.getBauble(player, this.slot) == bag : !player.getHeldItem(hand).isEmpty() && player.getHeldItem(hand) == bag;
 		}
 		return !player.getHeldItem(hand).isEmpty() && player.getHeldItem(hand) == bag;
 	}
@@ -466,6 +485,17 @@ public class ContainerBag extends Container
 		sync();
 
 		BagCache.clearBagCache(bag);
+	}
+
+	public static class BagContainerFactory implements IContainerFactory<ContainerBag>
+	{
+
+		@Override
+		public ContainerBag create(int windowId, PlayerInventory inv, PacketBuffer data)
+		{
+			return new ContainerBag(windowId, inv, data);
+		}
+
 	}
 
 }

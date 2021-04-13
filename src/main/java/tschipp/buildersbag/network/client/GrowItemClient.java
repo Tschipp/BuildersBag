@@ -1,60 +1,54 @@
 package tschipp.buildersbag.network.client;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
+import java.util.function.Supplier;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.Hand;
+import net.minecraftforge.fml.network.NetworkEvent;
 import tschipp.buildersbag.BuildersBag;
+import tschipp.buildersbag.network.NetworkMessage;
 
-public class GrowItemClient implements IMessage, IMessageHandler<GrowItemClient, IMessage>
+public class GrowItemClient implements NetworkMessage
 {
 
 	private int growthAmount;
-	private EnumHand hand;
+	private Hand hand;
 
-	public GrowItemClient()
+	public GrowItemClient(PacketBuffer buf)
 	{
+		growthAmount = buf.readInt();
+		hand = buf.readBoolean() ? Hand.MAIN_HAND : Hand.OFF_HAND;
 	}
 
-	public GrowItemClient(int growthAmount, EnumHand hand)
+	public GrowItemClient(int growthAmount, Hand hand)
 	{
 		this.growthAmount = growthAmount;
 		this.hand = hand;
 	}
 
 	@Override
-	public IMessage onMessage(GrowItemClient message, MessageContext ctx)
-	{
-		final IThreadListener mainThread = Minecraft.getMinecraft();
-
-		mainThread.addScheduledTask(() -> {
-
-			PlayerEntity player = BuildersBag.proxy.getPlayer();
-			ItemStack s = player.getHeldItem(message.hand);
-			s.grow(message.growthAmount);
-
-		});
-
-		return null;
-	}
-
-	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		growthAmount = buf.readInt();
-		hand = buf.readBoolean() ? EnumHand.MAIN_HAND : EnumHand.OFF_HAND;
-	}
-
-	@Override
-	public void toBytes(ByteBuf buf)
+	public void toBytes(PacketBuffer buf)
 	{
 		buf.writeInt(growthAmount);
-		buf.writeBoolean(hand == EnumHand.MAIN_HAND);
+		buf.writeBoolean(hand == Hand.MAIN_HAND);
+	}
+	
+	@Override
+	public void handle(Supplier<NetworkEvent.Context> ctx)
+	{
+		if (ctx.get().getDirection().getReceptionSide().isClient())
+		{
+			ctx.get().enqueueWork(() -> {
+				PlayerEntity player = BuildersBag.proxy.getPlayer();
+				ItemStack s = player.getHeldItem(hand);
+				s.grow(growthAmount);
+				
+				ctx.get().setPacketHandled(true);
+			});
+		}
 	}
 
+	
 }

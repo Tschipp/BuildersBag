@@ -5,13 +5,10 @@ import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.init.Blocks;
-import net.minecraft.inventory.InventoryEnderChest;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
+import net.minecraft.util.Hand;
 import tschipp.buildersbag.api.IBlockSourceAdapter;
-import tschipp.buildersbag.common.helper.FakePlayerCopy;
 import tschipp.buildersbag.common.item.BuildersBagItem;
 import vazkii.botania.api.item.IBlockProvider;
 import vazkii.botania.common.item.ItemBlackHoleTalisman;
@@ -33,7 +30,7 @@ public class BotaniaAdapter implements IBlockSourceAdapter
 	public ItemStack createBlock(ItemStack fromStack, ItemStack toCreate, PlayerEntity player, boolean simulate)
 	{
 		IBlockProvider provider = (IBlockProvider) fromStack.getItem();
-		if (provider.provideBlock(player, player.getHeldItem(EnumHand.MAIN_HAND), fromStack, Block.getBlockFromItem(toCreate.getItem()), toCreate.getMetadata(), !simulate || fromStack.getItem() instanceof ItemEnderHand))
+		if (provider.provideBlock(player, player.getHeldItem(Hand.MAIN_HAND), fromStack, Block.getBlockFromItem(toCreate.getItem()), toCreate.getMetadata(), !simulate || fromStack.getItem() instanceof ItemEnderHand))
 			return toCreate.copy();
 		return ItemStack.EMPTY;
 	}

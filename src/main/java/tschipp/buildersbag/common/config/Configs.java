@@ -1,7 +1,5 @@
 package tschipp.buildersbag.common.config;
 
-import net.minecraftforge.common.config.Config;
-import net.minecraftforge.common.config.Config.Comment;
 import tschipp.buildersbag.common.BuildersBagRegistry;
 
 public class Configs {

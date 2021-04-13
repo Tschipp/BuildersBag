@@ -1,25 +1,22 @@
 package tschipp.buildersbag.network.client;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import tschipp.buildersbag.BuildersBag;
+import java.util.function.Supplier;
 
-public class SetWorkStateClient implements IMessage, IMessageHandler<SetWorkStateClient, IMessage>
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
+import tschipp.buildersbag.BuildersBag;
+import tschipp.buildersbag.network.NetworkMessage;
+
+public class SetWorkStateClient implements NetworkMessage
 {
 
 	private String bag;
 	private boolean start;
 
-	public SetWorkStateClient()
+	public SetWorkStateClient(PacketBuffer buf)
 	{
+		bag = buf.readString();
+		start = buf.readBoolean();
 	}
 
 	public SetWorkStateClient(String bag, boolean start)
@@ -29,33 +26,22 @@ public class SetWorkStateClient implements IMessage, IMessageHandler<SetWorkStat
 	}
 
 	@Override
-	public IMessage onMessage(SetWorkStateClient message, MessageContext ctx)
+	public void toBytes(PacketBuffer buf)
 	{
-		final IThreadListener mainThread = Minecraft.getMinecraft();
-
-		mainThread.addScheduledTask(() ->
-		{
-			if (message.start)
-				BuildersBag.proxy.startWorking(message.bag, BuildersBag.proxy.getPlayer());
-			else
-				BuildersBag.proxy.stopWorking(message.bag, BuildersBag.proxy.getPlayer());
-		});
-
-		return null;
-	}
-
-	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		bag = ByteBufUtils.readUTF8String(buf);
-		start = buf.readBoolean();
-	}
-
-	@Override
-	public void toBytes(ByteBuf buf)
-	{
-		ByteBufUtils.writeUTF8String(buf, bag);
+		buf.writeString(bag);
 		buf.writeBoolean(start);
 	}
 
+	@Override
+	public void handle(Supplier<NetworkEvent.Context> ctx)
+	{
+		if (ctx.get().getDirection().getReceptionSide().isClient())
+		{
+			ctx.get().enqueueWork(() -> {
+
+				BuildersBag.proxy.changeWorkState(bag, BuildersBag.proxy.getPlayer(), start);
+
+			});
+		}
+	}
 }

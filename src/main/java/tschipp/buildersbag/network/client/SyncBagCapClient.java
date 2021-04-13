@@ -1,67 +1,59 @@
 package tschipp.buildersbag.network.client;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
+import java.util.function.Supplier;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.Hand;
+import net.minecraftforge.fml.network.NetworkEvent;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.caps.BagCapProvider;
 import tschipp.buildersbag.common.helper.CapHelper;
+import tschipp.buildersbag.network.NetworkMessage;
 
-public class SyncBagCapClient implements IMessage, IMessageHandler<SyncBagCapClient, IMessage>
+public class SyncBagCapClient implements NetworkMessage
 {
 
 	private IBagCap bagCap;
 	public boolean right;
 	public CompoundNBT readTag;
 
-	public SyncBagCapClient()
+	public SyncBagCapClient(PacketBuffer buf)
 	{
-	}
-
-	public SyncBagCapClient(IBagCap bagCap, EnumHand hand)
-	{
-		this.bagCap = bagCap;
-		this.right = hand == EnumHand.MAIN_HAND;
-	}
-
-	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		readTag = ByteBufUtils.readTag(buf);
+		readTag = buf.readCompoundTag();
 		right = buf.readBoolean();
 	}
 
-	@Override
-	public void toBytes(ByteBuf buf)
+	public SyncBagCapClient(IBagCap bagCap, Hand hand)
 	{
-		ByteBufUtils.writeTag(buf, (CompoundNBT) BagCapProvider.BAG_CAPABILITY.writeNBT(bagCap, null));
+		this.bagCap = bagCap;
+		this.right = hand == Hand.MAIN_HAND;
+	}
+
+	@Override
+	public void toBytes(PacketBuffer buf)
+	{
+		buf.writeCompoundTag((CompoundNBT) BagCapProvider.BAG_CAPABILITY.writeNBT(bagCap, null));
 		buf.writeBoolean(right);
 	}
 
 	@Override
-	public IMessage onMessage(SyncBagCapClient message, MessageContext ctx)
+	public void handle(Supplier<NetworkEvent.Context> ctx)
 	{
-		final IThreadListener mainThread = Minecraft.getMinecraft();
+		if (ctx.get().getDirection().getReceptionSide().isClient())
+		{
+			ctx.get().enqueueWork(() -> {
+				PlayerEntity player = BuildersBag.proxy.getPlayer();
+				ItemStack stack = right ? player.getHeldItemMainhand() : player.getHeldItemOffhand();
 
-		mainThread.addScheduledTask(() -> {
+				IBagCap oldCap = CapHelper.getBagCap(stack);
+				BagCapProvider.BAG_CAPABILITY.readNBT(oldCap, null, readTag);
 
-			PlayerEntity player = BuildersBag.proxy.getPlayer();
-			ItemStack stack = message.right ? player.getHeldItemMainhand() : player.getHeldItemOffhand();
-	
-			IBagCap oldCap = CapHelper.getBagCap(stack);
-			BagCapProvider.BAG_CAPABILITY.readNBT(oldCap, null, message.readTag);
-		});
-
-		return null;
+				ctx.get().setPacketHandled(true);
+			});
+		}
 	}
-
 }

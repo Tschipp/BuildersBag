@@ -4,17 +4,13 @@ import java.util.Random;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
-import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.cache.BagCache;
 import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
-import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.compat.blocksourceadapter.BlockSourceAdapterHandler;
-import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
 import vazkii.botania.common.item.ItemEnderHand;
 
 public class BotaniaCompat
@@ -74,7 +70,7 @@ public class BotaniaCompat
 			if (provided.isEmpty())
 				return false;
 
-//			BuildersBag.network.sendTo(new SyncBagCapInventoryClient(bag, InventoryHelper.getSlotForStack(player, stack)), (ServerPlayerEntity) player);
+//			BuildersBag.network.send(PacketDistributor.PLAYER.with(() ->  (ServerPlayerEntity) player), new SyncBagCapInventoryClient(bag, InventoryHelper.getSlotForStack(player, stack)));
 			return true;
 		} else
 		{

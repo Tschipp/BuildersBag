@@ -1,7 +1,5 @@
 package tschipp.buildersbag.compat.buildinggadgets;
 
-import com.direwolf20.buildinggadgets.common.integration.IItemAccess;
-
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;

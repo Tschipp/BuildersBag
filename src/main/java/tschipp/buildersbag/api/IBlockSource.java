@@ -2,7 +2,6 @@ package tschipp.buildersbag.api;
 
 import java.util.List;
 
-import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 

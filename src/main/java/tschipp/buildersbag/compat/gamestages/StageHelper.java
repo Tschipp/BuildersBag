@@ -5,13 +5,9 @@ import java.util.Collection;
 
 import net.darkhax.gamestages.GameStageHelper;
 import net.darkhax.gamestages.data.IStageData;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Tuple;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import tschipp.buildersbag.common.helper.FakePlayerCopy;
 
 public class StageHelper
@@ -32,7 +28,7 @@ public class StageHelper
 
 	static
 	{
-		if (Loader.isModLoaded("gamestages"))
+		if (ModList.get().isLoaded("gamestages"))
 		{
 			try
 			{
@@ -63,14 +59,14 @@ public class StageHelper
 
 	public static String getItemStage(ItemStack stack)
 	{
-		if(Loader.isModLoaded("itemstages"))
+		if(ModList.get().isLoaded("itemstages"))
 			return ItemStageHelper.getItemStage(stack);
 		return "";
 	}
 	
 	public static Tuple<String, IBlockState> getOreStage(IBlockState block)
 	{
-		if(Loader.isModLoaded("orestages"))
+		if(ModList.get().isLoaded("orestages"))
 			return OreStageHelper.getOreStage(block);
 		return new Tuple("", Blocks.AIR.getDefaultState());
 	}
@@ -83,7 +79,7 @@ public class StageHelper
 	
 	public static boolean hasStage(PlayerEntity player, String stage)
 	{
-		if (Loader.isModLoaded("gamestages"))
+		if (ModList.get().isLoaded("gamestages"))
 		{
 			if (stage.isEmpty())
 				return true;

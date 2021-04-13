@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,14 +18,13 @@ import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.IRecipe;
+import net.minecraft.item.crafting.ICraftingRecipe;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.NonNullList;
 import tschipp.buildersbag.api.IBagCap;
+import tschipp.buildersbag.api.datastructures.ItemContainer;
+import tschipp.buildersbag.api.datastructures.Tuple;
 import tschipp.buildersbag.common.crafting.CraftingStepList.CraftingStep;
-import tschipp.buildersbag.common.data.ItemContainer;
-import tschipp.buildersbag.common.data.Tuple;
-import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.helper.MapHelper;
 import tschipp.buildersbag.compat.gamestages.StageHelper;
 
@@ -38,13 +36,13 @@ public class RecipeTree
 	private Map<String, Boolean> markedNodes = new HashMap<String, Boolean>();
 	private Map<String, Boolean> validatedNodes = new HashMap<String, Boolean>();
 	private Map<String, Boolean> invalidatedNodes = new HashMap<String, Boolean>();
-	private Stack<String> callStack = new Stack();
+	private Stack<String> callStack = new Stack<String>();
 	private boolean aborted = false;
 
 	public Set<RecipeContainer> blacklistedRecipes = new HashSet<RecipeContainer>();
 	private int recursionCount = 0;
 
-	public void add(IRecipe recipe)
+	public void add(ICraftingRecipe recipe)
 	{
 		ItemStack output = recipe.getRecipeOutput();
 		if (!output.isEmpty())
@@ -444,12 +442,9 @@ public class RecipeTree
 		{
 			if (parent.getSecond() == fastestRecipe)
 			{
-				boolean isRootElement = this.rootNodes.containsKey(parent.getFirst().id);
-
 				String requirementNode = parent.getFirst().id;
 
 				String[] split = requirementNode.split(";");
-				boolean added = false;
 				for (String str : split)
 				{
 					RecipeNode n = this.nodes.get(str + ";");
@@ -504,36 +499,9 @@ public class RecipeTree
 		return reqList;
 	}
 
-	private boolean hasEnoughMaterialsForRoot(RecipeNode p, RecipeContainer recipeContainer, PlayerEntity player, IBagCap cap)
-	{
-		String[] split = p.id.split(";");
-		for (String str : split)
-		{
-			ItemStack stack = CraftingHandler.getItemFromString(str + ";");
-
-			double ingCount = 0;
-			for (Ingredient ing : recipeContainer.getIngredients())
-			{
-				if (ing.test(stack))
-				{
-					ingCount += 1;
-				}
-			}
-
-			int provided = InventoryHelper.getMatchingStacksWithSizeOne(stack, InventoryHelper.getInventoryStacks(cap, player)).size();
-
-			if (provided >= ingCount)
-				return true;
-		}
-
-		return false;
-	}
-
 	public RecipeTree getSubtree(NonNullList<ItemStack> stacks)
 	{
 		RecipeTree subtree = new RecipeTree();
-
-		long time = System.currentTimeMillis();
 
 		for (ItemStack stack : stacks)
 		{
@@ -570,8 +538,6 @@ public class RecipeTree
 		List<String> availableStacks = new ArrayList<String>();
 		for (ItemStack st : stacks)
 			availableStacks.add(CraftingHandler.getItemString(st));
-
-		time = System.currentTimeMillis();
 
 		int lastNodeSize = 0;
 
@@ -792,21 +758,6 @@ public class RecipeTree
 		}
 	}
 
-	private void removeNodesRecursively(RecipeNode node)
-	{
-
-		for (Tuple<RecipeNode, RecipeContainer> adjacent : node.adjacentNodes)
-		{
-			RecipeNode adjacentNode = adjacent.getFirst();
-
-			if (nodes.get(adjacentNode.id) != null)
-			{
-				this.nodes.remove(adjacentNode.id);
-				this.removeNodesRecursively(adjacentNode);
-			}
-		}
-	}
-
 	public static class RecipeNode
 	{
 		public String id;
@@ -845,8 +796,6 @@ public class RecipeTree
 			writer.write("digraph G {\n");
 			// writer.write("graph [ dpi = 75 ];");
 			// writer.write("ranksep = 1\n");
-
-			List<RecipeNode> drawn = new ArrayList<RecipeNode>();
 
 			for (RecipeNode node : nodes.values())
 			{

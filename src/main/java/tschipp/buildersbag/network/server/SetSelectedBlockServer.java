@@ -1,24 +1,25 @@
 package tschipp.buildersbag.network.server;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.PlayerEntity;
+import java.util.function.Supplier;
+
+import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.helper.CapHelper;
+import tschipp.buildersbag.network.NetworkMessage;
 
-public class SetSelectedBlockServer implements IMessage, IMessageHandler<SetSelectedBlockServer, IMessage>
+public class SetSelectedBlockServer implements NetworkMessage
 {
 
 	private ItemStack sel;
 	private String uuid;
 	
-	public SetSelectedBlockServer()
+	public SetSelectedBlockServer(PacketBuffer buf)
 	{
+		uuid = buf.readString();
+		sel = buf.readItemStack();
 	}
 	
 	public SetSelectedBlockServer(String uuid, ItemStack selected)
@@ -28,42 +29,36 @@ public class SetSelectedBlockServer implements IMessage, IMessageHandler<SetSele
 	}
 	
 	@Override
-	public IMessage onMessage(SetSelectedBlockServer message, MessageContext ctx)
+	public void toBytes(PacketBuffer buf)
 	{
-		final IThreadListener mainThread = (IThreadListener)ctx.getServerHandler().player.world;
-		
-		mainThread.addScheduledTask(() -> {
-			
-			PlayerEntity player = ctx.getServerHandler().player;
-			ItemStack main = player.getHeldItemMainhand();
-			ItemStack off = player.getHeldItemOffhand();
-			
-			IBagCap cap;
-			if((cap = CapHelper.getBagCap(main)) != null && cap.getUUID().equals(message.uuid))
-			{
-				cap.getSelectedInventory().setStackInSlot(0, message.sel);
-			}
-			else if((cap = CapHelper.getBagCap(off)) != null && cap.getUUID().equals(message.uuid))
-			{
-				cap.getSelectedInventory().setStackInSlot(0, message.sel);
-			}
-		});
-		
-		return null;
+		buf.writeString(uuid);
+		buf.writeItemStack(sel);
 	}
-
+	
 	@Override
-	public void fromBytes(ByteBuf buf)
+	public void handle(Supplier<NetworkEvent.Context> ctx)
 	{
-		uuid = ByteBufUtils.readUTF8String(buf);
-		sel = ByteBufUtils.readItemStack(buf);
-	}
+		if (ctx.get().getDirection().getReceptionSide().isServer())
+		{
+			ctx.get().enqueueWork(() -> {
 
-	@Override
-	public void toBytes(ByteBuf buf)
-	{
-		ByteBufUtils.writeUTF8String(buf, uuid);
-		ByteBufUtils.writeItemStack(buf, sel);
-	}
+				ServerPlayerEntity player = ctx.get().getSender();
 
+				ItemStack main = player.getHeldItemMainhand();
+				ItemStack off = player.getHeldItemOffhand();
+				
+				IBagCap cap;
+				if((cap = CapHelper.getBagCap(main)) != null && cap.getUUID().equals(uuid))
+				{
+					cap.getSelectedInventory().setStackInSlot(0, sel);
+				}
+				else if((cap = CapHelper.getBagCap(off)) != null && cap.getUUID().equals(uuid))
+				{
+					cap.getSelectedInventory().setStackInSlot(0, sel);
+				}
+
+				ctx.get().setPacketHandled(true);
+			});
+		}
+	}
 }

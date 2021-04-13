@@ -1,59 +1,60 @@
 package tschipp.buildersbag;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import tschipp.buildersbag.client.BuildersBagKeybinds;
+import tschipp.buildersbag.client.gui.GuiBag;
 import tschipp.buildersbag.client.rendering.BagItemStackRenderer;
 import tschipp.buildersbag.client.rendering.ItemRendering;
+import tschipp.buildersbag.common.BuildersBagRegistry;
 
-public class ClientProxy extends CommonProxy
+
+@EventBusSubscriber(bus = Bus.MOD, value = Dist.CLIENT)
+public class ClientProxy implements IProxy
 {
-
-	@Override
-	public void preInit(FMLPreInitializationEvent event)
+	
+	@SubscribeEvent
+	public static void onClientStartup(FMLClientSetupEvent event)
 	{
-		super.preInit(event);
 		BuildersBagKeybinds.registerKeybinds();
 		ItemRendering.regItemRenders();
-	}
-	
-	@Override
-	public void init(FMLInitializationEvent event)
-	{
-		super.init(event);
-	}
-	
-	@Override
-	public void postInit(FMLPostInitializationEvent event)
-	{
-		super.postInit(event);
+		
+		ScreenManager.registerFactory(BuildersBagRegistry.BAG_CONTAINER_TYPE, (container, inv, name) -> {
+			return new GuiBag(container, inv.player, name);
+		});
 	}
 	
 	@Override
 	public PlayerEntity getPlayer()
 	{
-		return Minecraft.getMinecraft().player;
+		return Minecraft.getInstance().player;
+	}
+
+//	@Override
+//	public void setTEISR(Item item)
+//	{
+//		item.setTileItemEntityStackRenderer(new BagItemStackRenderer());
+//	}
+	
+	@Override
+	public World getWorld()
+	{
+		return Minecraft.getInstance().world;
 	}
 
 	@Override
-	public void setTEISR(Item item)
+	public void changeWorkState(String uuid, PlayerEntity player, boolean start)
 	{
-		item.setTileEntityItemStackRenderer(new BagItemStackRenderer());
-	}
-	
-	@Override
-	public void startWorking(String uuid, PlayerEntity player)
-	{
-		BagItemStackRenderer.working.add(uuid);
-	}
-	
-	@Override
-	public void stopWorking(String uuid, PlayerEntity player)
-	{
-		BagItemStackRenderer.working.remove(uuid);
+		if(start)
+			BagItemStackRenderer.working.add(uuid);
+		else
+			BagItemStackRenderer.working.remove(uuid);
 	}
 }

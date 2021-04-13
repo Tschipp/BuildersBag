@@ -1,29 +1,32 @@
 package tschipp.buildersbag.network.server;
 
-import baubles.api.BaublesApi;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.PlayerEntity;
+import java.util.function.Supplier;
+
+import com.lazy.baubles.api.BaublesAPI;
+
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.network.NetworkEvent;
+import net.minecraftforge.fml.network.PacketDistributor;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
+import tschipp.buildersbag.network.NetworkMessage;
 import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
 
-public class CompactBagServer implements IMessage, IMessageHandler<CompactBagServer, IMessage>
+public class CompactBagServer implements NetworkMessage
 {
 
 	public int slot;
 	public boolean isBauble;
 	
-	public CompactBagServer()
+	public CompactBagServer(PacketBuffer buf)
 	{
+		slot = buf.readInt();
+		isBauble = buf.readBoolean();
 	}
 	
 	public CompactBagServer(int slot)
@@ -38,50 +41,45 @@ public class CompactBagServer implements IMessage, IMessageHandler<CompactBagSer
 	}
 
 	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		slot = buf.readInt();
-		isBauble = buf.readBoolean();
-	}
-
-	@Override
-	public void toBytes(ByteBuf buf)
+	public void toBytes(PacketBuffer buf)
 	{
 		buf.writeInt(slot);
 		buf.writeBoolean(isBauble);
 	}
 	
+
 	@Override
-	public IMessage onMessage(CompactBagServer message, MessageContext ctx)
+	public void handle(Supplier<NetworkEvent.Context> ctx)
 	{
-		final IThreadListener mainThread = (IThreadListener)ctx.getServerHandler().player.world;
+		if (ctx.get().getDirection().getReceptionSide().isServer())
+		{
+			ctx.get().enqueueWork(() -> {
 
-		mainThread.addScheduledTask(() -> {
+				ServerPlayerEntity player = ctx.get().getSender();
 
-			PlayerEntity player = ctx.getServerHandler().player;
-			if (message.slot >= 0)
-			{
-				ItemStack stack = ItemStack.EMPTY;
-				if (message.isBauble)
+				if (slot >= 0)
 				{
-					if (Loader.isModLoaded("baubles"))
+					ItemStack stack = ItemStack.EMPTY;
+					if (isBauble)
 					{
-						stack = BaublesApi.getBaubles(player).getStackInSlot(message.slot);
+						if (ModList.get().isLoaded("baubles"))
+						{
+							stack = BaublesAPI.getBaublesHandler(player).getStackInSlot(slot);
+						}
+					} else
+						stack = player.inventory.getStackInSlot(slot);
+
+					if (!stack.isEmpty())
+					{
+						IBagCap oldCap = CapHelper.getBagCap(stack);
+						
+						BagHelper.compactStacks(oldCap, player);
+						BuildersBag.network.send(PacketDistributor.PLAYER.with(() ->  (ServerPlayerEntity) player), new SyncBagCapInventoryClient(oldCap, slot, isBauble));
 					}
-				} else
-					stack = player.inventory.getStackInSlot(message.slot);
-
-				if (!stack.isEmpty())
-				{
-					IBagCap oldCap = CapHelper.getBagCap(stack);
-					
-					BagHelper.compactStacks(oldCap, player);
-					BuildersBag.network.sendTo(new SyncBagCapInventoryClient(oldCap, message.slot, message.isBauble), (ServerPlayerEntity) player);
 				}
-			}
-		});
 
-		return null;
+				ctx.get().setPacketHandled(true);
+			});
+		}
 	}
-
 }

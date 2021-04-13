@@ -3,9 +3,9 @@ package tschipp.buildersbag.common.modules;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemBlock;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemStackHandler;
@@ -38,7 +38,7 @@ public class RandomnessModule extends AbstractBagModule
 		NonNullList<ItemStack> list = BagHelper.getAllAvailableStacks(bag, player);
 		
 		NonNullList<ItemStack> blocks = NonNullList.create();
-		blocks.addAll(list.stream().filter(stack -> stack.getItem() instanceof ItemBlock).collect(Collectors.toList()));
+		blocks.addAll(list.stream().filter(stack -> stack.getItem() instanceof BlockItem).collect(Collectors.toList()));
 		
 		if(blocks.isEmpty())
 			return ItemStack.EMPTY;

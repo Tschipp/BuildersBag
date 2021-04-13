@@ -2,20 +2,20 @@ package tschipp.buildersbag.common.cache;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.fml.network.PacketDistributor;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
-import tschipp.buildersbag.common.data.Tuple;
+import tschipp.buildersbag.api.datastructures.Tuple;
 import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
@@ -40,8 +40,8 @@ public class BagCache
 	
 	public static void clearBagCache(ItemStack bag)
 	{
-		Side side = BuildersBag.proxy.getSide();
-		Map<String, CachedBag> cache = side == Side.CLIENT ? client_cache : server_cache;
+		Dist side = BuildersBag.proxy.getSide();
+		Map<String, CachedBag> cache = side == Dist.CLIENT ? client_cache : server_cache;
 		IBagCap bagCap = CapHelper.getBagCap(bag);
 
 		if(bagCap == null)
@@ -69,7 +69,7 @@ public class BagCache
 
 		Tuple<Boolean, Integer> slot = InventoryHelper.getSlotForStackWithBaubles(player, bag);
 		
-		BuildersBag.network.sendTo(new UpdateCacheClient(slot.getSecond(), slot.getFirst(), forStack, count), (ServerPlayerEntity) player);
+		BuildersBag.network.send(PacketDistributor.PLAYER.with(() ->  (ServerPlayerEntity) player), new UpdateCacheClient(slot.getSecond(), slot.getFirst(), forStack, count));
 		server_cache.put(bagCap.getUUID(), cachedBag);
 		return count;
 	}
@@ -77,7 +77,7 @@ public class BagCache
 	/**
 	 * This should ONLY be called from the client side
 	 */
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public static void updateCachedBagStackWithAmount(ItemStack bag, PlayerEntity player, ItemStack forStack, int amount)
 	{
 		
@@ -92,8 +92,8 @@ public class BagCache
 
 	public static void modifyCachedAmount(ItemStack bag, ItemStack forStack, int delta)
 	{
-		Side side = BuildersBag.proxy.getSide();
-		Map<String, CachedBag> cache = side == Side.CLIENT ? client_cache : server_cache;
+		Dist side = BuildersBag.proxy.getSide();
+		Map<String, CachedBag> cache = side == Dist.CLIENT ? client_cache : server_cache;
 		IBagCap bagCap = CapHelper.getBagCap(bag);
 
 		CachedBag cachedBag = cache.get(bagCap.getUUID());
@@ -103,8 +103,8 @@ public class BagCache
 
 	public static void startSimulation(ItemStack bag)
 	{
-		Side side = BuildersBag.proxy.getSide();
-		Map<String, CachedBag> cache = side == Side.CLIENT ? client_cache : server_cache;
+		Dist side = BuildersBag.proxy.getSide();
+		Map<String, CachedBag> cache = side == Dist.CLIENT ? client_cache : server_cache;
 		IBagCap bagCap = CapHelper.getBagCap(bag);
 
 		CachedBag cachedBag = cache.get(bagCap.getUUID());
@@ -121,8 +121,8 @@ public class BagCache
 
 	public static void stopSimulation(ItemStack bag)
 	{
-		Side side = BuildersBag.proxy.getSide();
-		Map<String, CachedBag> cache = side == Side.CLIENT ? client_cache : server_cache;
+		Dist side = BuildersBag.proxy.getSide();
+		Map<String, CachedBag> cache = side == Dist.CLIENT ? client_cache : server_cache;
 		IBagCap bagCap = CapHelper.getBagCap(bag);
 
 		CachedBag cachedBag = cache.get(bagCap.getUUID());
@@ -152,7 +152,7 @@ public class BagCache
 	public static void sendBagModificationToClient(ItemStack bag, ItemStack forStack, int delta, PlayerEntity player)
 	{
 		Tuple<Boolean, Integer> slot = InventoryHelper.getSlotForStackWithBaubles(player, bag);
-		BuildersBag.network.sendTo(new ModifyCacheClient(slot.getSecond(), slot.getFirst(), forStack, delta), (ServerPlayerEntity) player);
+		BuildersBag.network.send(PacketDistributor.PLAYER.with(() ->  (ServerPlayerEntity) player), new ModifyCacheClient(slot.getSecond(), slot.getFirst(), forStack, delta));
 	}
 	
 	@SubscribeEvent

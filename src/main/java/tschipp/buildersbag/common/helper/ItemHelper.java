@@ -4,8 +4,7 @@ import java.util.List;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.nbt.NBTTagString;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.NonNullList;
 
 public class ItemHelper
@@ -13,12 +12,12 @@ public class ItemHelper
 
 	public static void addLore(ItemStack stack, String... lines)
 	{
-		CompoundNBT tag = stack.getTagCompound();
+		CompoundNBT tag = stack.getTag();
 		if (tag == null)
 			tag = new CompoundNBT();
 	
-		CompoundNBT display = tag.getCompoundTag("display");
-		NBTTagList lore = display.getTagList("Lore", 8);
+		CompoundNBT display = tag.getCompound("display");
+		ListNBT lore = display.getList("Lore", 8);
 		if (lore == null)
 			lore = new NBTTagList();
 	

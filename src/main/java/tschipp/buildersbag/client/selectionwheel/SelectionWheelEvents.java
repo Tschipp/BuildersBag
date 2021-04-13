@@ -2,13 +2,12 @@ package tschipp.buildersbag.client.selectionwheel;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
-import net.minecraftforge.client.event.MouseEvent;
+import net.minecraft.util.SoundEvents;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.client.BuildersBagKeybinds;
@@ -18,13 +17,13 @@ import tschipp.buildersbag.common.item.BuildersBagItem;
 import tschipp.buildersbag.network.server.ModifyPaletteServer;
 import tschipp.buildersbag.network.server.SetSelectedBlockServer;
 
-@EventBusSubscriber(modid = BuildersBag.MODID, value = Side.CLIENT)
+@EventBusSubscriber(modid = BuildersBag.MODID, value = Dist.CLIENT)
 public class SelectionWheelEvents
 {
 	@SubscribeEvent
 	public static void onRenderScreen(RenderGameOverlayEvent.Post event)
 	{
-		Minecraft mc = Minecraft.getMinecraft();
+		Minecraft mc = Minecraft.getInstance();
 
 		if (!SelectionWheel.open && BuildersBagKeybinds.isMenuKeyPressed())
 		{
@@ -69,9 +68,9 @@ public class SelectionWheelEvents
 			event.setCanceled(true);
 		}
 
-		if (event.getDwheel() > 0 || event.getDwheel() < 0 && Minecraft.getMinecraft().player != null)
+		if (event.getDwheel() > 0 || event.getDwheel() < 0 && Minecraft.getInstance().player != null)
 		{
-			PlayerEntity player = Minecraft.getMinecraft().player;
+			PlayerEntity player = Minecraft.getInstance().player;
 
 			if (player.isSneaking())
 			{

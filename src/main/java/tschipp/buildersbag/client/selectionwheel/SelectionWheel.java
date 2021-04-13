@@ -9,34 +9,28 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import javax.vecmath.Vector2d;
-
-import org.lwjgl.input.Mouse;
-
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.platform.GlStateManager;
 
+import net.java.games.input.Mouse;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.RenderItem;
-import net.minecraft.init.SoundEvents;
-import net.minecraft.item.ItemBlock;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvents;
 import net.minecraft.util.text.TextFormatting;
-import net.minecraft.util.text.translation.I18n;
-import net.minecraftforge.fml.client.config.GuiUtils;
+import net.minecraftforge.fml.client.gui.GuiUtils;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.api.datastructures.Tuple;
 import tschipp.buildersbag.client.rendering.BagRenderHelper;
 import tschipp.buildersbag.client.selectionwheel.SelectionWheelLogic.SelectionFilter;
 import tschipp.buildersbag.client.selectionwheel.SelectionWheelLogic.SelectionPage;
 import tschipp.buildersbag.common.config.BuildersBagConfig;
-import tschipp.buildersbag.common.data.Tuple;
 import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
@@ -48,7 +42,7 @@ public class SelectionWheel
 {
 	private static final ResourceLocation TEXTURE = new ResourceLocation(BuildersBag.MODID, "textures/gui/blockselector.png");
 	private static final ResourceLocation VANILLA = new ResourceLocation("textures/gui/icons.png");
-	private static Minecraft mc = Minecraft.getMinecraft();
+	private static Minecraft mc = Minecraft.getInstance();
 	private static RenderItem itemRender = mc.getRenderItem();
 
 	private static final int WHEEL_WIDTH = 238, WHEEL_HEIGHT = 235;
@@ -105,14 +99,14 @@ public class SelectionWheel
 		// SET UP FILTERS
 		List<ItemStack> provideableStacks = new ArrayList<ItemStack>();
 
-		provideableStacks.addAll(InventoryHelper.getInventoryStacks(cap, mc.player).stream().filter(s -> s.getItem() instanceof ItemBlock).collect(Collectors.toList()));
+		provideableStacks.addAll(InventoryHelper.getInventoryStacks(cap, mc.player).stream().filter(s -> s.getItem() instanceof BlockItem).collect(Collectors.toList()));
 
 		filters.clear();
 		for (IBagModule module : cap.getModules())
 		{
 			if (module.isEnabled())
 			{
-				List<ItemStack> provideable = module.getPossibleStacks(cap, mc.player).stream().filter(s -> s.getItem() instanceof ItemBlock).collect(Collectors.toList());
+				List<ItemStack> provideable = module.getPossibleStacks(cap, mc.player).stream().filter(s -> s.getItem() instanceof BlockItem).collect(Collectors.toList());
 				if (!provideable.isEmpty())
 				{
 					List<SelectionPage> filterpages = SelectionWheelLogic.createPages(provideable);

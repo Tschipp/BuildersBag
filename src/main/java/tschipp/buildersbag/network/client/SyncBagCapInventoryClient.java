@@ -1,94 +1,87 @@
 package tschipp.buildersbag.network.client;
 
-import baubles.api.BaublesApi;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
+import java.util.function.Supplier;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.network.NetworkEvent;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.caps.BagCapProvider;
-import tschipp.buildersbag.common.data.Tuple;
 import tschipp.buildersbag.common.helper.CapHelper;
-import tschipp.buildersbag.common.helper.InventoryHelper;
+import tschipp.buildersbag.compat.baubles.BaubleHelper;
+import tschipp.buildersbag.network.NetworkMessage;
 
-public class SyncBagCapInventoryClient implements IMessage, IMessageHandler<SyncBagCapInventoryClient, IMessage>
+public class SyncBagCapInventoryClient implements NetworkMessage
 {
 
 	private IBagCap bagCap;
 	public int slot;
 	public CompoundNBT readTag;
 	public boolean isBauble;
-	
-	public SyncBagCapInventoryClient()
+
+	public SyncBagCapInventoryClient(PacketBuffer buf)
 	{
+		readTag = buf.readCompoundTag();
+		slot = buf.readInt();
+		isBauble = buf.readBoolean();
 	}
-		
+
 	public SyncBagCapInventoryClient(IBagCap bagCap, int slot, boolean isBauble)
 	{
-		if(bagCap == null || bagCap.getBlockInventory() == null)
+		if (bagCap == null || bagCap.getBlockInventory() == null)
 		{
 			BuildersBag.LOGGER.error("Invalid Bag Cap! It is null!");
 			new Throwable().printStackTrace();
 		}
-		
+
 		this.bagCap = bagCap;
 		this.slot = slot;
 		this.isBauble = isBauble;
 	}
 
 	@Override
-	public void fromBytes(ByteBuf buf)
+	public void toBytes(PacketBuffer buf)
 	{
-		readTag = ByteBufUtils.readTag(buf);
-		slot = buf.readInt();
-		isBauble = buf.readBoolean();
-	}
-
-	@Override
-	public void toBytes(ByteBuf buf)
-	{
-		ByteBufUtils.writeTag(buf, (CompoundNBT) BagCapProvider.BAG_CAPABILITY.writeNBT(bagCap, null));
+		buf.writeCompoundTag((CompoundNBT) BagCapProvider.BAG_CAPABILITY.writeNBT(bagCap, null));
 		buf.writeInt(slot);
 		buf.writeBoolean(isBauble);
 	}
-	
+
 	@Override
-	public IMessage onMessage(SyncBagCapInventoryClient message, MessageContext ctx)
+	public void handle(Supplier<NetworkEvent.Context> ctx)
 	{
-		final IThreadListener mainThread = Minecraft.getMinecraft();
+		if (ctx.get().getDirection().getReceptionSide().isClient())
+		{
+			ctx.get().enqueueWork(() -> {
 
-		mainThread.addScheduledTask(() -> {
-
-			PlayerEntity player = BuildersBag.proxy.getPlayer();
-			if (message.slot >= 0)
-			{
-				ItemStack stack = ItemStack.EMPTY;
-				if (message.isBauble)
+				PlayerEntity player = BuildersBag.proxy.getPlayer();
+				if (slot >= 0)
 				{
-					if (Loader.isModLoaded("baubles"))
+					ItemStack stack = ItemStack.EMPTY;
+					if (isBauble)
 					{
-						stack = BaublesApi.getBaubles(player).getStackInSlot(message.slot);
+						if (ModList.get().isLoaded("baubles"))
+						{
+							stack = BaubleHelper.getBauble(player, slot);
+						}
 					}
-				} else
-					stack = player.inventory.getStackInSlot(message.slot);
+					else
+						stack = player.inventory.getStackInSlot(slot);
 
-				if (!stack.isEmpty())
-				{
-					IBagCap oldCap = CapHelper.getBagCap(stack);
-					BagCapProvider.BAG_CAPABILITY.readNBT(oldCap, null, message.readTag);
+					if (!stack.isEmpty())
+					{
+						IBagCap oldCap = CapHelper.getBagCap(stack);
+						BagCapProvider.BAG_CAPABILITY.readNBT(oldCap, null, readTag);
+					}
 				}
-			}
-		});
 
-		return null;
+				ctx.get().setPacketHandled(true);
+			});
+		}
 	}
-
+	
 }

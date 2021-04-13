@@ -1,26 +1,25 @@
 package tschipp.buildersbag;
 
-import java.lang.reflect.Field;
+import java.util.Optional;
+
+import org.spongepowered.asm.mixin.MixinEnvironment.Side;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.network.FMLEmbeddedChannel;
-import net.minecraftforge.fml.common.network.FMLEventChannel;
-import net.minecraftforge.fml.common.network.NetworkEventFiringHandler;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.common.thread.SidedThreadGroups;
-import net.minecraftforge.fml.relauncher.ReflectionHelper;
-import net.minecraftforge.fml.relauncher.Side;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.World;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.network.NetworkDirection;
+import net.minecraftforge.fml.network.NetworkRegistry;
+import net.minecraftforge.fml.network.PacketDistributor;
 import tschipp.buildersbag.common.BuildersBagRegistry;
 import tschipp.buildersbag.common.config.BuildersBagConfig;
 import tschipp.buildersbag.common.crafting.CraftingHandler;
 import tschipp.buildersbag.common.inventory.BagGuiHandler;
-import tschipp.buildersbag.compat.bbw.BBWCompat;
 import tschipp.buildersbag.compat.botania.BotaniaCompat;
 import tschipp.buildersbag.compat.chisel.ChiselEvents;
 import tschipp.buildersbag.compat.linear.LinearCompatManager;
@@ -31,8 +30,6 @@ import tschipp.buildersbag.network.client.SetHeldItemClient;
 import tschipp.buildersbag.network.client.SetWorkStateClient;
 import tschipp.buildersbag.network.client.SyncBagCapClient;
 import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
-import tschipp.buildersbag.network.client.SyncBagCapServer;
-import tschipp.buildersbag.network.client.SyncEnderchestToClient;
 import tschipp.buildersbag.network.client.UpdateCacheClient;
 import tschipp.buildersbag.network.server.CompactBagServer;
 import tschipp.buildersbag.network.server.ModifyPaletteServer;
@@ -40,41 +37,40 @@ import tschipp.buildersbag.network.server.OpenBaubleBagServer;
 import tschipp.buildersbag.network.server.RequestBagUpdateServer;
 import tschipp.buildersbag.network.server.RequestCacheUpdateServer;
 import tschipp.buildersbag.network.server.SetSelectedBlockServer;
+import tschipp.buildersbag.network.server.SyncBagCapServer;
 import tschipp.buildersbag.network.server.SyncItemStackServer;
 import tschipp.buildersbag.network.server.SyncModuleStateServer;
 
-public class CommonProxy
+@EventBusSubscriber(bus = Bus.MOD)
+public class CommonProxy implements IProxy
 {
 
-	private static Field eventChannel;
+	private static int packetID = 0;
 
-	static
+	@SubscribeEvent
+	public static void onCommonStartup(FMLCommonSetupEvent event)
 	{
-		eventChannel = ReflectionHelper.findField(NetworkEventFiringHandler.class, "eventChannel");
-		eventChannel.setAccessible(true);
-	}
+		String version = BuildersBag.info.getVersion().toString();
 
-	public void preInit(FMLPreInitializationEvent event)
-	{
-		BuildersBag.network = NetworkRegistry.INSTANCE.newSimpleChannel(BuildersBag.MODID);
-		BuildersBag.network.registerMessage(SyncItemStackServer.class, SyncItemStackServer.class, 0, Side.SERVER);
-		BuildersBag.network.registerMessage(SyncModuleStateServer.class, SyncModuleStateServer.class, 1, Side.SERVER);
-		BuildersBag.network.registerMessage(SyncBagCapClient.class, SyncBagCapClient.class, 2, Side.CLIENT);
-		BuildersBag.network.registerMessage(SetHeldItemClient.class, SetHeldItemClient.class, 3, Side.CLIENT);
-		BuildersBag.network.registerMessage(SyncBagCapInventoryClient.class, SyncBagCapInventoryClient.class, 4, Side.CLIENT);
-		BuildersBag.network.registerMessage(OpenBaubleBagServer.class, OpenBaubleBagServer.class, 5, Side.SERVER);
-		BuildersBag.network.registerMessage(GrowItemClient.class, GrowItemClient.class, 6, Side.CLIENT);
-		BuildersBag.network.registerMessage(SyncEnderchestToClient.class, SyncEnderchestToClient.class, 7, Side.CLIENT);
-		BuildersBag.network.registerMessage(SyncBagCapServer.class, SyncBagCapServer.class, 8, Side.SERVER);
-		BuildersBag.network.registerMessage(CompactBagServer.class, CompactBagServer.class, 9, Side.SERVER);
-		BuildersBag.network.registerMessage(RequestCacheUpdateServer.class, RequestCacheUpdateServer.class, 10, Side.SERVER);
-		BuildersBag.network.registerMessage(UpdateCacheClient.class, UpdateCacheClient.class, 11, Side.CLIENT);
-		BuildersBag.network.registerMessage(ModifyCacheClient.class, ModifyCacheClient.class, 12, Side.CLIENT);
-		BuildersBag.network.registerMessage(SetWorkStateClient.class, SetWorkStateClient.class, 13, Side.CLIENT);
-		BuildersBag.network.registerMessage(RequestBagUpdateServer.class, RequestBagUpdateServer.class, 14, Side.SERVER);
-		BuildersBag.network.registerMessage(PlayFailureSoundClient.class, PlayFailureSoundClient.class, 15, Side.CLIENT);
-		BuildersBag.network.registerMessage(SetSelectedBlockServer.class, SetSelectedBlockServer.class, 16, Side.SERVER);
-		BuildersBag.network.registerMessage(ModifyPaletteServer.class, ModifyPaletteServer.class, 17, Side.SERVER);
+		BuildersBag.network = NetworkRegistry.newSimpleChannel(new ResourceLocation(BuildersBag.MODID, "carryonpackets"), () -> version, version::equals, version::equals);
+
+		BuildersBag.network.registerMessage(packetID++, SyncItemStackServer.class, SyncItemStackServer::toBytes, SyncItemStackServer::new, SyncItemStackServer::handle, Optional.of(NetworkDirection.LOGIN_TO_SERVER));
+		BuildersBag.network.registerMessage(packetID++, SyncModuleStateServer.class, SyncModuleStateServer::toBytes, SyncModuleStateServer::new, SyncModuleStateServer::handle, Optional.of(NetworkDirection.LOGIN_TO_SERVER));
+		BuildersBag.network.registerMessage(packetID++, SyncBagCapClient.class, SyncBagCapClient::toBytes, SyncBagCapClient::new, SyncBagCapClient::handle, Optional.of(NetworkDirection.LOGIN_TO_CLIENT));
+		BuildersBag.network.registerMessage(packetID++, SetHeldItemClient.class, SetHeldItemClient::toBytes, SetHeldItemClient::new, SetHeldItemClient::handle, Optional.of(NetworkDirection.LOGIN_TO_CLIENT));
+		BuildersBag.network.registerMessage(packetID++, SyncBagCapInventoryClient.class, SyncBagCapInventoryClient::toBytes, SyncBagCapInventoryClient::new, SyncBagCapInventoryClient::handle, Optional.of(NetworkDirection.LOGIN_TO_CLIENT));
+		BuildersBag.network.registerMessage(packetID++, OpenBaubleBagServer.class, OpenBaubleBagServer::toBytes, OpenBaubleBagServer::new, OpenBaubleBagServer::handle, Optional.of(NetworkDirection.LOGIN_TO_SERVER));
+		BuildersBag.network.registerMessage(packetID++, GrowItemClient.class, GrowItemClient::toBytes, GrowItemClient::new, GrowItemClient::handle, Optional.of(NetworkDirection.LOGIN_TO_CLIENT));
+		BuildersBag.network.registerMessage(packetID++, SyncBagCapServer.class, SyncBagCapServer::toBytes, SyncBagCapServer::new, SyncBagCapServer::handle, Optional.of(NetworkDirection.LOGIN_TO_SERVER));
+		BuildersBag.network.registerMessage(packetID++, CompactBagServer.class, CompactBagServer::toBytes, CompactBagServer::new, CompactBagServer::handle,  Optional.of(NetworkDirection.LOGIN_TO_SERVER));
+		BuildersBag.network.registerMessage(packetID++, RequestCacheUpdateServer.class, RequestCacheUpdateServer::toBytes, RequestCacheUpdateServer::new, RequestCacheUpdateServer::handle,  Optional.of(NetworkDirection.LOGIN_TO_SERVER));
+		BuildersBag.network.registerMessage(packetID++, UpdateCacheClient.class, UpdateCacheClient::toBytes, UpdateCacheClient::new, UpdateCacheClient::handle, Optional.of(NetworkDirection.LOGIN_TO_CLIENT));
+		BuildersBag.network.registerMessage(packetID++, ModifyCacheClient.class, ModifyCacheClient::toBytes, ModifyCacheClient::new, ModifyCacheClient::handle, Optional.of(NetworkDirection.LOGIN_TO_CLIENT));
+		BuildersBag.network.registerMessage(packetID++, SetWorkStateClient.class, SetWorkStateClient::toBytes, SetWorkStateClient::new, SetWorkStateClient::handle, Optional.of(NetworkDirection.LOGIN_TO_CLIENT));
+		BuildersBag.network.registerMessage(packetID++, RequestBagUpdateServer.class, RequestBagUpdateServer::toBytes, RequestBagUpdateServer::new, RequestBagUpdateServer::handle,  Optional.of(NetworkDirection.LOGIN_TO_SERVER));
+		BuildersBag.network.registerMessage(packetID++, PlayFailureSoundClient.class, PlayFailureSoundClient::toBytes, PlayFailureSoundClient::new, PlayFailureSoundClient::handle, Optional.of(NetworkDirection.LOGIN_TO_CLIENT));
+		BuildersBag.network.registerMessage(packetID++, SetSelectedBlockServer.class, SetSelectedBlockServer::toBytes, SetSelectedBlockServer::new, SetSelectedBlockServer::handle,  Optional.of(NetworkDirection.LOGIN_TO_SERVER));
+		BuildersBag.network.registerMessage(packetID++, ModifyPaletteServer.class, ModifyPaletteServer::toBytes, ModifyPaletteServer::new, ModifyPaletteServer::handle,  Optional.of(NetworkDirection.LOGIN_TO_SERVER));
 
 		NetworkRegistry.INSTANCE.registerGuiHandler(BuildersBag.instance, new BagGuiHandler());
 		BuildersBagRegistry.registerModules();
@@ -83,23 +79,17 @@ public class CommonProxy
 
 		BuildersBagRegistry.registerCapabilities();
 		BuildersBagRegistry.registerItems();
-	}
 
-	public void init(FMLInitializationEvent event)
-	{
-		if (Loader.isModLoaded("betterbuilderswands"))
-			BBWCompat.register();
+//		if (ModList.get().isLoaded("betterbuilderswands"))
+//			BBWCompat.register();
 
-		if (Loader.isModLoaded("botania"))
+		if (ModList.get().isLoaded("botania"))
 			BotaniaCompat.register();
-	}
 
-	public void postInit(FMLPostInitializationEvent event)
-	{
-		if (!Loader.isModLoaded("crafttweaker"))
+		if (!ModList.get().isLoaded("crafttweaker"))
 			CraftingHandler.generateRecipes();
 
-		if (Loader.isModLoaded("chiselsandbits"))
+		if (ModList.get().isLoaded("chiselsandbits"))
 		{
 			FMLEmbeddedChannel server = NetworkRegistry.INSTANCE.getChannel("ChiselsAndBits", Side.SERVER);
 			NetworkEventFiringHandler handler = server.pipeline().get(NetworkEventFiringHandler.class);
@@ -114,33 +104,26 @@ public class CommonProxy
 			}
 		}
 
-		if (Loader.isModLoaded("linear"))
+		if (ModList.get().isLoaded("linear"))
 			LinearCompatManager.register();
-
 	}
 
+	@Override
 	public PlayerEntity getPlayer()
 	{
 		return null;
 	}
 
-	public void setTEISR(Item item)
+	@Override
+	public World getWorld()
 	{
+		return null;
 	}
 
-	public Side getSide()
+	@Override
+	public void changeWorkState(String uuid, PlayerEntity player, boolean start)
 	{
-		return Thread.currentThread().getThreadGroup() == SidedThreadGroups.SERVER ? Side.SERVER : Side.CLIENT;
-	}
-
-	public void startWorking(String uuid, PlayerEntity player)
-	{
-		BuildersBag.network.sendTo(new SetWorkStateClient(uuid, true), (ServerPlayerEntity) player);
-	}
-
-	public void stopWorking(String uuid, PlayerEntity player)
-	{
-		BuildersBag.network.sendTo(new SetWorkStateClient(uuid, false), (ServerPlayerEntity) player);
+		BuildersBag.network.send(PacketDistributor.PLAYER.with(() ->  (ServerPlayerEntity) player), new SetWorkStateClient(uuid, start));
 	}
 
 }

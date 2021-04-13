@@ -1,56 +1,47 @@
 package tschipp.buildersbag.network.server;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import tschipp.buildersbag.BuildersBag;
+import java.util.function.Supplier;
 
-public class OpenBaubleBagServer implements IMessage, IMessageHandler<OpenBaubleBagServer, IMessage>
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.network.NetworkEvent;
+import tschipp.buildersbag.BuildersBag;
+import tschipp.buildersbag.network.NetworkMessage;
+
+public class OpenBaubleBagServer implements NetworkMessage
 {
 
-	
 	private int bagSlot;
 
-	public OpenBaubleBagServer()
-	{
-	}
-	
-	public OpenBaubleBagServer(int bagSlot)
-	{
-		this.bagSlot = bagSlot;
-	}
-	
-	
-	@Override
-	public IMessage onMessage(OpenBaubleBagServer message, MessageContext ctx)
-	{
-		final IThreadListener mainThread = (IThreadListener) ctx.getServerHandler().player.world;
-
-		mainThread.addScheduledTask(() -> {
-
-			PlayerEntity player = ctx.getServerHandler().player;
-
-			player.openGui(BuildersBag.instance, 1, player.world, message.bagSlot, 0, 0);
-
-		});
-
-		return null;
-	}
-
-	@Override
-	public void fromBytes(ByteBuf buf)
+	public OpenBaubleBagServer(PacketBuffer buf)
 	{
 		bagSlot = buf.readInt();
 	}
 
+	public OpenBaubleBagServer(int bagSlot)
+	{
+		this.bagSlot = bagSlot;
+	}
+
 	@Override
-	public void toBytes(ByteBuf buf)
+	public void toBytes(PacketBuffer buf)
 	{
 		buf.writeInt(bagSlot);
 	}
 
+	@Override
+	public void handle(Supplier<NetworkEvent.Context> ctx)
+	{
+		if (ctx.get().getDirection().getReceptionSide().isServer())
+		{
+			ctx.get().enqueueWork(() -> {
+
+				ServerPlayerEntity player = ctx.get().getSender();
+
+				player.openGui(BuildersBag.instance, 1, player.world, bagSlot, 0, 0);
+
+				ctx.get().setPacketHandled(true);
+			});
+		}
+	}
 }

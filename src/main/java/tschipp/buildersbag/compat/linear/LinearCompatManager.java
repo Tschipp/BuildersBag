@@ -3,8 +3,6 @@ package tschipp.buildersbag.compat.linear;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.RayTraceResult.Type;
 import tschipp.buildersbag.common.item.BuildersBagItem;
-import tschipp.linear.api.LinearHooks;
-import tschipp.linear.common.helper.LinearHelper;
 
 public class LinearCompatManager
 {

@@ -1,8 +1,6 @@
 package tschipp.buildersbag;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -11,30 +9,22 @@ import java.util.Set;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import net.minecraftforge.fml.DistExecutor;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.Mod.EventHandler;
-import net.minecraftforge.fml.common.Mod.Instance;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLConstructionEvent;
-import net.minecraftforge.fml.common.event.FMLFingerprintViolationEvent;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import tschipp.buildersbag.common.config.BuildersBagConfig;
+import net.minecraftforge.fml.network.simple.SimpleChannel;
+import net.minecraftforge.forgespi.language.IModInfo;
 
 @EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 @Mod(BuildersBag.MODID)
 public class BuildersBag
 {
 
-	@SidedProxy(clientSide = "tschipp.buildersbag.ClientProxy", serverSide = "tschipp.buildersbag.CommonProxy")
-	public static CommonProxy proxy;
-
+	public static final IProxy proxy = DistExecutor.safeRunForDist(() -> () -> new ClientProxy(), () -> () -> new CommonProxy());
 	// Instance
-	@Instance(BuildersBag.MODID)
-	public static BuildersBag instance;
+//	@Instance(BuildersBag.MODID)
+//	public static BuildersBag instance;
 
 	public static final String MODID = "buildersbag";
 	public static final String VERSION = "GRADLE:VERSION";
@@ -44,7 +34,8 @@ public class BuildersBag
 	public static final Logger LOGGER = LogManager.getFormatterLogger(MODID.toUpperCase());
 	public static final String CERTIFICATE = "fd21553434f4905f2f73ea7838147ac4ea07bd88";
 
-	public static SimpleNetworkWrapper network;
+	public static SimpleChannel network;
+	public static IModInfo info;
 
 	public static boolean FINGERPRINT_VIOLATED = false;
 
@@ -52,56 +43,33 @@ public class BuildersBag
 	public static final File seenModsFile = new File("seen_buildersbag_addons.txt");
 	private static final List<String> seenMods = new ArrayList<String>();
 	public static boolean isNewlyGenerated = false;
-
+	
 	public BuildersBag()
 	{
-		if(!configFile.exists())
-		{
-			isNewlyGenerated = true;
-		}
+//		if(!configFile.exists())
+//		{
+//			isNewlyGenerated = true;
+//		}
+		
+		info = ModLoadingContext.get().getActiveContainer().getModInfo();
+
 	}
 	
-	@EventHandler
-	public void construction(FMLConstructionEvent event)
-	{
-		try
-		{	
-			if (seenModsFile.exists())
-			{
-				seenMods.addAll(Files.readAllLines(seenModsFile.toPath()));
-			} else
-				seenModsFile.createNewFile();
-		} catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-	}
-
-	@EventHandler
-	public void preInit(FMLPreInitializationEvent event)
-	{
-		BuildersBag.proxy.preInit(event);
-	}
-
-	@EventHandler
-	public void init(FMLInitializationEvent event)
-	{
-		BuildersBag.proxy.init(event);
-	}
-
-	@EventHandler
-	public void postInit(FMLPostInitializationEvent event)
-	{		
-		BuildersBag.proxy.postInit(event);		
-	}
-
-	@EventHandler
-	public void onFingerprintViolation(FMLFingerprintViolationEvent event)
-	{
-
-		LOGGER.error("WARNING! Invalid fingerprint detected! The file " + event.getSource().getName() + " may have been tampered with! If you didn't download the file from https://minecraft.curseforge.com/projects/buildersbag or through any kind of mod launcher, immediately delete the file and re-download it from https://minecraft.curseforge.com/projects/buildersbag");
-		FINGERPRINT_VIOLATED = true;
-	}
+//	@EventHandler
+//	public void construction(FMLConstructionEvent event)
+//	{
+//		try
+//		{	
+//			if (seenModsFile.exists())
+//			{
+//				seenMods.addAll(Files.readAllLines(seenModsFile.toPath()));
+//			} else
+//				seenModsFile.createNewFile();
+//		} catch (IOException e)
+//		{
+//			e.printStackTrace();
+//		}
+//	}
 
 	public static Set<String> getSeenMods()
 	{

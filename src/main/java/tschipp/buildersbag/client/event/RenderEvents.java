@@ -1,22 +1,22 @@
 package tschipp.buildersbag.client.event;
 
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.model.IBakedModel;
+import net.minecraft.client.renderer.model.ModelResourceLocation;
 import net.minecraft.item.Item;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ModelBakeEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.client.rendering.BagModel;
 import tschipp.buildersbag.common.BuildersBagRegistry;
 
-@EventBusSubscriber(modid = BuildersBag.MODID, value = Side.CLIENT)
+@EventBusSubscriber(modid = BuildersBag.MODID, value = Dist.CLIENT)
 public class RenderEvents
 {
 	@SubscribeEvent
-	@SideOnly(Side.CLIENT)
+	@OnlyIn(Dist.CLIENT)
 	public static void onModelBake(ModelBakeEvent event)
 	{
 		for (Item item : BuildersBagRegistry.items)

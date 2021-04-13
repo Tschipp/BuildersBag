@@ -1,8 +1,8 @@
 package tschipp.buildersbag.common.recipes;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -11,18 +11,12 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
-import net.minecraft.inventory.InventoryCrafting;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.util.JsonUtils;
 import net.minecraft.util.NonNullList;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.crafting.CraftingHelper;
-import net.minecraftforge.common.crafting.IRecipeFactory;
-import net.minecraftforge.common.crafting.JsonContext;
-import net.minecraftforge.common.crafting.CraftingHelper.ShapedPrimer;
-import net.minecraftforge.oredict.ShapedOreRecipe;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.item.BuildersBagItem;

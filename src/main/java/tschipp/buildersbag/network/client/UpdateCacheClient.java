@@ -1,32 +1,30 @@
 package tschipp.buildersbag.network.client;
 
-import baubles.api.BaublesApi;
-import io.netty.buffer.ByteBuf;
-import net.minecraft.client.Minecraft;
+import java.util.function.Supplier;
+
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.IThreadListener;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
+import net.minecraft.network.PacketBuffer;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.network.NetworkEvent;
 import tschipp.buildersbag.BuildersBag;
-import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.cache.BagCache;
-import tschipp.buildersbag.common.caps.BagCapProvider;
-import tschipp.buildersbag.common.helper.CapHelper;
+import tschipp.buildersbag.compat.baubles.BaubleHelper;
+import tschipp.buildersbag.network.NetworkMessage;
 
-public class UpdateCacheClient implements IMessage, IMessageHandler<UpdateCacheClient, IMessage>
+public class UpdateCacheClient implements NetworkMessage
 {
 	private int bagSlot;
 	private boolean isBauble;
 	private ItemStack forStack;
 	private int amount;
-	
-	@Deprecated
-	public UpdateCacheClient()
+
+	public UpdateCacheClient(PacketBuffer buf)
 	{
+		bagSlot = buf.readInt();
+		isBauble = buf.readBoolean();
+		forStack = buf.readItemStack();
+		amount = buf.readInt();
 	}
 
 	public UpdateCacheClient(int bagSlot, boolean isBauble, ItemStack forStack, int amount)
@@ -38,46 +36,38 @@ public class UpdateCacheClient implements IMessage, IMessageHandler<UpdateCacheC
 	}
 
 	@Override
-	public void fromBytes(ByteBuf buf)
-	{
-		bagSlot = buf.readInt();
-		isBauble = buf.readBoolean();
-		forStack = ByteBufUtils.readItemStack(buf);
-		amount = buf.readInt();
-	}
-
-	@Override
-	public void toBytes(ByteBuf buf)
+	public void toBytes(PacketBuffer buf)
 	{
 		buf.writeInt(bagSlot);
 		buf.writeBoolean(isBauble);
-		ByteBufUtils.writeItemStack(buf, forStack);
+		buf.writeItemStack(forStack);
 		buf.writeInt(amount);
 	}
-	
+
 	@Override
-	public IMessage onMessage(UpdateCacheClient message, MessageContext ctx)
+	public void handle(Supplier<NetworkEvent.Context> ctx)
 	{
-		final IThreadListener mainThread = Minecraft.getMinecraft();
+		if (ctx.get().getDirection().getReceptionSide().isClient())
+		{
+			ctx.get().enqueueWork(() -> {
 
-		mainThread.addScheduledTask(() -> {
+				PlayerEntity player = BuildersBag.proxy.getPlayer();
 
-			PlayerEntity player = BuildersBag.proxy.getPlayer();
-			
-			ItemStack bag = ItemStack.EMPTY;
-			if (message.isBauble)
-			{
-				if (Loader.isModLoaded("baubles"))
+				ItemStack bag = ItemStack.EMPTY;
+				if (isBauble)
 				{
-					bag = BaublesApi.getBaubles(player).getStackInSlot(message.bagSlot);
+					if (ModList.get().isLoaded("baubles"))
+					{
+						bag = BaubleHelper.getBauble(player, bagSlot);
+					}
 				}
-			}
-			else
-				bag = player.inventory.getStackInSlot(message.bagSlot);
-			
-			BagCache.updateCachedBagStackWithAmount(bag, player, message.forStack, message.amount);
-		});
-		
-		return null;
+				else
+					bag = player.inventory.getStackInSlot(bagSlot);
+
+				BagCache.updateCachedBagStackWithAmount(bag, player, forStack, amount);
+
+				ctx.get().setPacketHandled(true);
+			});
+		}
 	}
 }
