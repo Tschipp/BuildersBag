@@ -1,49 +1,38 @@
 package tschipp.buildersbag.common.modules;
 
+import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.AbstractBagModule;
+import tschipp.buildersbag.api.BagModuleType;
 import tschipp.buildersbag.api.IBagCap;
-import tschipp.buildersbag.common.helper.BagHelper;
+import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.api.datastructures.CreateableItemsManager;
+import tschipp.buildersbag.common.BuildersBagRegistry;
 
 public class RandomnessModule extends AbstractBagModule
 {
 
 	private static final ItemStack DISPLAY = new ItemStack(Blocks.COBBLESTONE);
-	
-	public RandomnessModule()
-	{
-		super("buildersbag:random");
-	}
-
-	@Override
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, PlayerEntity player)
-	{
-		NonNullList<ItemStack> list = NonNullList.create();
-		
-		return list;
-	}
 
 	@Override
 	public ItemStack getBlock(IBagCap bag, PlayerEntity player)
 	{
 		Random rand = new Random();
-		NonNullList<ItemStack> list = BagHelper.getAllAvailableStacks(bag, player);
+		List<Item> items = bag.getComplex().getAllAvailableItems().stream().filter(item -> item instanceof BlockItem).collect(Collectors.toList());
 		
-		NonNullList<ItemStack> blocks = NonNullList.create();
-		blocks.addAll(list.stream().filter(stack -> stack.getItem() instanceof BlockItem).collect(Collectors.toList()));
-		
-		if(blocks.isEmpty())
+		if(items.isEmpty())
 			return ItemStack.EMPTY;
 		
-		ItemStack stack =  blocks.get(rand.nextInt(blocks.size()));		
+		ItemStack stack =  new ItemStack(items.get(rand.nextInt(items.size())));		
 		return stack;
 	}
 
@@ -75,6 +64,18 @@ public class RandomnessModule extends AbstractBagModule
 	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, PlayerEntity player)
 	{
 		return NonNullList.create();
+	}
+
+	@Override
+	public CreateableItemsManager getCreateableItemsManager()
+	{
+		return null;
+	}
+
+	@Override
+	public BagModuleType<? extends IBagModule> getType()
+	{
+		return BuildersBagRegistry.MODULE_RANDOM;
 	}
 
 }

@@ -19,7 +19,7 @@ public class SetHeldItemClient implements NetworkMessage
 
 	public SetHeldItemClient(PacketBuffer buf)
 	{
-		stack = buf.readItemStack();
+		stack = buf.readItem();
 		right = buf.readBoolean();
 	}
 
@@ -33,7 +33,7 @@ public class SetHeldItemClient implements NetworkMessage
 	@Override
 	public void toBytes(PacketBuffer buf)
 	{
-		buf.writeItemStack(stack);
+		buf.writeItem(stack);
 		buf.writeBoolean(right);
 	}
 
@@ -47,7 +47,7 @@ public class SetHeldItemClient implements NetworkMessage
 				PlayerEntity player = BuildersBag.proxy.getPlayer();
 				Hand hand = right ? Hand.MAIN_HAND : Hand.OFF_HAND;
 
-				player.setHeldItem(hand, stack);
+				player.setItemInHand(hand, stack);
 
 				ctx.get().setPacketHandled(true);
 			});

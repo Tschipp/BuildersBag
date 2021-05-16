@@ -14,20 +14,20 @@ public class SelectedBlockSlot extends SlotItemHandler
 	}
 	
 	@Override
-	public void putStack(ItemStack stack)
+	public void set(ItemStack stack)
 	{
 		stack.setCount(1);
-		super.putStack(stack);
+		super.set(stack);
 	}
 	
 	@Override
-	public boolean isItemValid(ItemStack stack)
+	public boolean mayPlace(ItemStack stack)
 	{
 		return stack.getItem() instanceof BlockItem;
 	}
 	
 	@Override
-	public int getItemStackLimit(ItemStack stack)
+	public int getMaxStackSize(ItemStack stack)
 	{
 		return 0;
 	}

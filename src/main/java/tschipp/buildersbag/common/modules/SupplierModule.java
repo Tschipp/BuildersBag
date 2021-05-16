@@ -6,25 +6,17 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.AbstractBagModule;
+import tschipp.buildersbag.api.BagModuleType;
 import tschipp.buildersbag.api.IBagCap;
-import tschipp.buildersbag.common.helper.BagHelper;
+import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.api.datastructures.CreateableItemsManager;
+import tschipp.buildersbag.common.BuildersBagRegistry;
 
 public class SupplierModule extends AbstractBagModule
 {
 
 	private static final ItemStack DISPLAY = new ItemStack(Blocks.CHEST);
-
-	public SupplierModule()
-	{
-		super("buildersbag:supplier");
-	}
-
-	@Override
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, PlayerEntity player)
-	{
-		return NonNullList.create();
-	}
-
+	
 	@Override
 	public boolean doesntUseOwnInventory()
 	{
@@ -52,6 +44,18 @@ public class SupplierModule extends AbstractBagModule
 	@Override
 	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, PlayerEntity player)
 	{
-		return BagHelper.getOrProvideStackWithCount(stack, count, bag, player, this);
+		return NonNullList.create();
+	}
+
+	@Override
+	public CreateableItemsManager getCreateableItemsManager()
+	{
+		return null;
+	}
+
+	@Override
+	public BagModuleType<? extends IBagModule> getType()
+	{
+		return BuildersBagRegistry.MODULE_SUPPLIER;
 	}
 }

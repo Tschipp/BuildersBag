@@ -23,7 +23,7 @@ public class UpdateCacheClient implements NetworkMessage
 	{
 		bagSlot = buf.readInt();
 		isBauble = buf.readBoolean();
-		forStack = buf.readItemStack();
+		forStack = buf.readItem();
 		amount = buf.readInt();
 	}
 
@@ -40,7 +40,7 @@ public class UpdateCacheClient implements NetworkMessage
 	{
 		buf.writeInt(bagSlot);
 		buf.writeBoolean(isBauble);
-		buf.writeItemStack(forStack);
+		buf.writeItem(forStack);
 		buf.writeInt(amount);
 	}
 
@@ -62,7 +62,7 @@ public class UpdateCacheClient implements NetworkMessage
 					}
 				}
 				else
-					bag = player.inventory.getStackInSlot(bagSlot);
+					bag = player.inventory.getItem(bagSlot);
 
 				BagCache.updateCachedBagStackWithAmount(bag, player, forStack, amount);
 

@@ -101,7 +101,7 @@ public class CachedBag
 		{
 			pendingRequests.add(ItemContainer.forStack(forStack));
 
-			if (player.world.isRemote)
+			if (player.level.isClientSide)
 			{
 				Tuple<Boolean, Integer> slot = InventoryHelper.getSlotForStackWithBaubles(player, bag);
 				BuildersBag.network.sendToServer(new RequestCacheUpdateServer(slot.getSecond(), slot.getFirst(), forStack, preferredAmount));

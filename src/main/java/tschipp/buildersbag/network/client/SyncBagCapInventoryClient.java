@@ -25,7 +25,7 @@ public class SyncBagCapInventoryClient implements NetworkMessage
 
 	public SyncBagCapInventoryClient(PacketBuffer buf)
 	{
-		readTag = buf.readCompoundTag();
+		readTag = buf.readNbt();
 		slot = buf.readInt();
 		isBauble = buf.readBoolean();
 	}
@@ -46,7 +46,7 @@ public class SyncBagCapInventoryClient implements NetworkMessage
 	@Override
 	public void toBytes(PacketBuffer buf)
 	{
-		buf.writeCompoundTag((CompoundNBT) BagCapProvider.BAG_CAPABILITY.writeNBT(bagCap, null));
+		buf.writeNbt((CompoundNBT) BagCapProvider.BAG_CAPABILITY.writeNBT(bagCap, null));
 		buf.writeInt(slot);
 		buf.writeBoolean(isBauble);
 	}
@@ -70,7 +70,7 @@ public class SyncBagCapInventoryClient implements NetworkMessage
 						}
 					}
 					else
-						stack = player.inventory.getStackInSlot(slot);
+						stack = player.inventory.getItem(slot);
 
 					if (!stack.isEmpty())
 					{

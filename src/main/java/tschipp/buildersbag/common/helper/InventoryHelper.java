@@ -6,7 +6,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import com.lazy.baubles.api.cap.IBaublesItemHandler;
 
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import net.minecraftforge.fml.ModList;
@@ -142,18 +141,18 @@ public class InventoryHelper
 	{
 		NonNullList<Triple<Integer, Boolean, ItemStack>> list = NonNullList.create();
 
-		for (int i = 0; i < player.inventory.mainInventory.size(); i++)
+		for (int i = 0; i < player.inventory.items.size(); i++)
 		{
-			ItemStack s = player.inventory.mainInventory.get(i);
+			ItemStack s = player.inventory.items.get(i);
 			if (s.getItem() instanceof BuildersBagItem)
 			{
 				list.add(new ImmutableTriple(i, false, s));
 			}
 		}
 
-		for (int i = 0; i < player.inventory.offHandInventory.size(); i++)
+		for (int i = 0; i < player.inventory.offhand.size(); i++)
 		{
-			ItemStack s = player.inventory.offHandInventory.get(i);
+			ItemStack s = player.inventory.offhand.get(i);
 			if (s.getItem() instanceof BuildersBagItem)
 			{
 				list.add(new ImmutableTriple(i + 40, false, s));
@@ -185,7 +184,7 @@ public class InventoryHelper
 			if (count <= 0)
 				break;
 
-			if (ItemStack.areItemsEqual(s, stack))
+			if (ItemStack.isSame(s, stack))
 			{
 				int reduce = Math.min(s.getCount(), count);
 				list.addAll(ItemHelper.listOf(stack, reduce));
@@ -202,14 +201,14 @@ public class InventoryHelper
 		NonNullList<ItemStack> list = NonNullList.create();
 		for (ItemStack s : fromStacks)
 		{
-			if (ItemStack.areItemsEqual(s, stack))
+			if (ItemStack.isSame(s, stack))
 			{
 				s = s.copy();
 
 				int count = s.getCount();
 				for (int i = 0; i < count; i++)
 				{
-					list.add(s.splitStack(1));
+					list.add(s.split(1));
 				}
 			}
 		}
@@ -222,7 +221,7 @@ public class InventoryHelper
 		int added = 0;
 		for (ItemStack s : fromStacks)
 		{
-			if (ItemStack.areItemsEqual(s, stack))
+			if (ItemStack.isSame(s, stack))
 			{
 				s = s.copy();
 
@@ -231,7 +230,7 @@ public class InventoryHelper
 				{
 					if (added < maxCount)
 					{
-						list.add(s.splitStack(1));
+						list.add(s.split(1));
 						added++;
 					}
 					else
@@ -244,9 +243,9 @@ public class InventoryHelper
 
 	public static int getSlotForStack(PlayerEntity player, ItemStack stack)
 	{
-		for (int i = 0; i < player.inventory.getSizeInventory(); i++)
+		for (int i = 0; i < player.inventory.getContainerSize(); i++)
 		{
-			if (player.inventory.getStackInSlot(i) == stack)
+			if (player.inventory.getItem(i) == stack)
 				return i;
 		}
 
@@ -262,7 +261,7 @@ public class InventoryHelper
 			BaubleHelper.getBauble(player, slot);
 		}
 		else
-			stack = player.inventory.getStackInSlot(slot);
+			stack = player.inventory.getItem(slot);
 
 		return stack;
 
@@ -270,16 +269,16 @@ public class InventoryHelper
 
 	public static Tuple<Boolean, Integer> getSlotForStackWithBaubles(PlayerEntity player, ItemStack stack)
 	{
-		for (int i = 0; i < player.inventory.getSizeInventory(); i++)
+		for (int i = 0; i < player.inventory.getContainerSize(); i++)
 		{
-			ItemStack inSlot = player.inventory.getStackInSlot(i);
+			ItemStack inSlot = player.inventory.getItem(i);
 
 			if (inSlot.getItem() instanceof BuildersBagItem && stack.getItem() instanceof BuildersBagItem)
 			{
 				if (CapHelper.areCapsEqual(CapHelper.getBagCap(stack), CapHelper.getBagCap(inSlot)))
 					return new Tuple(false, i);
 			}
-			else if (ItemStack.areItemStackTagsEqual(inSlot, stack))
+			else if (ItemStack.tagMatches(inSlot, stack))
 				return new Tuple(false, i);
 		}
 
@@ -291,7 +290,7 @@ public class InventoryHelper
 				if (CapHelper.areCapsEqual(CapHelper.getBagCap(stack), CapHelper.getBagCap(inSlot)))
 					return new Tuple(true, 3);
 			}
-			else if (ItemStack.areItemStacksEqualUsingNBTShareTag(inSlot, stack))
+			else if (ItemStack.tagMatches(inSlot, stack))
 				return new Tuple(true, 3);
 		}
 

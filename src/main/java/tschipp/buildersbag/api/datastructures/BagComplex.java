@@ -1,6 +1,10 @@
 package tschipp.buildersbag.api.datastructures;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -22,6 +26,7 @@ public class BagComplex
 	{
 		this.bagCap = cap;
 		this.inventory = new BagInventory(cap.getBlockInventory(), this);
+		this.modules = new HashMap<>();
 	}
 	
 	public boolean isValid()
@@ -63,8 +68,8 @@ public class BagComplex
 		BagInventory inv = getInventory();
 		int available = inv.removePhysical(item, amount);
 		
-		boolean notify = inv.has(item); //Only notify if there's really no items of this type left
-		if(!notify)
+		boolean anyLeft = inv.has(item); //Only notify if there's really no items of this type left
+		if(!anyLeft && available > 0)
 			notifyItemRemoved(item);
 		
 		return available;
@@ -106,5 +111,25 @@ public class BagComplex
 		{
 			type.getListener().notifyRemoved(item, this);
 		}
+	}
+	
+	public Set<Item> getCreateableItems()
+	{
+		BagInventory inv = getInventory();
+		return inv.createableItems.values().stream().map(holder -> holder.getItem()).collect(Collectors.toSet());
+	}
+	
+	public Set<Item> getPhysicalItems()
+	{
+		BagInventory inv = getInventory();
+		return inv.inventoryItems.values().stream().map(holder -> holder.getItem()).collect(Collectors.toSet());
+	}
+	
+	public Set<Item> getAllAvailableItems()
+	{
+		Set<Item> all = new HashSet<>();
+		all.addAll(getCreateableItems());
+		all.addAll(getPhysicalItems());
+		return all;
 	}
 }

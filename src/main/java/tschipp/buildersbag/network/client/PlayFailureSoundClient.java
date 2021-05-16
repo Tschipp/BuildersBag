@@ -7,7 +7,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.SoundEvents;
 import net.minecraftforge.fml.network.NetworkEvent;
 import tschipp.buildersbag.BuildersBag;
-import tschipp.buildersbag.common.config.BuildersBagConfig;
+import tschipp.buildersbag.common.config.Configs;
 import tschipp.buildersbag.network.NetworkMessage;
 
 public class PlayFailureSoundClient implements NetworkMessage
@@ -35,8 +35,8 @@ public class PlayFailureSoundClient implements NetworkMessage
 
 				PlayerEntity player = BuildersBag.proxy.getPlayer();
 
-				if (BuildersBagConfig.Settings.playFailSounds)
-					player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_BASEDRUM, 0.5f, 0.1f);
+				if (Configs.Settings.playFailSounds.get())
+					player.playSound(SoundEvents.NOTE_BLOCK_BASEDRUM, 0.5f, 0.1f);
 
 				ctx.get().setPacketHandled(true);
 			});

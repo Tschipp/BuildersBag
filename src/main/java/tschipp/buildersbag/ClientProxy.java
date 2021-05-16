@@ -10,6 +10,7 @@ import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import tschipp.buildersbag.client.BuildersBagKeybinds;
+import tschipp.buildersbag.client.KeyboardCallbackWrapper;
 import tschipp.buildersbag.client.gui.GuiBag;
 import tschipp.buildersbag.client.rendering.BagItemStackRenderer;
 import tschipp.buildersbag.client.rendering.ItemRendering;
@@ -21,14 +22,16 @@ public class ClientProxy implements IProxy
 {
 	
 	@SubscribeEvent
-	public static void onClientStartup(FMLClientSetupEvent event)
+	public static void setup(FMLClientSetupEvent event)
 	{
 		BuildersBagKeybinds.registerKeybinds();
 		ItemRendering.regItemRenders();
 		
-		ScreenManager.registerFactory(BuildersBagRegistry.BAG_CONTAINER_TYPE, (container, inv, name) -> {
+		ScreenManager.register(BuildersBagRegistry.BAG_CONTAINER_TYPE, (container, inv, name) -> {
 			return new GuiBag(container, inv.player, name);
 		});
+		
+		new KeyboardCallbackWrapper().setup(Minecraft.getInstance());
 	}
 	
 	@Override
@@ -46,7 +49,7 @@ public class ClientProxy implements IProxy
 	@Override
 	public World getWorld()
 	{
-		return Minecraft.getInstance().world;
+		return Minecraft.getInstance().level;
 	}
 
 	@Override

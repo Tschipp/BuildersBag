@@ -5,6 +5,7 @@ import java.util.List;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
+import net.minecraft.nbt.StringNBT;
 import net.minecraft.util.NonNullList;
 
 public class ItemHelper
@@ -19,21 +20,21 @@ public class ItemHelper
 		CompoundNBT display = tag.getCompound("display");
 		ListNBT lore = display.getList("Lore", 8);
 		if (lore == null)
-			lore = new NBTTagList();
+			lore = new ListNBT();
 	
 		for (String s : lines)
-			lore.appendTag(new NBTTagString(s));
+			lore.add(StringNBT.valueOf(s));
 	
-		display.setTag("Lore", lore);
-		tag.setTag("display", display);
-		stack.setTagCompound(tag);
+		display.put("Lore", lore);
+		tag.put("display", display);
+		stack.setTag(tag);
 	}
 
 	public static ItemStack containsStack(ItemStack stack, List<ItemStack> stacks)
 	{
 		for (ItemStack s : stacks)
 		{
-			if (ItemStack.areItemsEqual(stack, s))
+			if (ItemStack.isSame(stack, s))
 				return s;
 		}
 		return ItemStack.EMPTY;
@@ -66,7 +67,7 @@ public class ItemHelper
 			for(int j = 0; j < stacks.size(); j++)
 			{
 				ItemStack dupe = stacks.get(j);
-				if(dupe != pr && ItemStack.areItemStacksEqual(pr.copy().splitStack(1), dupe.copy().splitStack(1)))
+				if(dupe != pr && ItemStack.matches(pr.copy().split(1), dupe.copy().split(1)))
 				{
 					stacks.remove(j);
 					j--;

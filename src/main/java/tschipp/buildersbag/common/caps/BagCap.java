@@ -12,7 +12,7 @@ import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.api.datastructures.BagComplex;
 import tschipp.buildersbag.common.BuildersBagRegistry;
-import tschipp.buildersbag.common.config.BuildersBagConfig;
+import tschipp.buildersbag.common.config.Configs;
 import tschipp.buildersbag.common.inventory.BagItemStackHandler;
 import tschipp.buildersbag.common.inventory.SelectedBlockHandler;
 
@@ -34,38 +34,16 @@ public class BagCap implements IBagCap
 	
 	public BagCap(int tier)
 	{
-		switch (tier)
-		{
-		case 1:
-			initModules(BuildersBagConfig.Settings.tier1Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier1Slots);
-			break;
-		case 2:
-			initModules(BuildersBagConfig.Settings.tier2Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier2Slots);
-			break;
-		case 3:
-			initModules(BuildersBagConfig.Settings.tier3Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier3Slots);
-			break;
-		case 4:
-			initModules(BuildersBagConfig.Settings.tier4Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier4Slots);
-			break;
-		case 5:
-			initModules(BuildersBagConfig.Settings.tier5Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier5Slots);
-			break;
-		}
-	
+		reInit(tier);
+		
 		this.complex = new BagComplex(this);
 	}
 	
-	private void initModules(String[] modules)
+	private void initModules(List<? extends String> modules)
 	{
 		List<IBagModule> moduleList = new ArrayList<IBagModule>();
 		Lists.newArrayList(modules).stream().distinct().sorted().forEach(s -> {
-			IBagModule module = BuildersBagRegistry.getModule(new ResourceLocation(s));
+			IBagModule module = BuildersBagRegistry.createModule(new ResourceLocation(s));
 			if (module != null)
 				moduleList.add(module);
 		});
@@ -154,24 +132,24 @@ public class BagCap implements IBagCap
 		switch (tier)
 		{
 		case 1:
-			initModules(BuildersBagConfig.Settings.tier1Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier1Slots);
+			initModules(Configs.Settings.tier1Modules.get());
+			inv = new BagItemStackHandler(Configs.Settings.tier1Slots.get());
 			break;
 		case 2:
-			initModules(BuildersBagConfig.Settings.tier2Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier2Slots);
+			initModules(Configs.Settings.tier2Modules.get());
+			inv = new BagItemStackHandler(Configs.Settings.tier2Slots.get());
 			break;
 		case 3:
-			initModules(BuildersBagConfig.Settings.tier3Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier3Slots);
+			initModules(Configs.Settings.tier3Modules.get());
+			inv = new BagItemStackHandler(Configs.Settings.tier3Slots.get());
 			break;
 		case 4:
-			initModules(BuildersBagConfig.Settings.tier4Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier4Slots);
+			initModules(Configs.Settings.tier4Modules.get());
+			inv = new BagItemStackHandler(Configs.Settings.tier4Slots.get());
 			break;
 		case 5:
-			initModules(BuildersBagConfig.Settings.tier5Modules);
-			inv = new BagItemStackHandler(BuildersBagConfig.Settings.tier5Slots);
+			initModules(Configs.Settings.tier5Modules.get());
+			inv = new BagItemStackHandler(Configs.Settings.tier5Slots.get());
 			break;
 		}
 	}
@@ -189,7 +167,7 @@ public class BagCap implements IBagCap
 		
 		for(int i = 0; i < this.modules.length; i++)
 		{
-			IBagModule newModule = BuildersBagRegistry.getModule(new ResourceLocation(this.modules[i].getName()));
+			IBagModule newModule = BuildersBagRegistry.createModule(new ResourceLocation(this.modules[i].getName()));
 			newModule.deserializeNBT(this.modules[i].serializeNBT());
 			newcap.modules[i] = newModule;
 		}

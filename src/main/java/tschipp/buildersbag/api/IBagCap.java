@@ -38,4 +38,9 @@ public interface IBagCap
 	public IBagCap copy();
 	
 	public BagComplex getComplex();
+	
+	default ItemStack getSelectedItem()
+	{
+		return getSelectedInventory().getStackInSlot(0);
+	}
 }

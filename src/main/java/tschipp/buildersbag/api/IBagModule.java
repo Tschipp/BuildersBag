@@ -11,21 +11,25 @@ import tschipp.buildersbag.api.datastructures.CreateableItemsManager;
 public interface IBagModule extends INBTSerializable<CompoundNBT>
 {
 
+	/**
+	 * 
+	 * @return the CreateableItemsManager for this module. May be null, but only if the RequirementListener is empty.
+	 */
 	public CreateableItemsManager getCreateableItemsManager();
 	
-	/**
-	 * Gets a list of all stacks that this module can create using all other stacks,
-	 * so most of the time {@link tschipp.buildersbag.common.helper.BagHelper#getAllAvailableStacksExcept} is used to find the stacks of all other modules first.
-	 * @param bag
-	 * @param player
-	 * @return the possible stacks with size 1, or an empty list.
-	 */
-	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, PlayerEntity player);
+//	/**
+//	 * Gets a list of all stacks that this module can create using all other stacks,
+//	 * so most of the time {@link tschipp.buildersbag.common.helper.BagHelper#getAllAvailableStacksExcept} is used to find the stacks of all other modules first.
+//	 * @param bag
+//	 * @param player
+//	 * @return the possible stacks with size 1, or an empty list.
+//	 */
+//	public NonNullList<ItemStack> getPossibleStacks(IBagCap bag, PlayerEntity player);
 		
 	
 	/**
 	 * Creates the requested stack using some method. If any remainder stacks are created during this process,
-	 * they must be added with InventoryHelper.addStack.
+	 * they must be added with BagComplex.add
 	 * @param stack the stack that is requested
 	 * @param bag
 	 * @param player
@@ -85,11 +89,6 @@ public interface IBagModule extends INBTSerializable<CompoundNBT>
 	 */
 	public ItemStack getDisplayItem();
 	
-	/**
-	 * The name of the module, mostly the same as the registry name
-	 */
-	public String getName();
-	
 	
 	public BagModuleType<? extends IBagModule> getType();
 	
@@ -134,6 +133,11 @@ public interface IBagModule extends INBTSerializable<CompoundNBT>
 	default ModulePriority getPriority()
 	{
 		return ModulePriority.NORMAL;
+	}
+	
+	default String getName()
+	{
+		return getType().getRegistryName().toString();
 	}
 	
 }

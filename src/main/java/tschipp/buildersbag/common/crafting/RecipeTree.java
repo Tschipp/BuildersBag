@@ -44,7 +44,7 @@ public class RecipeTree
 
 	public void add(ICraftingRecipe recipe)
 	{
-		ItemStack output = recipe.getRecipeOutput();
+		ItemStack output = recipe.getResultItem();
 		if (!output.isEmpty())
 		{
 			NonNullList<Ingredient> ingredients = recipe.getIngredients();
@@ -69,7 +69,7 @@ public class RecipeTree
 
 			for (Ingredient ing : ingredients)
 			{
-				if (ing.getMatchingStacks().length == 0)
+				if (ing.getItems().length == 0)
 					continue;
 
 //				CraftingHandler.addIngredientIfAlternative(ing);

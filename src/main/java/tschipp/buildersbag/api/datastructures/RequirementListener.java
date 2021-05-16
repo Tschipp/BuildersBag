@@ -15,10 +15,8 @@ import tschipp.buildersbag.api.IBagModule;
 public class RequirementListener
 {
 	/*
-	 * Contains Map with Item as key and RequirementOutput as Value.
-	 * RequirementOutput contains a list of all Item, keeps track which are
-	 * fulfilled. Also contains a Map with RequirementOutput (the item) as key
-	 * and Lists of item requirements as value.
+	 * Contains Map with Item as key and RequirementItem as Value.
+	 * Is a multimap, so keeps track of all RequitementItems where the value item is used in.
 	 */
 
 	private final Multimap<Item, RequirementItem> listeners;
@@ -36,7 +34,10 @@ public class RequirementListener
 			BuildersBag.LOGGER.error("Complex didn't contain expected Bag Module");
 			return;
 		}
-
+		
+		if(!module.isEnabled())
+			return;
+			
 		for (RequirementItem req : updated)
 			module.getCreateableItemsManager().add(complex, req, item);
 	}
@@ -53,6 +54,9 @@ public class RequirementListener
 			BuildersBag.LOGGER.error("Complex didn't contain expected Bag Module");
 			return;
 		}
+		
+		if(!module.isEnabled())
+			return;
 
 		for (RequirementItem req : updated)
 			module.getCreateableItemsManager().remove(complex, req,  item);

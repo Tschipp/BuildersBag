@@ -2,8 +2,6 @@ package tschipp.buildersbag.network.server;
 
 import java.util.function.Supplier;
 
-import com.lazy.baubles.api.BaublesAPI;
-
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
@@ -14,6 +12,7 @@ import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
+import tschipp.buildersbag.compat.baubles.BaubleHelper;
 import tschipp.buildersbag.network.NetworkMessage;
 import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
 
@@ -64,10 +63,10 @@ public class CompactBagServer implements NetworkMessage
 					{
 						if (ModList.get().isLoaded("baubles"))
 						{
-							stack = BaublesAPI.getBaublesHandler(player).getStackInSlot(slot);
+							stack = BaubleHelper.getBauble(player,slot);
 						}
 					} else
-						stack = player.inventory.getStackInSlot(slot);
+						stack = player.inventory.getItem(slot);
 
 					if (!stack.isEmpty())
 					{

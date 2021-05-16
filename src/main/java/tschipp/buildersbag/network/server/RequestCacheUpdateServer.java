@@ -32,7 +32,7 @@ public class RequestCacheUpdateServer implements NetworkMessage
 	{
 		bagSlot = buf.readInt();
 		isBauble = buf.readBoolean();
-		forStack = buf.readItemStack();
+		forStack = buf.readItem();
 		preferred = buf.readInt();
 	}
 
@@ -49,7 +49,7 @@ public class RequestCacheUpdateServer implements NetworkMessage
 	{
 		buf.writeInt(bagSlot);
 		buf.writeBoolean(isBauble);
-		buf.writeItemStack(forStack);
+		buf.writeItem(forStack);
 		buf.writeInt(preferred);
 	}
 
@@ -73,7 +73,7 @@ public class RequestCacheUpdateServer implements NetworkMessage
 						}
 					}
 					else
-						bag = player.inventory.getStackInSlot(bagSlot);
+						bag = player.inventory.getItem(bagSlot);
 				}
 
 				if (!bag.isEmpty() && bag.getItem() instanceof BuildersBagItem)

@@ -18,8 +18,8 @@ public class SyncModuleStateServer implements NetworkMessage
 
 	public SyncModuleStateServer(PacketBuffer buf)
 	{
-		tag = buf.readCompoundTag();
-		name = buf.readString();
+		tag = buf.readNbt();
+		name = buf.readUtf();
 	}
 
 	public SyncModuleStateServer(String name, IBagModule module)
@@ -31,8 +31,8 @@ public class SyncModuleStateServer implements NetworkMessage
 	@Override
 	public void toBytes(PacketBuffer buf)
 	{
-		buf.writeCompoundTag(tag);
-		buf.writeString(name);
+		buf.writeNbt(tag);
+		buf.writeUtf(name);
 
 	}
 
@@ -44,8 +44,8 @@ public class SyncModuleStateServer implements NetworkMessage
 			ctx.get().enqueueWork(() -> {
 
 				ServerPlayerEntity player = ctx.get().getSender();
-				if (player.openContainer instanceof ContainerBag)
-					((ContainerBag) player.openContainer).updateModule(name, tag);
+				if (player.containerMenu instanceof ContainerBag)
+					((ContainerBag) player.containerMenu).updateModule(name, tag);
 
 				ctx.get().setPacketHandled(true);
 			});

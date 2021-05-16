@@ -14,8 +14,8 @@ import tschipp.buildersbag.api.datastructures.RequirementListener.RequirementIte
 
 public class BagInventory
 {
-	private Map<Item, ItemHolder> inventoryItems = new HashMap<>();
-	private Map<Item, CreateableItemHolder> createableItems = new HashMap<>();
+	Map<Item, ItemHolder> inventoryItems = new HashMap<>();
+	Map<Item, CreateableItemHolder> createableItems = new HashMap<>();
 
 	private IItemHandler realInventory;
 	private BagComplex complex;
@@ -64,7 +64,11 @@ public class BagInventory
 		if (holder == null)
 			return 0;
 
-		return holder.remove(amount);
+		int removed = holder.remove(amount);
+		if(holder.getCount() == 0)
+			inventoryItems.remove(item);
+			
+		return removed;
 	}
 
 	/**

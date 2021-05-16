@@ -354,7 +354,7 @@ public class RecipeRequirementList
 
 		for (Ingredient ing : step.recipe.getIngredients())
 		{
-			if (ing.getMatchingStacks().length == 0)
+			if (ing.getItems().length == 0)
 				continue;
 
 			String ingStr = CraftingHandler.getIngredientString(ing);

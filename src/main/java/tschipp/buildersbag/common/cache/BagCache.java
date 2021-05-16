@@ -132,7 +132,7 @@ public class BagCache
 
 	public static int getCachedAmount(ItemStack bag, PlayerEntity player, ItemStack toCheck, int preferredAmount)
 	{
-		Map<String, CachedBag> cache = player.world.isRemote ? client_cache : server_cache;
+		Map<String, CachedBag> cache = player.level.isClientSide ? client_cache : server_cache;
 		IBagCap bagCap = CapHelper.getBagCap(bag);
 		
 		CachedBag cachedBag = cache.get(bagCap.getUUID());
@@ -159,7 +159,7 @@ public class BagCache
 	public static void onWorldTick(TickEvent.WorldTickEvent event)
 	{
 		World world = event.world;
-		Map<String, CachedBag> cache = world.isRemote ? client_cache : server_cache;
+		Map<String, CachedBag> cache = world.isClientSide ? client_cache : server_cache;
 
 		for(CachedBag entry : cache.values())
 		{

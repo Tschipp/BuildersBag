@@ -32,15 +32,15 @@ public class BagModel implements IBakedModel
 	}
 
 	@Override
-	public boolean isSideLit()
+	public boolean usesBlockLight()
 	{
-		return old.isSideLit();
+		return old.usesBlockLight();
 	}
 
 	@Override
-	public boolean isAmbientOcclusion()
+	public boolean useAmbientOcclusion()
 	{
-		return old.isAmbientOcclusion();
+		return old.useAmbientOcclusion();
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public class BagModel implements IBakedModel
 	}
 
 	@Override
-	public boolean isBuiltInRenderer()
+	public boolean isCustomRenderer()
 	{
 		return true;
 	}
@@ -67,9 +67,9 @@ public class BagModel implements IBakedModel
 
 	@SuppressWarnings("deprecation")
 	@Override
-	public TextureAtlasSprite getParticleTexture()
+	public TextureAtlasSprite getParticleIcon()
 	{
-		return old.getParticleTexture();
+		return old.getParticleIcon();
 	}
 	
 	@Override
@@ -87,7 +87,6 @@ public class BagModel implements IBakedModel
 	@Override
 	public IBakedModel handlePerspective(TransformType cameraTransformType, MatrixStack mat)
 	{
-		BagItemStackRenderer.transform = cameraTransformType;
 		return old.handlePerspective(cameraTransformType, mat);
 	}
 

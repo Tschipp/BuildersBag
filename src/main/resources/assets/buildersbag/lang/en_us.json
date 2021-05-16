@@ -9,7 +9,7 @@
     "buildersbag.module.left": "Left click",
     "buildersbag.module.shiftleft": "Shift + left click",
     "buildersbag.module.toggle": "to toggle slots",
-    "buildersbag.module.to": "to",
+    "buildersbag.module.to": " to ",
     "buildersbag.module.from": "from",
     "buildersbag.module.enable": "enable",
     "buildersbag.module.disable": "disable",
@@ -19,13 +19,13 @@
 
     "buildersbag.sort": "Auto-Compact",
 
-    "item.builders_bag_tier_one": "Beginner Builder's Bag",
-    "item.builders_bag_tier_two": "Regular Builder's Bag",
-    "item.builders_bag_tier_three": "Advanced Builder's Bag",
-    "item.builders_bag_tier_four": "Masterful Builder's Bag",
-    "item.builders_bag_tier_five": "Expert Builder's Bag",
+    "item.buildersbag.builders_bag_tier_one": "Beginner Builder's Bag",
+    "item.buildersbag.builders_bag_tier_two": "Regular Builder's Bag",
+    "item.buildersbag.builders_bag_tier_three": "Advanced Builder's Bag",
+    "item.buildersbag.builders_bag_tier_four": "Masterful Builder's Bag",
+    "item.buildersbag.builders_bag_tier_five": "Expert Builder's Bag",
 
-    "buildersbag": "Builder's Bag",
+    "buildersbag.name": "Builder's Bag",
 
     "buildersbag.noblock": "No block selected!",
     "buildersbag.cantplace": "Can't place %s here!",

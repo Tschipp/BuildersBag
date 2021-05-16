@@ -98,7 +98,7 @@ public class ItemContainer
 			if (other.item != null)
 				return false;
 		}
-		else if (!ItemStack.areItemsEqual(item, other.item))
+		else if (!ItemStack.isSame(item, other.item))
 			return false;
 		return true;
 	}
@@ -106,7 +106,8 @@ public class ItemContainer
 	@Override
 	public String toString()
 	{
-		return this.isIngredient() ? ingString : item.getItem().getRegistryName() + "@" + item.getMetadata();
+//		return this.isIngredient() ? ingString : item.getItem().getRegistryName() + "@" + item.getMetadata();
+		return null; //obsolete, remove
 	}
 	
 	

@@ -12,17 +12,12 @@ import java.util.Map.Entry;
 import org.apache.commons.lang3.tuple.Triple;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.vertex.IVertexBuilder;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
-import net.minecraft.client.renderer.IRenderTypeBuffer;
-import net.minecraft.client.renderer.IRenderTypeBuffer.Impl;
 import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.container.Slot;
 import net.minecraft.item.ItemStack;
@@ -47,10 +42,10 @@ public class GuiBag extends ContainerScreen<ContainerBag>
 	private ContainerBag container;
 	private PlayerEntity player;
 	private ItemStack bag;
-//	private Hand hand;
+	// private Hand hand;
 
-//	private boolean isBauble = false;
-//	private int slot = 0;
+	// private boolean isBauble = false;
+	// private int slot = 0;
 
 	private int mainWidth;
 	private int mainHeight;
@@ -59,8 +54,8 @@ public class GuiBag extends ContainerScreen<ContainerBag>
 	private int compactButtonX;
 	private int compactButtonY;
 
-//	private static int TEX_HEIGHT = 60;
-//	private static int TEX_WIDTH = 54;
+	// private static int TEX_HEIGHT = 60;
+	// private static int TEX_WIDTH = 54;
 
 	private Minecraft mc;
 
@@ -70,99 +65,42 @@ public class GuiBag extends ContainerScreen<ContainerBag>
 		this.container = container;
 		this.player = player;
 		this.bag = container.bag;
-//		this.hand = container.hand;
-//
-//		this.isBauble = container.isBauble;
-//		this.slot = container.slot;
+		// this.hand = container.hand;
+		//
+		// this.isBauble = container.isBauble;
+		// this.slot = container.slot;
 
 		this.mainWidth = getTotalWidth();
 		this.mainHeight = getTotalHeight(container.invSize);
 
 		this.leftOffset = Math.max(InventoryHelper.getBagExtraLeft(CapHelper.getBagCap(bag)), InventoryHelper.getBagExtraRight(CapHelper.getBagCap(bag)));
 
-		this.xSize = mainWidth + leftOffset * 2;
-		this.ySize = mainHeight;
+		this.imageWidth = mainWidth + leftOffset * 2;
+		this.imageHeight = mainHeight;
 
 		this.compactButtonX = this.leftOffset + 72;
 		this.compactButtonY = mainHeight;
 
-		this.mc = Minecraft.getInstance();
+		this.mc = Minecraft.getInstance();		
 	}
 
-	// @Override
-	// public void drawScreen(int mouseX, int mouseY, float partialTicks)
-	// {
-	// super.drawScreen(mouseX, mouseY, partialTicks);
-	// this.renderHoveredToolTip(mouseX, mouseY);
-	//
-	//// if(isNew)
-	//// {
-	//// isNew = false;
-	//// BuildersBag.network.sendToServer(new RequestBagUpdateServer(slot,
-	// isBauble));
-	//// }
-	//
-	// int mX = mouseX - guiLeft;
-	// int mY = mouseY - guiTop;
-	//
-	// if(mX >= this.compactButtonX && mX <= this.compactButtonX + 32 && mY >=
-	// this.compactButtonY && mY <= this.compactButtonY + 32)
-	// {
-	// List<String> tooltip = new ArrayList<String>();
-	// tooltip.add(TextFormatting.BOLD +
-	// I18n.translateToLocal("buildersbag.sort"));
-	// tooltip.add(TextFormatting.GOLD +
-	// I18n.translateToLocal("buildersbag.module.left") + TextFormatting.RESET +
-	// I18n.translateToLocal("buildersbag.module.to") +
-	// I18n.translateToLocal("buildersbag.sort"));
-	//
-	// this.drawHoveringText(tooltip, mouseX, mouseY);
-	// }
-	//
-	// container.modules.forEach((module, triple) -> {
-	//
-	// int x = triple.getLeft();
-	// int y = triple.getMiddle();
-	// boolean right = triple.getRight();
-	//
-	// if (mX >= x && mX <= x + 32 && mY >= y && mY <= y + 32)
-	// {
-	// List<String> tooltip = new ArrayList<String>();
-	// tooltip.add(TextFormatting.BOLD +
-	// I18n.translateToLocal("buildersbag.module." + module.getName()));
-	// if (!module.doesntUseOwnInventory())
-	// tooltip.add(TextFormatting.GOLD +
-	// I18n.translateToLocal("buildersbag.module.shiftleft") +
-	// TextFormatting.RESET +
-	// I18n.translateToLocal("buildersbag.module.toggle"));
-	// tooltip.add(TextFormatting.GOLD +
-	// I18n.translateToLocal("buildersbag.module.left") + TextFormatting.RESET +
-	// I18n.translateToLocal("buildersbag.module.to") + (module.isEnabled() ?
-	// TextFormatting.RED + I18n.translateToLocal("buildersbag.module.disable")
-	// : TextFormatting.GREEN +
-	// I18n.translateToLocal("buildersbag.module.enable")));
-	//
-	// this.drawHoveringText(tooltip, mouseX, mouseY);
-	// }
-	//
-	// });
-	// }
-
 	@Override
-	protected void drawGuiContainerForegroundLayer(MatrixStack matrix, int mouseX, int mouseY)
+	protected void renderLabels(MatrixStack matrix, int mouseX, int mouseY)
 	{
-		super.drawGuiContainerForegroundLayer(matrix, mouseX, mouseY);
+		
+		int mX = mouseX - leftPos;
+		int mY = mouseY - topPos;
 
-		int mX = mouseX - guiLeft;
-		int mY = mouseY - guiTop;
-
+		this.renderTooltip(matrix, mX, mY);
+		
 		if (mX >= this.compactButtonX && mX <= this.compactButtonX + 32 && mY >= this.compactButtonY && mY <= this.compactButtonY + 32)
 		{
 			List<ITextComponent> tooltip = new ArrayList<ITextComponent>();
-			tooltip.add(new TranslationTextComponent("buildersbag.sort").mergeStyle(TextFormatting.BOLD));
-			tooltip.add(new TranslationTextComponent("buildersbag.module.left").mergeStyle(TextFormatting.GOLD).append(new TranslationTextComponent("buildersbag.module.to")).append(new TranslationTextComponent("buildersbag.sort")));
+			tooltip.add(new TranslationTextComponent("buildersbag.sort").withStyle(TextFormatting.BOLD));
+			tooltip.add(new TranslationTextComponent("buildersbag.module.left").withStyle(TextFormatting.GOLD).append(new TranslationTextComponent("buildersbag.module.to")).append(new TranslationTextComponent("buildersbag.sort")));
 
-			this.func_243308_b(matrix, tooltip, mouseX, mouseY); // draw tooltip
+			this.renderComponentTooltip(matrix, tooltip, mX, mY); // draw
+																	// tooltip
 		}
 
 		container.modules.forEach((module, triple) -> {
@@ -172,12 +110,12 @@ public class GuiBag extends ContainerScreen<ContainerBag>
 			if (mX >= x && mX <= x + 32 && mY >= y && mY <= y + 32)
 			{
 				List<ITextComponent> tooltip = new ArrayList<ITextComponent>();
-				tooltip.add(new TranslationTextComponent("buildersbag.module." + module.getName()).mergeStyle(TextFormatting.BOLD));
+				tooltip.add(new TranslationTextComponent("buildersbag.module." + module.getName()).withStyle(TextFormatting.BOLD));
 				if (!module.doesntUseOwnInventory())
-					tooltip.add(new TranslationTextComponent("buildersbag.module.shiftleft").mergeStyle(TextFormatting.GOLD).append(new TranslationTextComponent("buildersbag.module.toggle")));
-				tooltip.add(new TranslationTextComponent("buildersbag.module.left").mergeStyle(TextFormatting.GOLD).append(new TranslationTextComponent("buildersbag.module.to")).append((module.isEnabled() ? new TranslationTextComponent("buildersbag.module.disable").mergeStyle(TextFormatting.RED) : new TranslationTextComponent("buildersbag.module.enable").mergeStyle(TextFormatting.GREEN))));
+					tooltip.add(new TranslationTextComponent("buildersbag.module.shiftleft").withStyle(TextFormatting.GOLD).append(new TranslationTextComponent("buildersbag.module.toggle")));
+				tooltip.add(new TranslationTextComponent("buildersbag.module.left").withStyle(TextFormatting.GOLD).append(new TranslationTextComponent("buildersbag.module.to")).append((module.isEnabled() ? new TranslationTextComponent("buildersbag.module.disable").withStyle(TextFormatting.RED) : new TranslationTextComponent("buildersbag.module.enable").withStyle(TextFormatting.GREEN))));
 
-				this.func_243308_b(matrix, tooltip, mouseX, mouseY); // draw
+				this.renderComponentTooltip(matrix, tooltip, mX, mY); // draw
 																		// tooltip
 			}
 
@@ -185,26 +123,26 @@ public class GuiBag extends ContainerScreen<ContainerBag>
 	}
 
 	@Override
-	protected void drawGuiContainerBackgroundLayer(MatrixStack matrix, float partialTicks, int mouseX, int mouseY)
+	protected void renderBg(MatrixStack matrix, float partialTicks, int mouseX, int mouseY)
 	{
 		renderBackground(matrix);
 
-		matrix.push();
-		mc.getTextureManager().bindTexture(new ResourceLocation(BuildersBag.MODID + ":textures/gui/bag.png"));
+		matrix.pushPose();
+		mc.getTextureManager().bind(new ResourceLocation(BuildersBag.MODID + ":textures/gui/bag.png"));
 
-		drawBackground(matrix, 0 + leftOffset, 0, mainWidth, mainHeight); // Draw
-																	// inventories
+		drawBackground(matrix, 0 + leftOffset, 0, mainWidth, mainHeight); // Draw 
+																// inventories
 		drawBackground(matrix, 72 + leftOffset, -32, 32, 32, 16); // Draw golden slot
 
 		drawHoverableBackground(matrix, this.compactButtonX, this.compactButtonY, 32, 32, mouseX, mouseY, 28, 32); // Draw
-																											// compact
-																											// button
+		// compact
+		// button
 
-		RenderHelper.enableStandardItemLighting();
-		itemRenderer.renderItemAndEffectIntoGUI(new ItemStack(Blocks.CHEST), this.compactButtonX + 8 + guiLeft, this.compactButtonY + 8 + guiTop);
-		RenderHelper.disableStandardItemLighting();
+		RenderHelper.turnBackOn();
+		itemRenderer.renderAndDecorateItem(new ItemStack(Blocks.CHEST), this.compactButtonX + 8 + leftPos, this.compactButtonY + 8 + topPos);
+		RenderHelper.turnOff();
 
-		mc.getTextureManager().bindTexture(new ResourceLocation(BuildersBag.MODID + ":textures/gui/bag.png"));
+		mc.getTextureManager().bind(new ResourceLocation(BuildersBag.MODID + ":textures/gui/bag.png"));
 
 		container.modules.forEach((module, triple) -> {
 			int x = triple.getLeft();
@@ -213,11 +151,11 @@ public class GuiBag extends ContainerScreen<ContainerBag>
 
 			drawHoverableBackgroundToggleable(matrix, x, y, 32, 32, mouseX, mouseY, module.isEnabled());
 
-			RenderHelper.enableStandardItemLighting();
-			itemRenderer.renderItemAndEffectIntoGUI(module.getDisplayItem(), x + 8 + guiLeft, y + 8 + guiTop);
-			RenderHelper.disableStandardItemLighting();
+			RenderHelper.turnBackOn();
+			itemRenderer.renderAndDecorateItem(module.getDisplayItem(), x + 8 + leftPos, y + 8 + topPos);
+			RenderHelper.turnOff();
 
-			mc.getTextureManager().bindTexture(new ResourceLocation(BuildersBag.MODID + ":textures/gui/bag.png"));
+			mc.getTextureManager().bind(new ResourceLocation(BuildersBag.MODID + ":textures/gui/bag.png"));
 
 			ItemStackHandler handler = module.getInventory();
 			if (handler != null && module.isExpanded())
@@ -229,11 +167,11 @@ public class GuiBag extends ContainerScreen<ContainerBag>
 		});
 
 		drawSlotBackgrounds(matrix);
-		
-		this.font.drawString(matrix, container.name.getString(), this.guiLeft + 7 + this.leftOffset, this.guiTop + 6, 4210752);
-		this.font.drawString(matrix, player.inventory.getDisplayName().getString(), this.guiLeft + 7 + this.leftOffset, this.guiTop + 6 + getBagRows(container.invSize) * 18 + 14, 4210752);
 
-		matrix.pop();
+		this.font.draw(matrix, container.name.getString(), this.leftPos + 7 + this.leftOffset, this.topPos + 6, 4210752);
+		this.font.draw(matrix, player.inventory.getDisplayName().getString(), this.leftPos + 7 + this.leftOffset, this.topPos + 6 + getBagRows(container.invSize) * 18 + 14, 4210752);
+
+		matrix.popPose();		
 	}
 
 	// @Override
@@ -301,11 +239,11 @@ public class GuiBag extends ContainerScreen<ContainerBag>
 	@Override
 	public boolean mouseClicked(double mouseX, double mouseY, int button)
 	{
-		if (super.mouseClicked(mouseX, mouseY, button))
+		if (!super.mouseClicked(mouseX, mouseY, button))
 			return true;
 
-		double mousePosX = mouseX - guiLeft;
-		double mousePosY = mouseY - guiTop;
+		double mousePosX = mouseX - leftPos;
+		double mousePosY = mouseY - topPos;
 
 		if (mousePosX >= this.compactButtonX && mousePosX <= this.compactButtonX + 32 && mousePosY >= this.compactButtonY && mousePosY <= this.compactButtonY + 32)
 		{
@@ -358,22 +296,17 @@ public class GuiBag extends ContainerScreen<ContainerBag>
 
 	private void drawSlotBackgrounds(MatrixStack matrix)
 	{
-		Impl buffer = IRenderTypeBuffer.getImpl(Tessellator.getInstance().getBuffer());
-		IVertexBuilder builder = buffer.getBuffer(RenderType.getCutout());
-		
-		for (Slot slot : container.inventorySlots)
+		for (Slot slot : container.slots)
 		{
-			if (slot.isEnabled())
-				drawRect(builder, matrix, this.guiLeft + slot.xPos - 1, this.guiTop + slot.yPos - 1, 36, 0, 18, 18);
+			if (slot.isActive())
+				blit(matrix, this.leftPos + slot.x - 1, this.topPos + slot.y - 1, 18, 18, 36, 0, 18, 18, 54, 60); 
 		}
-		
-		buffer.finish();
 	}
 
 	private void drawHoverableBackground(MatrixStack matrix, int x, int y, int width, int height, int mouseX, int mouseY, int texVNormal, int texVHovered)
 	{
-		mouseX -= this.guiLeft;
-		mouseY -= this.guiTop;
+		mouseX -= this.leftPos;
+		mouseY -= this.topPos;
 
 		if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height)
 			drawBackground(matrix, x, y, width, height, texVHovered);
@@ -383,8 +316,8 @@ public class GuiBag extends ContainerScreen<ContainerBag>
 
 	private void drawHoverableBackgroundToggleable(MatrixStack matrix, int x, int y, int width, int height, int mouseX, int mouseY, boolean enabled)
 	{
-		mouseX -= this.guiLeft;
-		mouseY -= this.guiTop;
+		mouseX -= this.leftPos;
+		mouseY -= this.topPos;
 
 		if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height)
 			if (enabled)
@@ -405,9 +338,6 @@ public class GuiBag extends ContainerScreen<ContainerBag>
 
 	private void drawBackground(MatrixStack matrix, int x, int y, int width, int height, int offset)
 	{
-		Impl buffer = IRenderTypeBuffer.getImpl(Tessellator.getInstance().getBuffer());
-		IVertexBuilder builder = buffer.getBuffer(RenderType.getCutout());
-		
 		int drawWidth = (width - 8) / 4;
 		int drawHeight = (height - 8) / 4;
 
@@ -416,65 +346,65 @@ public class GuiBag extends ContainerScreen<ContainerBag>
 
 		int oldX = x;
 		// Draw First line
-		drawRect(builder, matrix, x, y, 0, 0 + offset, 4, 4);
+		drawRect(matrix, x, y, 0, 0 + offset, 4, 4);
 		x += 4;
 		for (int i = 0; i < drawWidth; i++)
 		{
-			drawRect(builder, matrix,x, y, 4, 0 + offset, 4, 4);
+			drawRect(matrix, x, y, 4, 0 + offset, 4, 4);
 			x += 4;
 		}
-		drawRect(builder, matrix,x, y, 16, 0 + offset, 4, 4);
+		drawRect(matrix, x, y, 16, 0 + offset, 4, 4);
 
 		// Draw main part
 		x = oldX;
 		y += 4;
 		for (int i = 0; i < drawHeight; i++)
 		{
-			drawRect(builder, matrix,x, y, 8, 0 + offset, 4, 4);
+			drawRect(matrix, x, y, 8, 0 + offset, 4, 4);
 			x += 4;
 			for (int j = 0; j < drawWidth; j++)
 			{
-				drawRect(builder, matrix,x, y, 12, 0 + offset, 4, 4);
+				drawRect(matrix, x, y, 12, 0 + offset, 4, 4);
 				x += 4;
 			}
-			drawRect(builder, matrix,x, y, 20, 0 + offset, 4, 4);
+			drawRect(matrix, x, y, 20, 0 + offset, 4, 4);
 			y += 4;
 			x = oldX;
 		}
 
 		// Draw last line
-		drawRect(builder, matrix,x, y, 32, 0 + offset, 4, 4);
+		drawRect(matrix, x, y, 32, 0 + offset, 4, 4);
 		x += 4;
 		for (int i = 0; i < drawWidth; i++)
 		{
-			drawRect(builder, matrix,x, y, 28, 0 + offset, 4, 4);
+			drawRect(matrix, x, y, 28, 0 + offset, 4, 4);
 			x += 4;
 		}
-		drawRect(builder, matrix,x, y, 24, 0 + offset, 4, 4);
-
-		buffer.finish();
+		drawRect(matrix, x, y, 24, 0 + offset, 4, 4);
 	}
 
 	private void sendUpdate(IBagModule module)
 	{
 		BuildersBag.network.sendToServer(new SyncModuleStateServer(module.getName(), module));
 	}
-	
-	private void drawRect(IVertexBuilder builder, MatrixStack matrix, int x, int y, int u, int v, int width, int height)
+
+	private void drawRect(MatrixStack matrix, int x, int y, int u, int v, int width, int height)
 	{
-		add(builder, matrix, x, y, u, v);
-		add(builder, matrix, x + width, y, u + width, v);
-		add(builder, matrix, x + width, y + height, u + width, v + height);
-		add(builder, matrix, x, y + height, u, v + height);
+//		add(builder, matrix, x, y, u, v);
+//		add(builder, matrix, x + width, y, u + width, v);
+//		add(builder, matrix, x + width, y + height, u + width, v + height);
+//		add(builder, matrix, x, y + height, u, v + height);
+		blit(matrix, x, y, width, height, u, v, 4, 4, 54, 60);
 	}
-	
-	private static void add(IVertexBuilder builder, MatrixStack matrix, float x, float y, float u, float v)
-	{
-		builder.pos(matrix.getLast().getMatrix(), x, y, 0)
-			   .tex(u, v)
-			   .lightmap(240, 240)
-			   .normal(1,0,0)
-			   .endVertex();
-	}
+
+//	private static void add(IVertexBuilder builder, MatrixStack matrix, float x, float y, float u, float v)
+//	{
+//		builder
+//		.vertex(matrix.last().pose(), x, y, 0) //pos
+//		.color(1f, 1f, 1f, 1f) //color
+//		.uv(u / 54.0f, v / 60.0f) //tex
+//		.uv2(240, 240) //lightmap
+//		.endVertex();
+//	}
 
 }

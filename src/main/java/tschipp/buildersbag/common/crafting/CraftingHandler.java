@@ -40,55 +40,55 @@ public class CraftingHandler
 
 	public static void generateRecipes()
 	{
-		for (IRecipe recipe : ForgeRegistries.)
-		{
-			for(Ingredient ing : recipe.getIngredients())
-			{
-				addIngredientIfAlternative(ing);
-			}
-		}
-		
-		for (IRecipe recipe : ForgeRegistries.RECIPES)
-		{
-			ItemStack output = recipe.getRecipeOutput();
-			if (!output.isEmpty())
-			{
-				NonNullList<Ingredient> ingredients = recipe.getIngredients();
-				String itemString = getItemString(output);
-				List<RecipeContainer> genRecipes = recipes.get(itemString);
-
-				if (genRecipes != null)
-				{
-					genRecipes.add(new RecipeContainer(ingredients, output, getTierIfStaged(recipe)));
-				}
-				else
-				{
-					genRecipes = new ArrayList<RecipeContainer>();
-					genRecipes.add(new RecipeContainer(ingredients, output, getTierIfStaged(recipe)));
-					recipes.put(itemString, genRecipes);
-				}
-
-			}
-
-			recipeTree.add(recipe);
-		}
+//		for (IRecipe recipe : ForgeRegistries.) TODO
+//		{ 
+//			for(Ingredient ing : recipe.getIngredients())
+//			{
+//				addIngredientIfAlternative(ing);
+//			}
+//		}
+//		
+//		for (IRecipe recipe : ForgeRegistries.RECIPES)
+//		{
+//			ItemStack output = recipe.getRecipeOutput();
+//			if (!output.isEmpty())
+//			{
+//				NonNullList<Ingredient> ingredients = recipe.getIngredients();
+//				String itemString = getItemString(output);
+//				List<RecipeContainer> genRecipes = recipes.get(itemString);
+//
+//				if (genRecipes != null)
+//				{
+//					genRecipes.add(new RecipeContainer(ingredients, output, getTierIfStaged(recipe)));
+//				}
+//				else
+//				{
+//					genRecipes = new ArrayList<RecipeContainer>();
+//					genRecipes.add(new RecipeContainer(ingredients, output, getTierIfStaged(recipe)));
+//					recipes.put(itemString, genRecipes);
+//				}
+//
+//			}
+//
+//			recipeTree.add(recipe);
+//		}
 	}
 
 	public static void addIngredientIfAlternative(Ingredient ing)
 	{
-		if (ing.getMatchingStacks().length > 1 && !(ing instanceof OreIngredient))
-		{
-			String ingString = getIngredientString(ing);
-			for (String s : getIngredientStrings(ing))
-			{
-				Set<String> set = alternativeIngredients.get(s);
-				if (set == null)
-					set = new HashSet<String>();
-
-				set.add(ingString);
-				alternativeIngredients.put(s, set);
-			}
-		}
+//		if (ing.getItems().length > 1 && !(ing instanceof OreIngredient))
+//		{
+//			String ingString = getIngredientString(ing);
+//			for (String s : getIngredientStrings(ing))
+//			{
+//				Set<String> set = alternativeIngredients.get(s);
+//				if (set == null)
+//					set = new HashSet<String>();
+//
+//				set.add(ingString);
+//				alternativeIngredients.put(s, set);
+//			}
+//		}
 	}
 
 	public static List<RecipeContainer> getRecipes(ItemStack stack)
@@ -132,75 +132,77 @@ public class CraftingHandler
 
 	public static String getTierIfStaged(IRecipe recipe)
 	{
-
-		if (ModList.get().isLoaded("recipestages"))
-		{
-			try
-			{
-				Class clazz = Class.forName("com.blamejared.recipestages.recipes.RecipeStage");
-
-				if (clazz.isInstance(recipe))
-				{
-					Method getTier = ReflectionHelper.findMethod(clazz, "getTier", null);
-					String tier = (String) getTier.invoke(recipe);
-
-					return tier;
-				}
-
-			}
-			catch (Exception e)
-			{
-				return "";
-			}
-		}
+//
+//		if (ModList.get().isLoaded("recipestages"))
+//		{
+//			try
+//			{
+//				Class clazz = Class.forName("com.blamejared.recipestages.recipes.RecipeStage");
+//
+//				if (clazz.isInstance(recipe))
+//				{
+//					Method getTier = ReflectionHelper.findMethod(clazz, "getTier", null);
+//					String tier = (String) getTier.invoke(recipe);
+//
+//					return tier;
+//				}
+//
+//			}
+//			catch (Exception e)
+//			{
+//				return "";
+//			}
+//		}
 
 		return "";
 	}
 
 	public static String getItemString(ItemStack output)
 	{
-		String nbt = output.hasTagCompound() ? output.getTagCompound().toString() : "";
-		long nbtID = 0;
-
-		if (NBTToIDCache.containsKey(nbt))
-		{
-			nbtID = NBTToIDCache.get(nbt);
-		}
-		else
-		{
-			NBTToIDCache.put(nbt, num);
-			IDToNBTCache.put(num, nbt);
-			num++;
-		}
-
-		String outputString = output.getItem().getRegistryName().toString() + "@" + output.getMetadata() + "$" + nbtID + ";";
-		return outputString;
+//		String nbt = output.hasTagCompound() ? output.getTagCompound().toString() : "";
+//		long nbtID = 0;
+//
+//		if (NBTToIDCache.containsKey(nbt))
+//		{
+//			nbtID = NBTToIDCache.get(nbt);
+//		}
+//		else
+//		{
+//			NBTToIDCache.put(nbt, num);
+//			IDToNBTCache.put(num, nbt);
+//			num++;
+//		}
+//
+//		String outputString = output.getItem().getRegistryName().toString() + "@" + output.getMetadata() + "$" + nbtID + ";";
+//		return outputString;
+		return "";
 	}
 
 	public static String[] getStackIngredientStrings(ItemStack output, boolean self)
 	{
-		if (output.isEmpty())
-			return new String[0];
-
-		int[] ores = OreDictionary.getOreIDs(output);
-
-		List<String> oredict = new ArrayList<String>();
-		for (int i = 0; i < ores.length; i++)
-		{
-			OreIngredient ore = new OreIngredient(OreDictionary.getOreName(ores[i]));
-			oredict.add(getIngredientString(ore));
-		}
-
-		String itemString = getItemString(output);
-		if (self)
-			oredict.add(itemString);
-
-		if (alternativeIngredients.containsKey(itemString))
-		{
-			oredict.addAll(alternativeIngredients.get(itemString));
-		}
-
-		return oredict.toArray(new String[oredict.size()]);
+//		if (output.isEmpty())
+//			return new String[0];
+//
+//		int[] ores = OreDictionary.getOreIDs(output);
+//
+//		List<String> oredict = new ArrayList<String>();
+//		for (int i = 0; i < ores.length; i++)
+//		{
+//			OreIngredient ore = new OreIngredient(OreDictionary.getOreName(ores[i]));
+//			oredict.add(getIngredientString(ore));
+//		}
+//
+//		String itemString = getItemString(output);
+//		if (self)
+//			oredict.add(itemString);
+//
+//		if (alternativeIngredients.containsKey(itemString))
+//		{
+//			oredict.addAll(alternativeIngredients.get(itemString));
+//		}
+//
+//		return oredict.toArray(new String[oredict.size()]);
+		return null;
 	}
 
 	public static String getStackIngredientString(ItemStack output, boolean self)
@@ -218,11 +220,11 @@ public class CraftingHandler
 
 	public static String[] getIngredientStrings(Ingredient ing)
 	{
-		String[] strings = new String[ing.getMatchingStacks().length];
+		String[] strings = new String[ing.getItems().length];
 
-		for (int i = 0; i < ing.getMatchingStacks().length; i++)
+		for (int i = 0; i < ing.getItems().length; i++)
 		{
-			strings[i] = getItemString(ing.getMatchingStacks()[i]);
+			strings[i] = getItemString(ing.getItems()[i]);
 		}
 
 		return strings;
@@ -231,7 +233,7 @@ public class CraftingHandler
 	public static String getIngredientString(Ingredient ing)
 	{
 		StringBuilder sb = new StringBuilder();
-		for (ItemStack stack : ing.getMatchingStacks())
+		for (ItemStack stack : ing.getItems())
 			sb.append(getItemString(stack));
 
 		return sb.toString();
@@ -239,36 +241,37 @@ public class CraftingHandler
 
 	public static ItemStack getItemFromString(String str)
 	{
-		str = str.substring(0, str.length() - 1);
-
-		int at = str.indexOf('@');
-		int hash = str.indexOf('#');
-		int dollar = str.indexOf('$');
-
-		String name = str.substring(0, at);
-		int meta = Integer.parseInt(str.substring(at + 1, dollar));
-		String nbt = dollar == str.length() - 1 ? "" : str.substring(dollar + 1, str.length());
-
-		ItemStack stack = new ItemStack(Item.getByNameOrId(name), 1, meta);
-
-		if (!nbt.isEmpty())
-		{
-			try
-			{
-				String nbtString = IDToNBTCache.get(Long.parseLong(nbt));
-				
-				CompoundNBT tag;
-
-				tag = JsonToNBT.getTagFromJson(nbtString);
-				stack.setTagCompound(tag);
-			}
-			catch (Exception e)
-			{
-				return stack;
-			}
-
-		}
-
-		return stack;
+//		str = str.substring(0, str.length() - 1);
+//
+//		int at = str.indexOf('@');
+//		int hash = str.indexOf('#');
+//		int dollar = str.indexOf('$');
+//
+//		String name = str.substring(0, at);
+//		int meta = Integer.parseInt(str.substring(at + 1, dollar));
+//		String nbt = dollar == str.length() - 1 ? "" : str.substring(dollar + 1, str.length());
+//
+//		ItemStack stack = new ItemStack(Item.getByNameOrId(name), 1, meta);
+//
+//		if (!nbt.isEmpty())
+//		{
+//			try
+//			{
+//				String nbtString = IDToNBTCache.get(Long.parseLong(nbt));
+//				
+//				CompoundNBT tag;
+//
+//				tag = JsonToNBT.parseTag(nbtString);
+//				stack.setTagCompound(tag);
+//			}
+//			catch (Exception e)
+//			{
+//				return stack;
+//			}
+//
+//		}
+//
+//		return stack;
+		return null;
 	}
 }

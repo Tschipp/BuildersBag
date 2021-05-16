@@ -2,10 +2,10 @@
 //
 //import net.minecraft.util.Tuple;
 //
-//public class OreStageHelper
+//public class OreStageHelper TODO
 //{
 //
-//	public static Tuple<String, IBlockState> getOreStage(IBlockState block)
+//	public static Tuple<String, BlockState> getOreStage(BlockState block)
 //	{
 //		if(OreTiersAPI.hasReplacement(block))
 //		{

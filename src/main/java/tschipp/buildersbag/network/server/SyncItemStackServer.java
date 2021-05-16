@@ -17,7 +17,7 @@ public class SyncItemStackServer implements NetworkMessage
 
 	public SyncItemStackServer(PacketBuffer buf)
 	{
-		stack = buf.readItemStack();
+		stack = buf.readItem();
 		right = buf.readBoolean();
 	}
 
@@ -30,7 +30,7 @@ public class SyncItemStackServer implements NetworkMessage
 	@Override
 	public void toBytes(PacketBuffer buf)
 	{
-		buf.writeItemStack(stack);
+		buf.writeItem(stack);
 		buf.writeBoolean(right);
 	}
 
@@ -43,7 +43,7 @@ public class SyncItemStackServer implements NetworkMessage
 
 				ServerPlayerEntity player = ctx.get().getSender();
 
-				ItemStack stack = right ? player.getHeldItemMainhand() : player.getHeldItemOffhand();
+				ItemStack stack = right ? player.getMainHandItem() : player.getOffhandItem();
 				stack.deserializeNBT(stack.serializeNBT());
 
 				ctx.get().setPacketHandled(true);

@@ -29,7 +29,7 @@
 //import tschipp.buildersbag.network.client.SyncBagCapClient;
 //import tschipp.buildersbag.network.client.SyncBagCapInventoryClient;
 //
-//@EventBusSubscriber(modid = BuildersBag.MODID)
+//@EventBusSubscriber(modid = BuildersBag.MODID) TODO
 //public class LinearEvents
 //{
 //	// private static String lastTag = "";
@@ -354,7 +354,7 @@
 //				stand.rotationYaw = player.rotationYaw;
 //
 //				float[] hit = LinearHelper.getHitCoords(player);
-//				IBlockState state = block.getStateForPlacement(player.world, LinearHelper.getLookPos(player, LinearHelper.canPlaceInMidair(player)), ray.sideHit, hit[0], hit[1], hit[2], placementStack.getMetadata(), stand, hand);
+//				BlockState state = block.getStateForPlacement(player.world, LinearHelper.getLookPos(player, LinearHelper.canPlaceInMidair(player)), ray.sideHit, hit[0], hit[1], hit[2], placementStack.getMetadata(), stand, hand);
 //
 //				if (state != null)
 //					event.setState(state);

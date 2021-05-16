@@ -13,7 +13,7 @@ import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.api.datastructures.RequirementListener.RequirementItem;
 
 public class CreateableItemsManager
-{
+{	
 	private Set<Item> currentlyCreateable = new HashSet<>();
 	private Multimap<Item, RequirementItem> currentlyProvidedFrom = HashMultimap.create();
 	private Map<RequirementItem, Tracker> activeRequirements = new HashMap<>();

@@ -67,6 +67,11 @@ public class ItemHolder
 		}
 		slots.removeIf(slot -> handler.getStackInSlot(slot).isEmpty());
 		
+		if(slots.isEmpty())
+			amount = 0;
+		
+		containedAmount -= removed;
+		
 		return removed;
 	}
 	
