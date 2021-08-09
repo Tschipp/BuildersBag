@@ -73,8 +73,8 @@ dependencies {
     
 	deobfCompile "team.chisel.ctm:CTM:${ctm_version}" //CTM
 	deobfCompile "team.chisel:Chisel:${chisel_version}" //Chisel
-	compile "curse.maven:littletiles:${littletiles_version}" //LT
-	compile "curse.maven:creativecore:${creativecore_version}" //Creative Core
+	compile files('libs/CreativeCore_v1.10.62_mc1.12.2_dev.jar') //CC
+	compile files('libs/LittleTiles_v1.5.18_mc1.12.2_dev.jar') //LT
 	compile "curse.maven:chisels-bits:${chisels_and_bits_version}" //C & B
 	compile "curse.maven:better-builders-wands:${bbw_version}" //Better Builder's Wands
 	compile "curse.maven:building-gadgets:${buildinggadgets_version}" //Building Gadgets
