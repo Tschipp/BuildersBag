@@ -16,7 +16,6 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
-import com.lazy.baubles.api.BaublesAPI;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -66,6 +65,7 @@ public class ContainerBag extends Container
 
 	public int leftOffset = 0;
 
+	// Server constructors
 	public ContainerBag(int windowID, PlayerEntity player, ItemStack bag, Hand hand)
 	{
 		this(windowID, player, bag);
@@ -79,6 +79,7 @@ public class ContainerBag extends Container
 		this.isBauble = true;
 	}
 
+	
 	private ContainerBag(int windowID, PlayerEntity player, ItemStack bag)
 	{
 		super(BuildersBagRegistry.BAG_CONTAINER_TYPE, windowID);
@@ -92,30 +93,31 @@ public class ContainerBag extends Container
 
 		this.leftOffset = Math.max(InventoryHelper.getBagExtraLeft(CapHelper.getBagCap(bag)), InventoryHelper.getBagExtraRight(CapHelper.getBagCap(bag)));
 
-		if (bag.hasDisplayName())
-			name = bag.getDisplayName();
+		if (bag.hasCustomHoverName())
+			name = bag.getHoverName();
 		else
 			name = new TranslationTextComponent("buildersbag.name");
 
 		setupInventories();
 	}
 
+	//Client constructor
 	public ContainerBag(int windowID, PlayerInventory inv, PacketBuffer data)
 	{
 		super(BuildersBagRegistry.BAG_CONTAINER_TYPE, windowID);
-		CompoundNBT tag = data.readCompoundTag();
+		CompoundNBT tag = data.readNbt();
 		PlayerEntity player = inv.player;
 		
-		if(tag.contains("isBauble"))
+		if(tag.contains("isBauble") && tag.getBoolean("isBauble"))
 		{
 			this.slot = tag.getInt("slot");
 			this.isBauble = true;
-			this.bag = BaublesAPI.getBauble(slot);
+			this.bag = BaubleHelper.getBauble(player, slot);
 		}
 		else
 		{
 			this.hand = tag.getBoolean("hand") ? Hand.MAIN_HAND : Hand.OFF_HAND;
-			this.bag = player.getHeldItem(hand);
+			this.bag = player.getItemInHand(hand);
 			this.slot = InventoryHelper.getSlotForStack(player, bag);
 		}
 		
@@ -126,8 +128,8 @@ public class ContainerBag extends Container
 
 		this.leftOffset = Math.max(InventoryHelper.getBagExtraLeft(CapHelper.getBagCap(bag)), InventoryHelper.getBagExtraRight(CapHelper.getBagCap(bag)));
 
-		if (bag.hasDisplayName())
-			name = bag.getDisplayName();
+		if (bag.hasCustomHoverName())
+			name = bag.getHoverName();
 		else
 			name = new TranslationTextComponent("buildersbag.name");
 		
@@ -194,6 +196,7 @@ public class ContainerBag extends Container
 
 	private void setupModuleInventories()
 	{
+		this.modules = null;
 		Builder<IBagModule, Triple<Integer, Integer, Boolean>> builder = ImmutableMap.builder();
 
 		int moduleCount = getMaxModules(invSize);
@@ -258,34 +261,35 @@ public class ContainerBag extends Container
 		this.modules = builder.build();
 	}
 
+	//TODO: Detect when stack is dropped with Q
 	@Override
-	public ItemStack transferStackInSlot(PlayerEntity playerIn, int index)
+	public ItemStack quickMoveStack(PlayerEntity playerIn, int index)
 	{
 		ItemStack itemstack = ItemStack.EMPTY;
-		Slot slot = this.inventorySlots.get(index);
+		Slot slot = this.slots.get(index);
 
 		int rows = InventoryHelper.getBagRows(this.invSize);
 
-		ItemStack stack = slot.getStack();
+		ItemStack stack = slot.getItem();
 
 		if (index < 9 * 4)
 		{
 			// Item is in inventory
-			if (!this.mergeItemStack(stack, 36, 36 + invSize, false))
-				if (!this.mergeItemStack(stack, 36 + invSize + 1, this.inventorySlots.size(), false))
+			if (!this.moveItemStackTo(stack, 36, 36 + invSize, false))
+				if (!this.moveItemStackTo(stack, 36 + invSize + 1, this.slots.size(), false))
 					return ItemStack.EMPTY;
 
 		}
 		else if (index >= 9 * 4 && index < 9 * (4 + rows))
 		{
 			// Item is in bag inventory
-			if (!this.mergeItemStack(stack, 0, 36, false))
+			if (!this.moveItemStackTo(stack, 0, 36, false))
 				return ItemStack.EMPTY;
 		}
 		else
 		{
 			// Item is somewhere else in bag
-			if (!this.mergeItemStack(stack, 0, 36, false))
+			if (!this.moveItemStackTo(stack, 0, 36, false))
 				return ItemStack.EMPTY;
 		}
 
@@ -293,8 +297,10 @@ public class ContainerBag extends Container
 	}
 
 	@Override
-	protected boolean mergeItemStack(ItemStack stack, int startIndex, int endIndex, boolean reverseDirection)
+	protected boolean moveItemStackTo(ItemStack stack, int startIndex, int endIndex, boolean reverseDirection)
 	{
+		bagCap.getComplex().invalidate();
+		
 		boolean flag = false;
 		int i = startIndex;
 		if (reverseDirection)
@@ -318,24 +324,24 @@ public class ContainerBag extends Container
 					break;
 				}
 
-				Slot slot = this.inventorySlots.get(i);
-				ItemStack itemstack = slot.getStack();
-				if (!itemstack.isEmpty() && areItemsAndTagsEqual(stack, itemstack) && (slot instanceof ToggleableSlot ? ((ToggleableSlot) slot).isSlotEnabled() : true))
+				Slot slot = this.slots.get(i);
+				ItemStack itemstack = slot.getItem();
+				if (!itemstack.isEmpty() && consideredTheSameItem(stack, itemstack) && (slot instanceof ToggleableSlot ? ((ToggleableSlot) slot).isSlotEnabled() : true))
 				{
 					int j = itemstack.getCount() + stack.getCount();
-					int maxSize = Math.min(slot.getSlotStackLimit(), stack.getMaxStackSize());
+					int maxSize = Math.min(slot.getMaxStackSize(), stack.getMaxStackSize());
 					if (j <= maxSize)
 					{
 						stack.setCount(0);
 						itemstack.setCount(j);
-						slot.onSlotChanged();
+						slot.setChanged();
 						flag = true;
 					}
 					else if (itemstack.getCount() < maxSize)
 					{
 						stack.shrink(maxSize - itemstack.getCount());
 						itemstack.setCount(maxSize);
-						slot.onSlotChanged();
+						slot.setChanged();
 						flag = true;
 					}
 				}
@@ -376,20 +382,20 @@ public class ContainerBag extends Container
 					break;
 				}
 
-				Slot slot1 = this.inventorySlots.get(i);
-				ItemStack itemstack1 = slot1.getStack();
-				if (itemstack1.isEmpty() && slot1.isItemValid(stack) && (slot1 instanceof ToggleableSlot ? ((ToggleableSlot) slot1).isSlotEnabled() : true))
+				Slot slot1 = this.slots.get(i);
+				ItemStack itemstack1 = slot1.getItem();
+				if (itemstack1.isEmpty() && slot1.mayPlace(stack) && (slot1 instanceof ToggleableSlot ? ((ToggleableSlot) slot1).isSlotEnabled() : true))
 				{
-					if (stack.getCount() > slot1.getSlotStackLimit())
+					if (stack.getCount() > slot1.getMaxStackSize())
 					{
-						slot1.putStack(stack.split(slot1.getSlotStackLimit()));
+						slot1.set(stack.split(slot1.getMaxStackSize()));
 					}
 					else
 					{
-						slot1.putStack(stack.split(stack.getCount()));
+						slot1.set(stack.split(stack.getCount()));
 					}
 
-					slot1.onSlotChanged();
+					slot1.setChanged();
 					flag = true;
 					break;
 				}
@@ -409,33 +415,34 @@ public class ContainerBag extends Container
 	}
 
 	@Override
-	public boolean canDragIntoSlot(Slot slot)
+	public boolean canDragTo(Slot slot)
 	{
 		return !(slot instanceof SelectedBlockSlot);
 	}
 
 	public void updateModule(String name, CompoundNBT nbt)
 	{
-		modules.forEach((module, triple) -> {
-			if (module.getName().equals(name))
+		for(IBagModule mod : bagCap.getModules())
+		{
+			if (mod.getName().equals(name))
 			{
-				module.deserializeNBT(nbt);
+				mod.deserializeNBT(nbt);
 			}
-		});
-
+		}
+		
 		update();
 	}
 
 	public void update()
 	{
-		inventorySlots.clear();
+		slots.clear();
 
 		setupInventories();
 	}
 
 	public void sync()
 	{
-		if (!player.world.isRemote)
+		if (!player.level.isClientSide)
 		{
 			if (isBauble)
 				BuildersBag.network.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player), new SyncBagCapInventoryClient(bagCap, slot, true));
@@ -445,42 +452,47 @@ public class ContainerBag extends Container
 	}
 
 	@Override
-	public boolean canInteractWith(PlayerEntity player)
+	public boolean stillValid(PlayerEntity player)
 	{
 		if (ModList.get().isLoaded("baubles"))
 		{
-			return isBauble ? BaubleHelper.getBauble(player, this.slot) == bag : !player.getHeldItem(hand).isEmpty() && player.getHeldItem(hand) == bag;
+			return isBauble ? BaubleHelper.getBauble(player, this.slot) == bag : !player.getItemInHand(hand).isEmpty() && player.getItemInHand(hand) == bag;
 		}
-		return !player.getHeldItem(hand).isEmpty() && player.getHeldItem(hand) == bag;
+		return !player.getItemInHand(hand).isEmpty() && player.getItemInHand(hand) == bag;
 	}
 
 	@Override
-	public ItemStack slotClick(int slotId, int dragType, ClickType clickTypeIn, PlayerEntity player)
+	public ItemStack clicked(int slotId, int dragType, ClickType clickTypeIn, PlayerEntity player)
 	{
-		if (slotId == selectedBlockSlot.slotNumber)
+		if (slotId == selectedBlockSlot.index)
 		{
-			ItemStack mouseItem = player.inventory.getItemStack().copy();
-			if (selectedBlockSlot.isItemValid(mouseItem) || mouseItem.isEmpty())
+			ItemStack mouseItem = player.inventory.getCarried().copy();
+			if (selectedBlockSlot.mayPlace(mouseItem) || mouseItem.isEmpty())
 			{
 				mouseItem.setCount(1);
-				selectedBlockSlot.putStack(mouseItem);
+				selectedBlockSlot.set(mouseItem);
 			}
 			sync();
 
 			return ItemStack.EMPTY;
 		}
 
-		ItemStack ret = super.slotClick(slotId, dragType, clickTypeIn, player);
+		ItemStack ret = super.clicked(slotId, dragType, clickTypeIn, player);
 
+		if(!ret.isEmpty())
+		{
+			bagCap.getComplex().invalidate();
+		}
+		
 		sync();
 
 		return ret;
 	}
 
 	@Override
-	public void onContainerClosed(PlayerEntity playerIn)
+	public void removed(PlayerEntity playerIn)
 	{
-		super.onContainerClosed(playerIn);
+		super.removed(playerIn);
 
 		sync();
 

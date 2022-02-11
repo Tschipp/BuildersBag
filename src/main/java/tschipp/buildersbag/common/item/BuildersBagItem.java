@@ -1,5 +1,7 @@
 package tschipp.buildersbag.common.item;
 
+import javax.annotation.Nullable;
+
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -17,6 +19,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.shapes.ISelectionContext;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -24,19 +27,18 @@ import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.FakePlayer;
-import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.network.NetworkHooks;
 import net.minecraftforge.fml.network.PacketDistributor;
 import tschipp.buildersbag.BuildersBag;
+import tschipp.buildersbag.api.BagComplex;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
-import tschipp.buildersbag.api.datastructures.BagComplex;
 import tschipp.buildersbag.client.rendering.BagItemStackRenderer;
+import tschipp.buildersbag.common.BuildersBagRegistry;
 import tschipp.buildersbag.common.caps.BagCapProvider;
 import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.inventory.ContainerBag;
-import tschipp.buildersbag.compat.linear.LinearCompatManager;
 import tschipp.buildersbag.network.client.PlayFailureSoundClient;
 import tschipp.buildersbag.network.client.SyncBagCapClient;
 
@@ -51,7 +53,7 @@ public class BuildersBagItem extends Item implements INamedContainerProvider
 
 	public BuildersBagItem(int tier, String tiername)
 	{
-		super(new Item.Properties().group(ItemGroup.TOOLS).maxStackSize(1).setISTER(() -> () -> new BagItemStackRenderer()));
+		super(new Item.Properties().tab(ItemGroup.TAB_TOOLS).stacksTo(1).setISTER(() -> () -> new BagItemStackRenderer()));
 
 		String name = "builders_bag_tier_" + tiername;
 		this.setRegistryName(name);
@@ -61,11 +63,14 @@ public class BuildersBagItem extends Item implements INamedContainerProvider
 	@Override
 	public ICapabilityProvider initCapabilities(ItemStack stack, CompoundNBT nbt)
 	{
+		if(BagCapProvider.BAG_CAPABILITY == null) //Cap not yet initialized
+			return null;
+			
 		return new BagCapProvider(this.getTier());
 	}
 
 	@Override
-	public boolean shouldSyncTag()
+	public boolean shouldOverrideMultiplayerNbt()
 	{
 		return true;
 	}
@@ -102,41 +107,70 @@ public class BuildersBagItem extends Item implements INamedContainerProvider
 	}
 
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World world, PlayerEntity player, Hand hand)
+	public ActionResult<ItemStack> use(World world, PlayerEntity player, Hand hand)
 	{
-		ItemStack stack = player.getHeldItem(hand);
+		ItemStack stack = player.getItemInHand(hand);
 
-		if (!world.isRemote && player.isSneaking() && (ModList.get().isLoaded("linear") ? LinearCompatManager.doDragCheck(player) : true))
-			NetworkHooks.openGui((ServerPlayerEntity) player, this);
+		if (!world.isClientSide && player
+				.isShiftKeyDown() /*
+									 * && (ModList.get().isLoaded("linear") ?
+									 * LinearCompatManager.doDragCheck(player) :
+									 * true)
+									 */) // TODO Linear
+			openGui((ServerPlayerEntity) player, -1, false, hand);
 
-		
 		return new ActionResult<ItemStack>(ActionResultType.PASS, stack);
 	}
 
+//	@Override
+//	public ActionResultType useOn(ItemUseContext context)
+//	{
+//		PlayerEntity player = context.getPlayer();
+//		Direction facing = context.getClickedFace();
+//		Hand hand = context.getHand();
+//		ItemStack stack = context.getItemInHand();
+//		World world = context.getLevel();
+//		BlockPos pos = context.getClickedPos();
+//
+//		if (player == null)
+//			return ActionResultType.FAIL;
+//
+//		if (player.isShiftKeyDown())
+//			return ActionResultType.PASS;
+//
+//		if (!world.isClientSide)
+//		{
+//			IBagCap bag = CapHelper.getBagCap(stack);
+//			BagComplex complex = bag.getComplex();
+//
+//			ItemStack selectedStack = bag.getSelectedItem();
+//		}
+//	}
+
 	@Override
-	public ActionResultType onItemUse(ItemUseContext context)
+	public ActionResultType useOn(ItemUseContext context)
 	{
 		PlayerEntity player = context.getPlayer();
-		Direction facing = context.getFace();
+		Direction facing = context.getClickedFace();
 		Hand hand = context.getHand();
-		ItemStack stack = context.getItem();
-		World world = context.getWorld();
-		BlockPos pos = context.getPos();
+		ItemStack stack = context.getItemInHand();
+		World world = context.getLevel();
+		BlockPos pos = context.getClickedPos();
 
 		if (player == null)
 			return ActionResultType.FAIL;
 
-		if (player.isSneaking())
+		if (player.isShiftKeyDown())
 			return ActionResultType.PASS;
 
 		IBagCap bag = CapHelper.getBagCap(stack);
 
-		if (!world.isRemote)
+		if (!world.isClientSide)
 		{
 			FakePlayer fake = new FakePlayer((ServerWorld) world, player.getGameProfile());
-			fake.rotationPitch = player.rotationPitch;
-			fake.rotationYaw = player.rotationYaw;
-			fake.setPosition(0, 0, 0);
+			fake.xRot = player.xRot;
+			fake.yRot = player.yRot;
+			fake.setPos(0, 0, 0);
 
 			ItemStack placementStack = ItemStack.EMPTY;
 
@@ -157,25 +191,26 @@ public class BuildersBagItem extends Item implements INamedContainerProvider
 			if (placementStack.isEmpty())
 			{
 				// Send these via packet
-				player.sendStatusMessage(new TranslationTextComponent("buildersbag.noblock").mergeStyle(TextFormatting.RED), true);
+				player.displayClientMessage(new TranslationTextComponent("buildersbag.noblock").withStyle(TextFormatting.RED), true);
 				BuildersBag.network.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player), new PlayFailureSoundClient());
 				return ActionResultType.FAIL;
 			}
 
 			ItemStack requestedStack = placementStack.copy();
-			Item placementItem = stack.getItem();
+			Item placementItem = placementStack.getItem();
 
-			fake.setHeldItem(hand, placementStack);
-			fake.setPosition(player.getPosX(), player.getPosY(), player.getPosZ());
+//			fake.setItemInHand(hand, placementStack);
+//			fake.setPos(player.getX(), player.getY(), player.getZ());
 
-			Block block = Block.getBlockFromItem(placementStack.getItem());
-			boolean canPlace = block.getDefaultState().isValidPosition(world, world.getBlockState(pos).getMaterial().isReplaceable() ? pos : pos.offset(facing));
-			boolean canEdit = player.canPlayerEdit(pos, facing, placementStack);
-			boolean b = canEdit && canPlace;
+			Block block = Block.byItem(placementStack.getItem());
+			boolean canPlace = block.defaultBlockState().canSurvive(world, world.getBlockState(pos).getMaterial().isReplaceable() ? pos : pos.relative(facing));
+			boolean canEdit = player.mayUseItemAt(pos, facing, placementStack);
+			boolean enoughSpace = world.isUnobstructed(world.getBlockState(pos), pos.relative(facing), ISelectionContext.of(player));
+			boolean b = canEdit && canPlace && enoughSpace;
 
 			if (!b)
 			{
-				player.sendStatusMessage(new TranslationTextComponent("buildersbag.cantplace", requestedStack.getDisplayName()).mergeStyle(TextFormatting.RED), true);
+				player.displayClientMessage(new TranslationTextComponent("buildersbag.cantplace", requestedStack.getHoverName()).withStyle(TextFormatting.RED), true);
 				BuildersBag.network.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player), new PlayFailureSoundClient());
 				return ActionResultType.FAIL;
 			}
@@ -187,7 +222,7 @@ public class BuildersBagItem extends Item implements INamedContainerProvider
 				int removed = complex.take(placementItem, 1, player);
 				if (removed < 1)
 				{
-					player.sendStatusMessage(new TranslationTextComponent("buildersbag.nomaterials", requestedStack.getDisplayName()).mergeStyle(TextFormatting.RED), true);
+					player.displayClientMessage(new TranslationTextComponent("buildersbag.nomaterials", requestedStack.getHoverName()).withStyle(TextFormatting.RED), true);
 					BuildersBag.network.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player), new PlayFailureSoundClient());
 					return ActionResultType.FAIL;
 				}
@@ -196,15 +231,20 @@ public class BuildersBagItem extends Item implements INamedContainerProvider
 			else
 				placementStack = placementStack.copy();
 
-			fake.setHeldItem(hand, placementStack);
-			fake.setPosition(player.getPosX(), player.getPosY(), player.getPosZ());
+			fake.setItemInHand(hand, placementStack);
+			fake.setPos(player.getX(), player.getY(), player.getZ());
 
-			ActionResultType result = placementStack.onItemUse(new ItemUseContext(fake, hand, new BlockRayTraceResult(context.getHitVec(), facing, pos, context.isInside())));
+			ActionResultType result = placementStack.useOn(new ItemUseContext(fake, hand, new BlockRayTraceResult(context.getClickLocation(), facing, pos, context.isInside())));
 
-			if (result != ActionResultType.SUCCESS)
+			if (result != ActionResultType.CONSUME)
+			{
 				complex.add(placementItem, 1, player);
+				player.displayClientMessage(new TranslationTextComponent("buildersbag.cantplace", requestedStack.getHoverName()).withStyle(TextFormatting.RED), true);
+				BuildersBag.network.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player), new PlayFailureSoundClient());
+				return ActionResultType.FAIL;
+			}
 			else
-				player.swingArm(hand);
+				player.swing(hand);
 
 			BuildersBag.network.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player), new SyncBagCapClient(bag, hand));
 
@@ -229,14 +269,14 @@ public class BuildersBagItem extends Item implements INamedContainerProvider
 	@Override
 	public Container createMenu(int windowID, PlayerInventory inventory, PlayerEntity player)
 	{
-		ItemStack main = player.getHeldItemMainhand();
-		ItemStack off = player.getHeldItemOffhand();
-		
-		if(main.getItem() instanceof BuildersBagItem)
+		ItemStack main = player.getMainHandItem();
+		ItemStack off = player.getOffhandItem();
+
+		if (main.getItem() instanceof BuildersBagItem)
 			return new ContainerBag(windowID, player, main, Hand.MAIN_HAND);
-		else if(off.getItem() instanceof BuildersBagItem)
+		else if (off.getItem() instanceof BuildersBagItem)
 			return new ContainerBag(windowID, player, off, Hand.OFF_HAND);
-		
+
 		return null;
 	}
 
@@ -246,8 +286,21 @@ public class BuildersBagItem extends Item implements INamedContainerProvider
 		return new TranslationTextComponent("buildersbag.name");
 	}
 
+	public static void openGui(ServerPlayerEntity player, int slot, boolean isBauble, @Nullable Hand hand)
+	{
+		NetworkHooks.openGui(player, BuildersBagRegistry.TIER_1, buf -> {
+			CompoundNBT tag = new CompoundNBT();
+			tag.putInt("slot", slot);
+			if (hand != null)
+				tag.putBoolean("hand", hand == Hand.MAIN_HAND ? true : false);
+			tag.putBoolean("isBauble", isBauble);
+			buf.writeNbt(tag);
+		});
+
+	}
+
 	// /*
-	// * LITTLE TILES COMPAT
+	// * LITTLE TILES COMPAT TODO
 	// */
 	// @Optional.Method(modid = "littletiles")
 	// @Override

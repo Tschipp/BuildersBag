@@ -1,15 +1,7 @@
 package tschipp.buildersbag.common;
 
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
@@ -17,47 +9,74 @@ import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.CapabilityManager;
+import net.minecraftforge.common.extensions.IForgeContainerType;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.ObjectHolder;
+import net.minecraftforge.registries.RegistryBuilder;
 import tschipp.buildersbag.BuildersBag;
+import tschipp.buildersbag.api.BagModuleType;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.api.RequirementListener;
 import tschipp.buildersbag.common.caps.BagCap;
 import tschipp.buildersbag.common.caps.BagCapStorage;
-import tschipp.buildersbag.common.config.BuildersBagConfig;
+import tschipp.buildersbag.common.crafting.CraftingHandler;
+import tschipp.buildersbag.common.crafting.CraftingRecipesLoadedEvent;
 import tschipp.buildersbag.common.inventory.ContainerBag;
 import tschipp.buildersbag.common.inventory.ContainerBag.BagContainerFactory;
 import tschipp.buildersbag.common.item.BuildersBagItem;
+import tschipp.buildersbag.common.modules.CraftingModule;
+import tschipp.buildersbag.common.modules.RandomnessModule;
+import tschipp.buildersbag.common.modules.SupplierModule;
 
 @ObjectHolder(BuildersBag.MODID)
 @EventBusSubscriber(modid = BuildersBag.MODID, bus = Bus.MOD)
 public class BuildersBagRegistry
 {
+	public static IForgeRegistry<BagModuleType<?>> REGISTRY_MODULES;
 
-	private static final Map<ResourceLocation, Supplier<IBagModule>> modules = new HashMap<ResourceLocation, Supplier<IBagModule>>();
-	private static final Map<ResourceLocation, Set<Integer>> defaultModuleStages = new HashMap<ResourceLocation, Set<Integer>>();
-
-	@ObjectHolder("builders_bag_tier_1")
-	public static final Item TIER_1 = null;
+	@ObjectHolder("builders_bag_tier_one")
+	public static final BuildersBagItem TIER_1 = null;
 	
-	@ObjectHolder("builders_bag_tier_2")
-	public static final Item TIER_2 = null;
+	@ObjectHolder("builders_bag_tier_two")
+	public static final BuildersBagItem TIER_2 = null;
 	
-	@ObjectHolder("builders_bag_tier_3")
-	public static final Item TIER_3 = null;
+	@ObjectHolder("builders_bag_tier_three")
+	public static final BuildersBagItem TIER_3 = null;
 	
-	@ObjectHolder("builders_bag_tier_4")
-	public static final Item TIER_4 = null;
+	@ObjectHolder("builders_bag_tier_four")
+	public static final BuildersBagItem TIER_4 = null;
 	
-	@ObjectHolder("builders_bag_tier_5")
-	public static final Item TIER_5 = null;
-
+	@ObjectHolder("builders_bag_tier_five")
+	public static final BuildersBagItem TIER_5 = null;
+	
 	@ObjectHolder("buildersbag")
 	public static final ContainerType<ContainerBag> BAG_CONTAINER_TYPE = null;
+	
+	
+	
+	@ObjectHolder("random")
+	public static final BagModuleType<RandomnessModule> MODULE_RANDOM = null;
+
+	@ObjectHolder("supplier")
+	public static final BagModuleType<SupplierModule> MODULE_SUPPLIER = null;
+	
+	@ObjectHolder("crafting")
+	public static final BagModuleType<SupplierModule> MODULE_CRAFTING = null;
+	
+	@SubscribeEvent
+	public static void onRegistriesRegister(RegistryEvent.NewRegistry event)
+	{
+		RegistryBuilder<BagModuleType<?>> builder = new RegistryBuilder<>();
+		builder.setType(c(BagModuleType.class));
+		builder.setName(rs("modules"));
+		REGISTRY_MODULES = builder.create();
+	}
+	
 	
 	@SubscribeEvent
 	public static void onItemsRegister(RegistryEvent.Register<Item> event)
@@ -74,121 +93,112 @@ public class BuildersBagRegistry
 	@SubscribeEvent
 	public static void onContainerRegister(RegistryEvent.Register<ContainerType<?>> event)
 	{
-		event.getRegistry().register(new ContainerType<ContainerBag>(new BagContainerFactory()).setRegistryName(BuildersBag.MODID, "buildersbag"));
+		event.getRegistry().register(IForgeContainerType.create(new BagContainerFactory()).setRegistryName(BuildersBag.MODID, "buildersbag"));
 	}
 
-	
-	
-	public static void registerModules()
+	@SubscribeEvent
+	public static void onBagModuleRegister(RegistryEvent.Register<BagModuleType<?>> event)
 	{
-		// addModule(new ResourceLocation(BuildersBag.MODID, "random"),
-		// RandomnessModule::new, 1, 2, 3, 4, 5);
-		// addModule(new ResourceLocation(BuildersBag.MODID, "crafting"),
-		// CraftingModule::new, 4, 5);
-		// addModule(new ResourceLocation(BuildersBag.MODID, "supplier"),
-		// SupplierModule::new, 5);
-		//
-		// if (ModList.get().isLoaded("chisel"))
-		// addModule(new ResourceLocation(BuildersBag.MODID, "chisel"),
-		// ChiselModule::new, 2, 3, 4, 5);
-		//
-		// if (ModList.get().isLoaded("littletiles"))
-		// addModule(new ResourceLocation(BuildersBag.MODID, "littletiles"),
-		// LittleTilesModule::new, 3, 4, 5);
-		//
-		// if (ModList.get().isLoaded("chiselsandbits"))
-		// addModule(new ResourceLocation(BuildersBag.MODID, "chiselsandbits"),
-		// ChiselsBitsModule::new, 3, 4, 5);
+		event.getRegistry().registerAll(
+				BagModuleType.create(rs("random"), RandomnessModule::new,  RequirementListener::builder, 1, 2, 3, 4, 5),
+				BagModuleType.create(rs("supplier"), SupplierModule::new,  RequirementListener::builder, 5),
+				BagModuleType.create(rs("crafting"), CraftingModule::new,  CraftingHandler::createRecipeListener, CraftingRecipesLoadedEvent.class, 4, 5)
+				);
 	}
+	
+	private static ResourceLocation rs(String name)
+	{
+		return new ResourceLocation(BuildersBag.MODID, name);
+	}
+
+	@SuppressWarnings("unchecked") //Ugly hack to let us pass in a typed Class object. Remove when we remove type specific references.
+    private static <T> Class<T> c(Class<?> cls) { return (Class<T>)cls; }
 
 	@Nullable
-	public static IBagModule getModule(ResourceLocation loc)
+	public static IBagModule createModule(ResourceLocation loc)
 	{
-		Supplier<IBagModule> sup = modules.get(loc);
-		if (sup != null)
-			return sup.get();
+		BagModuleType<?> type = REGISTRY_MODULES.getValue(loc);
 
-		return null;
+		if(type == null)
+			return null;
+		
+		return type.create();
 	}
 
-	/**
-	 * Modders: Don't use this method, use the one in
-	 * {@link tschipp.buildersbag.api.ModuleRegistry#registerModule} Registers a
-	 * module that gets instantiated with the given supplier The bag stages
-	 * determine by what stage the module is unlocked by default.
-	 * 
-	 * @param name
-	 *            the registry name of the module
-	 * @param supplier
-	 *            the supplier
-	 * @param bagStages
-	 *            the bag stages, ints ranging from 1 - 5 (inclusive)
-	 */
-	public static void addModule(ResourceLocation name, Supplier<IBagModule> supplier, int... bagStages)
-	{
-		modules.put(name, supplier);
-		Set<Integer> list = new HashSet<Integer>();
-		for (int i : bagStages)
-			if (i >= 1 && i <= 5)
-				list.add(i);
-		defaultModuleStages.put(name, list);
-	}
+//	/** REMOVE, use registry events
+//	 * Modders: Don't use this method, use the one in
+//	 * {@link tschipp.buildersbag.api.ModuleRegistry#registerModule} Registers a
+//	 * module that gets instantiated with the given supplier The bag stages
+//	 * determine by what stage the module is unlocked by default.
+//	 * 
+//	 * @param name
+//	 *            the registry name of the module
+//	 * @param supplier
+//	 *            the supplier
+//	 * @param bagStages
+//	 *            the bag stages, ints ranging from 1 - 5 (inclusive)
+//	 */
+//	public static void addModule(ResourceLocation name, Supplier<IBagModule> supplier, int... bagStages)
+//	{
+//		modules.put(name, supplier);
+//		Set<Integer> list = new HashSet<Integer>();
+//		for (int i : bagStages)
+//			if (i >= 1 && i <= 5)
+//				list.add(i);
+//		defaultModuleStages.put(name, list);
+//	}
 
-	public static void sayHi(String modid)
-	{
-		Set<String> seenMods = BuildersBag.getSeenMods();
-		if (!seenMods.contains(modid))
-		{
-			BuildersBagConfig.addToCurrentConfig(modid);
-
-			try
-			{
-				FileWriter writer = new FileWriter(BuildersBag.seenModsFile, true);
-				writer.append(modid + "\n");
-				writer.close();
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-			}
-		}
-	}
+//	public static void sayHi(String modid)
+//	{
+//		Set<String> seenMods = BuildersBag.getSeenMods();
+//		if (!seenMods.contains(modid))
+//		{
+//			BuildersBagConfig.addToCurrentConfig(modid);
+//
+//			try
+//			{
+//				FileWriter writer = new FileWriter(BuildersBag.seenModsFile, true);
+//				writer.append(modid + "\n");
+//				writer.close();
+//			}
+//			catch (IOException e)
+//			{
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 
 	public static String[] getDefaultModulesForTier(int tier)
 	{
-		List<String> modules = new ArrayList<String>();
-		for (Entry<ResourceLocation, Set<Integer>> entry : defaultModuleStages.entrySet())
-		{
-			for (int t : entry.getValue())
-			{
-				if (t == tier)
-				{
-					modules.add(entry.getKey().toString());
-					break;
-				}
-			}
-		}
-
-		return modules.toArray(new String[modules.size()]);
+		return new String[] {"buildersbag:random", "buildersbag:supplier"};
+//		return REGISTRY_MODULES.getValues()
+//		.stream()
+//		.filter(type -> type.getBagLevels().contains(tier))
+//		.map(type -> type.getRegistryName().toString())
+//		.toArray(String[]::new);
 	}
 
 	public static List<Integer> getTiersForModule(ResourceLocation module)
 	{
-		return new ArrayList<Integer>(defaultModuleStages.get(module));
+		BagModuleType<?> type = REGISTRY_MODULES.getValue(module);
+		if(type == null)
+			return Collections.emptyList();
+		
+		return type.getBagLevels();
 	}
 
-	public static List<ResourceLocation> getModulesFromMod(String modid)
-	{
-		List<ResourceLocation> moduleL = new ArrayList<ResourceLocation>();
-		for (ResourceLocation module : modules.keySet())
-		{
-			if (module.getNamespace().equals(modid))
-			{
-				moduleL.add(module);
-			}
-		}
-		return moduleL;
-	}
+//	public static List<ResourceLocation> getModulesFromMod(String modid)
+//	{
+//		List<ResourceLocation> moduleL = new ArrayList<ResourceLocation>();
+//		for (ResourceLocation module : modules.keySet())
+//		{
+//			if (module.getNamespace().equals(modid))
+//			{
+//				moduleL.add(module);
+//			}
+//		}
+//		return moduleL;
+//	}
 
 	public static void registerCapabilities()
 	{

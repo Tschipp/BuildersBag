@@ -20,8 +20,8 @@ public class ModifyPaletteServer implements NetworkMessage
 	
 	public ModifyPaletteServer(PacketBuffer buf)
 	{
-		uuid = buf.readString();
-		sel = buf.readItemStack();
+		uuid = buf.readUtf();
+		sel = buf.readItem();
 		add = buf.readBoolean();
 	}
 	
@@ -35,8 +35,8 @@ public class ModifyPaletteServer implements NetworkMessage
 	@Override
 	public void toBytes(PacketBuffer buf)
 	{
-		buf.writeString(uuid);
-		buf.writeItemStack(sel);
+		buf.writeUtf(uuid);
+		buf.writeItem(sel);
 		buf.writeBoolean(add);
 	}
 
@@ -49,8 +49,8 @@ public class ModifyPaletteServer implements NetworkMessage
 
 				ServerPlayerEntity player = ctx.get().getSender();
 				
-				ItemStack main = player.getHeldItemMainhand();
-				ItemStack off = player.getHeldItemOffhand();
+				ItemStack main = player.getMainHandItem();
+				ItemStack off = player.getOffhandItem();
 				
 				IBagCap cap;
 				if((cap = CapHelper.getBagCap(main)) != null && cap.getUUID().equals(uuid));
@@ -63,7 +63,7 @@ public class ModifyPaletteServer implements NetworkMessage
 				{
 					for(int i = 0; i < palette.size(); i++)
 					{
-						if(ItemStack.areItemStacksEqual(sel, palette.get(i)))
+						if(ItemStack.matches(sel, palette.get(i)))
 						{
 							palette.remove(i);
 							break;

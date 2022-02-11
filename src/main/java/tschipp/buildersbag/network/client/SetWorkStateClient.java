@@ -15,7 +15,7 @@ public class SetWorkStateClient implements NetworkMessage
 
 	public SetWorkStateClient(PacketBuffer buf)
 	{
-		bag = buf.readString();
+		bag = buf.readUtf();
 		start = buf.readBoolean();
 	}
 
@@ -28,7 +28,7 @@ public class SetWorkStateClient implements NetworkMessage
 	@Override
 	public void toBytes(PacketBuffer buf)
 	{
-		buf.writeString(bag);
+		buf.writeUtf(bag);
 		buf.writeBoolean(start);
 	}
 

@@ -9,7 +9,7 @@ public class RecipeContainerProvided extends RecipeContainer
 
 	public RecipeContainerProvided(ItemStack output)
 	{
-		super(NonNullList.from(Ingredient.fromStacks(output)), output, "");
+		super(NonNullList.of(Ingredient.of(output)), output, "");
 	}
 
 }

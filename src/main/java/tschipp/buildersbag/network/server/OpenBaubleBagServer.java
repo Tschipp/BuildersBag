@@ -5,7 +5,7 @@ import java.util.function.Supplier;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.fml.network.NetworkEvent;
-import tschipp.buildersbag.BuildersBag;
+import tschipp.buildersbag.common.item.BuildersBagItem;
 import tschipp.buildersbag.network.NetworkMessage;
 
 public class OpenBaubleBagServer implements NetworkMessage
@@ -38,7 +38,7 @@ public class OpenBaubleBagServer implements NetworkMessage
 
 				ServerPlayerEntity player = ctx.get().getSender();
 
-				player.openGui(BuildersBag.instance, 1, player.world, bagSlot, 0, 0);
+				BuildersBagItem.openGui(player, bagSlot, true, null);
 
 				ctx.get().setPacketHandled(true);
 			});

@@ -20,7 +20,7 @@
 //	private long lastFailureTime = 0;
 //	
 //	@Override
-//	public int countItems(PlayerEntity player, ItemStack stack, ItemStack inventoryStack)
+//	public int countItems(PlayerEntity player, ItemStack stack, ItemStack inventoryStack) TODO
 //	{
 ////		String nbt = inventoryStack.serializeNBT().toString();
 ////		if(nbt.equals(lastTag) && ItemStack.areItemsEqual(lastSelected, stack))
@@ -31,7 +31,7 @@
 //
 //		long time = System.currentTimeMillis();
 //		
-//		if(player.world.isRemote)
+//		if(player.level.isRemote)
 //		{
 //			BagCache.startSimulation(inventoryStack);
 //			provided = BagHelper.getOrProvideStackWithCount(stack, 500, bag, player, null);

@@ -9,7 +9,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import tschipp.buildersbag.api.IBlockSourceAdapter;
 
-public class BlockSourceAdapterHandler
+public class BlockSourceAdapterHandler //TODO: Rewrite
 {
 	private static final Set<IBlockSourceAdapter> adapters = new HashSet<IBlockSourceAdapter>();
 	

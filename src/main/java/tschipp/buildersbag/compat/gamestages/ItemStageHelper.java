@@ -2,7 +2,7 @@
 //
 //import net.minecraft.item.ItemStack;
 //
-//public class ItemStageHelper
+//public class ItemStageHelper TODO
 //{
 //
 //	public static String getItemStage(ItemStack stack)

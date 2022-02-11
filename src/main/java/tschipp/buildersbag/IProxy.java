@@ -12,7 +12,7 @@ public interface IProxy
 	public World getWorld();
 
 	public void changeWorkState(String uuid, PlayerEntity player, boolean start);
-
+	
 	default Dist getSide()
 	{
 		return Thread.currentThread().getThreadGroup() == SidedThreadGroups.SERVER ? Dist.DEDICATED_SERVER : Dist.CLIENT;

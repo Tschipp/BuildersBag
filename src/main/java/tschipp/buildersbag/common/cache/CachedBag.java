@@ -14,8 +14,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.IBagCap;
-import tschipp.buildersbag.api.datastructures.ItemContainer;
-import tschipp.buildersbag.api.datastructures.Tuple;
+import tschipp.buildersbag.api.ItemContainer;
+import tschipp.buildersbag.api.Tuple;
 import tschipp.buildersbag.common.helper.BagHelper;
 import tschipp.buildersbag.common.helper.CapHelper;
 import tschipp.buildersbag.common.helper.InventoryHelper;
@@ -101,7 +101,7 @@ public class CachedBag
 		{
 			pendingRequests.add(ItemContainer.forStack(forStack));
 
-			if (player.world.isRemote)
+			if (player.level.isClientSide)
 			{
 				Tuple<Boolean, Integer> slot = InventoryHelper.getSlotForStackWithBaubles(player, bag);
 				BuildersBag.network.sendToServer(new RequestCacheUpdateServer(slot.getSecond(), slot.getFirst(), forStack, preferredAmount));

@@ -13,15 +13,17 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 import net.minecraftforge.forgespi.language.IModInfo;
+import tschipp.buildersbag.common.config.Configs;
 
 @EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
 @Mod(BuildersBag.MODID)
 public class BuildersBag
 {
 
-	public static final IProxy proxy = DistExecutor.safeRunForDist(() -> () -> new ClientProxy(), () -> () -> new CommonProxy());
+	public static final IProxy proxy = DistExecutor.safeRunForDist(() -> ClientProxy::new, () -> CommonProxy::new);
 	// Instance
 //	@Instance(BuildersBag.MODID)
 //	public static BuildersBag instance;
@@ -44,15 +46,19 @@ public class BuildersBag
 	private static final List<String> seenMods = new ArrayList<String>();
 	public static boolean isNewlyGenerated = false;
 	
+	public static boolean TESTING = true;
+	
 	public BuildersBag()
 	{
 //		if(!configFile.exists())
 //		{
 //			isNewlyGenerated = true;
 //		}
+				
+		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Configs.CLIENT_CONFIG);
+		ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, Configs.SERVER_CONFIG);
 		
 		info = ModLoadingContext.get().getActiveContainer().getModInfo();
-
 	}
 	
 //	@EventHandler

@@ -31,7 +31,7 @@ public class ToggleableSlot extends SlotItemHandler
 	}
 
 	@Override
-	public boolean isEnabled()
+	public boolean isActive()
 	{
 		return this.isSlotEnabled();
 	}

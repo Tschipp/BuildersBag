@@ -76,7 +76,7 @@ public class BagCapStorage implements IStorage<IBagCap>
 		for(int i = 0; i < modules.size(); i++)
 		{
 			CompoundNBT module = modules.getCompound(i);
-			IBagModule mod = BuildersBagRegistry.getModule(new ResourceLocation(module.getString("name")));
+			IBagModule mod = BuildersBagRegistry.createModule(new ResourceLocation(module.getString("name")));
 			if(mod != null)
 			{
 				mod.deserializeNBT(module);
@@ -89,7 +89,7 @@ public class BagCapStorage implements IStorage<IBagCap>
 		for(int i = 0; i < palette.size(); i++)
 		{
 			CompoundNBT stacktag = palette.getCompound(i);
-			ItemStack stack = ItemStack.read(stacktag);
+			ItemStack stack = ItemStack.of(stacktag);
 			if(!stack.isEmpty())
 				paletteList.add(stack);
 		}

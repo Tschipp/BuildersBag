@@ -1,4 +1,4 @@
-package tschipp.buildersbag.api.datastructures;
+package tschipp.buildersbag.api;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,14 +9,13 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
 import net.minecraft.item.Item;
-import tschipp.buildersbag.api.IBagModule;
-import tschipp.buildersbag.api.datastructures.RequirementListener.RequirementItem;
+import tschipp.buildersbag.api.RequirementListener.ItemCreationRequirements;
 
 public class CreateableItemsManager
-{
+{	
 	private Set<Item> currentlyCreateable = new HashSet<>();
-	private Multimap<Item, RequirementItem> currentlyProvidedFrom = HashMultimap.create();
-	private Map<RequirementItem, Tracker> activeRequirements = new HashMap<>();
+	private Multimap<Item, ItemCreationRequirements> currentlyProvidedFrom = HashMultimap.create();
+	private Map<ItemCreationRequirements, Tracker> activeRequirements = new HashMap<>();
 	private IBagModule module;
 	
 	public CreateableItemsManager(IBagModule module)
@@ -27,7 +26,7 @@ public class CreateableItemsManager
 	/*
 	 * Marks that item can be created somehow, keep track on what requirement(s) it is based, sends notifications if new items are created.
 	 */
-	public void add(BagComplex complex, RequirementItem req, Item item)
+	public void add(BagComplex complex, ItemCreationRequirements req, IngredientKey item)
 	{
 		Tracker track = activeRequirements.getOrDefault(req, new Tracker(req));
 		if(track.add(item))
@@ -36,9 +35,10 @@ public class CreateableItemsManager
 			currentlyProvidedFrom.put(req.getOutput(), req);
 			complex.getInventory().addCraftable(req.getOutput(), module, req);
 		}
+		activeRequirements.put(req, track);
 	}
 	
-	public void remove(BagComplex complex, RequirementItem req, Item item)
+	public void remove(BagComplex complex, ItemCreationRequirements req, IngredientKey item)
 	{
 		if(!activeRequirements.containsKey(req))
 			return;
@@ -59,10 +59,10 @@ public class CreateableItemsManager
 	static class Tracker
 	{
 		
-		private final Set<Item> requirements;
-		private final Set<Item> active = new HashSet<Item>();
+		private final Set<IngredientKey> requirements;
+		private final Set<IngredientKey> active = new HashSet<IngredientKey>();
 		
-		public Tracker(RequirementItem req)
+		public Tracker(ItemCreationRequirements req)
 		{
 			requirements = req.getRequirements();
 		}
@@ -70,7 +70,7 @@ public class CreateableItemsManager
 		/*
 		 * marks item as available. Returns true if all are available
 		 */
-		public boolean add(Item item)
+		public boolean add(IngredientKey item)
 		{
 			active.add(item);
 			if(active.containsAll(requirements))
@@ -81,7 +81,7 @@ public class CreateableItemsManager
 		/*
 		 * mark item as unavailable. Returns true if none are available.
 		 */
-		public boolean remove(Item item)
+		public boolean remove(IngredientKey item)
 		{
 			active.remove(item);
 			if(active.isEmpty())

@@ -21,7 +21,7 @@ public class SyncBagCapServer implements NetworkMessage
 
 	public SyncBagCapServer(PacketBuffer buf)
 	{
-		readTag = buf.readCompoundTag();
+		readTag = buf.readNbt();
 		right = buf.readBoolean();
 	}
 
@@ -34,7 +34,7 @@ public class SyncBagCapServer implements NetworkMessage
 	@Override
 	public void toBytes(PacketBuffer buf)
 	{
-		buf.writeCompoundTag((CompoundNBT) BagCapProvider.BAG_CAPABILITY.writeNBT(bagCap, null));
+		buf.writeNbt((CompoundNBT) BagCapProvider.BAG_CAPABILITY.writeNBT(bagCap, null));
 		buf.writeBoolean(right);
 	}
 
@@ -47,7 +47,7 @@ public class SyncBagCapServer implements NetworkMessage
 			ctx.get().enqueueWork(() -> {
 				
 				ServerPlayerEntity player = ctx.get().getSender();
-				ItemStack stack = right ? player.getHeldItemMainhand() : player.getHeldItemOffhand();
+				ItemStack stack = right ? player.getMainHandItem() : player.getOffhandItem();
 
 				IBagCap oldCap = CapHelper.getBagCap(stack);
 				BagCapProvider.BAG_CAPABILITY.readNBT(oldCap, null, readTag);

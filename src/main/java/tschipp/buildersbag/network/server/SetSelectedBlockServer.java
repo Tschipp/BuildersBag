@@ -18,8 +18,8 @@ public class SetSelectedBlockServer implements NetworkMessage
 	
 	public SetSelectedBlockServer(PacketBuffer buf)
 	{
-		uuid = buf.readString();
-		sel = buf.readItemStack();
+		uuid = buf.readUtf();
+		sel = buf.readItem();
 	}
 	
 	public SetSelectedBlockServer(String uuid, ItemStack selected)
@@ -31,8 +31,8 @@ public class SetSelectedBlockServer implements NetworkMessage
 	@Override
 	public void toBytes(PacketBuffer buf)
 	{
-		buf.writeString(uuid);
-		buf.writeItemStack(sel);
+		buf.writeUtf(uuid);
+		buf.writeItem(sel);
 	}
 	
 	@Override
@@ -44,8 +44,8 @@ public class SetSelectedBlockServer implements NetworkMessage
 
 				ServerPlayerEntity player = ctx.get().getSender();
 
-				ItemStack main = player.getHeldItemMainhand();
-				ItemStack off = player.getHeldItemOffhand();
+				ItemStack main = player.getMainHandItem();
+				ItemStack off = player.getOffhandItem();
 				
 				IBagCap cap;
 				if((cap = CapHelper.getBagCap(main)) != null && cap.getUUID().equals(uuid))

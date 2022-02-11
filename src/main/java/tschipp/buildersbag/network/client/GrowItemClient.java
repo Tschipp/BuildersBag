@@ -42,7 +42,7 @@ public class GrowItemClient implements NetworkMessage
 		{
 			ctx.get().enqueueWork(() -> {
 				PlayerEntity player = BuildersBag.proxy.getPlayer();
-				ItemStack s = player.getHeldItem(hand);
+				ItemStack s = player.getItemInHand(hand);
 				s.grow(growthAmount);
 				
 				ctx.get().setPacketHandled(true);

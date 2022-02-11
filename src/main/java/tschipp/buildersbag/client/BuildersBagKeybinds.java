@@ -3,12 +3,13 @@ package tschipp.buildersbag.client;
 
 import org.lwjgl.glfw.GLFW;
 
-import net.java.games.input.Keyboard;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.client.util.InputMappings;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import tschipp.buildersbag.common.item.BuildersBagItem;
 
@@ -36,27 +37,25 @@ public class BuildersBagKeybinds
 
 	public static void registerKeybinds()
 	{
-		openSelectionWheel = new KeyBinding("keybind.openSelectionWheel", NO_CONFLICT, GLFW.GLFW_KEY_LEFT_ALT, "buildersbag.name");
+		openSelectionWheel = new KeyBinding("keybind.openSelectionWheel", NO_CONFLICT, InputMappings.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_ALT, "buildersbag.name");
 		ClientRegistry.registerKeyBinding(openSelectionWheel);
 		
 		if(ModList.get().isLoaded("baubles"))
 		{
-			openBaubleBag = new KeyBinding("keybind.openBaubleBag", Keyboard.KEY_R, "buildersbag.name");
+			openBaubleBag = new KeyBinding("keybind.openBaubleBag", GLFW.GLFW_KEY_R, "buildersbag.name");
 			ClientRegistry.registerKeyBinding(openBaubleBag);
 		}
 	}
 	
-	private static long lastGuiTime = 0;
-	
 	public static boolean isMenuKeyPressed()
 	{
-		if(Minecraft.getInstance().currentScreen != null)
+		if(Minecraft.getInstance().screen != null)
 		{
 			return false;
 		}
 		
-		ItemStack main = Minecraft.getInstance().player.getHeldItemMainhand();
-		ItemStack off = Minecraft.getInstance().player.getHeldItemOffhand();
+		ItemStack main = Minecraft.getInstance().player.getMainHandItem();
+		ItemStack off = Minecraft.getInstance().player.getOffhandItem();
 		if(!(main.getItem() instanceof BuildersBagItem) && !(off.getItem() instanceof BuildersBagItem))
 			return false;
 		
@@ -72,7 +71,7 @@ public class BuildersBagKeybinds
 			return KeyModifier.SHIFT.isActive(NO_CONFLICT);
 		}
 		else
-			return openSelectionWheel.isKeyDown();
+			return openSelectionWheel.isDown();
 	}
 	
 }

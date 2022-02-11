@@ -1,6 +1,6 @@
 {
     "parent": "item/generated",
     "textures": {
-        "layer0": "buildersbag:items/tier_5"
+        "layer0": "buildersbag:item/tier_5"
     }
 }

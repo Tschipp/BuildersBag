@@ -1,4 +1,4 @@
-package tschipp.buildersbag.api.datastructures;
+package tschipp.buildersbag.api;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +66,11 @@ public class ItemHolder
 				break;
 		}
 		slots.removeIf(slot -> handler.getStackInSlot(slot).isEmpty());
+		
+		if(slots.isEmpty())
+			amount = 0;
+		
+		containedAmount -= removed;
 		
 		return removed;
 	}
@@ -137,5 +142,11 @@ public class ItemHolder
 	public boolean isItem(Item item)
 	{
 		return containedItem == item;
+	}
+	
+	@Override
+	public String toString()
+	{
+		return containedAmount + " x " + containedItem;
 	}
 }
