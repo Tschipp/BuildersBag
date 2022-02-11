@@ -277,7 +277,7 @@
 //			}
 //		}
 //		
-////		if(!player.world.isRemote)
+////		if(!player.level.isRemote)
 ////		{
 ////			BuildersBag.network.send(PacketDistributor.PLAYER.with(() ->  (ServerPlayerEntity) player), new SyncBagCapInventoryClient(stack, player));
 ////		}

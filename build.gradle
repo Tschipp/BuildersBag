@@ -2,23 +2,25 @@ buildscript {
     repositories {
         maven { url = 'https://files.minecraftforge.net/maven' }
 		maven { url = 'https://repo.spongepowered.org/maven' }
+		maven { url = 'https://maven.parchmentmc.org' }
         jcenter()
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
 		classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.7-SNAPSHOT'
+		classpath 'org.parchmentmc:librarian:1.+'
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'org.spongepowered.mixin'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
-apply plugin: 'maven'
+apply plugin: 'org.parchmentmc.librarian.forgegradle'
 
 apply from: 'https://raw.githubusercontent.com/MinecraftModDevelopment/Gradle-Collection/22e7d543a18cd30675277fbfa3669e3d9e206010/generic/secrets.gradle'
 
-import net.minecraftforge.gradle.common.task.SignJar                      
+//import net.minecraftforge.gradle.common.task.SignJar                      
 import groovy.json.JsonSlurper                       
 import groovy.json.JsonOutput
 
@@ -30,7 +32,7 @@ version = "${version}"
 group = "tschipp.buildersbag"
 archivesBaseName = "buildersbag-${minecraft_version}"
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+java.toolchain.languageVersion = JavaLanguageVersion.of(8)
 
 
 if (System.getenv('BUILD_NUMBER') != null) {
@@ -39,7 +41,7 @@ if (System.getenv('BUILD_NUMBER') != null) {
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
-    mappings channel: 'official', version: '1.16.5'
+    mappings channel: 'parchment', version: "${mapping_version}-${minecraft_version}"
    
     runs {
         client {
@@ -96,6 +98,8 @@ minecraft {
 
 repositories {
 	
+	mavenCentral()
+	
 	maven { // Chisel, CTM
         name 'tterrag maven'
         url "https://maven.tterrag.com/"
@@ -138,24 +142,25 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-	compile fg.deobf("team.chisel.ctm:CTM:${ctm_version}") //CTM
+	implementation fg.deobf("team.chisel.ctm:CTM:${ctm_version}") //CTM
 	//deobfCompile "team.chisel:Chisel:${chisel_version}" //Chisel //not yet available
 	//compile "curse.maven:littletiles:${littletiles_version}" //LT //not yet available
 	//compile "curse.maven:creativecore:${creativecore_version}" //Creative Core //not yet available
-	compile fg.deobf("curse.maven:chisels-bits-231095:${chisels_and_bits_version}") //C & B
+	implementation fg.deobf("curse.maven:chisels-bits-231095:${chisels_and_bits_version}") //C & B
 	//compile "curse.maven:better-builders-wands:${bbw_version}" //Better Builder's Wands //not yet available
-	compile fg.deobf("curse.maven:building-gadgets-298187:${buildinggadgets_version}") //Building Gadgets
+	implementation fg.deobf("curse.maven:building-gadgets-298187:${buildinggadgets_version}") //Building Gadgets
 	//deobfCompile "tschipp.linear:linear-1.16.4:${linear_version}" //Linear //not yet available
-	compile fg.deobf("vazkii.botania:Botania:${botania_version}") //Botania
-	compile fg.deobf("vazkii.patchouli:Patchouli:${patchouli_version}") //Patchouli
+	implementation fg.deobf("vazkii.botania:Botania:${botania_version}") //Botania
+	implementation fg.deobf("vazkii.patchouli:Patchouli:${patchouli_version}") //Patchouli
 	runtimeOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}") //curios
     compileOnly fg.deobf("top.theillusivec4.curios:curios-forge:${curios_version}:api") //curios
-	compile fg.deobf("com.github.lazyMods:Baubles:${baubles_version}:api") //Baubles 
-	compile fg.deobf("net.darkhax.gamestages:GameStages-1.16.4:${gamestage_version}") //Gamestages
+	implementation fg.deobf("com.github.lazyMods:Baubles:${baubles_version}:api") //Baubles 
+	implementation fg.deobf("net.darkhax.gamestages:GameStages-1.16.4:${gamestage_version}") //Gamestages
 	//compile "net.darkhax.itemstages:ItemStages-1.16.4:${itemstage_version}" //Itemstages //not yet available
 	//compile "net.darkhax.orestages:OreStages-1.16.4:${orestage_version}" //Orestage //not yet available
-	compile fg.deobf("net.darkhax.bookshelf:Bookshelf-1.16.4:${bookshelf_version}") //Bookshelf
+	implementation fg.deobf("net.darkhax.bookshelf:Bookshelf-1.16.4:${bookshelf_version}") //Bookshelf
     //compile fg.deobf("com.blamejared.crafttweaker:CraftTweaker-1.16.4:${ct_version}") //Crafttweaker
+	//compile "org.jgrapht:jgrapht-core:1.5.1"
 }
 
 // Example for how to get properties into the manifest for reading by the runtime..
@@ -246,6 +251,7 @@ publishing {
     }
 }
 
+/*
 task signJar(type: SignJar, dependsOn: jar) {
     // Skips if the keyStore property is missing.
     onlyIf {
@@ -265,3 +271,4 @@ task signJar(type: SignJar, dependsOn: jar) {
 
 // Runs this task automatically when build is ran. 
 build.dependsOn signJar
+*/

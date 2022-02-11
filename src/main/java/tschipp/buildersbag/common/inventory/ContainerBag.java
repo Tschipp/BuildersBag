@@ -196,6 +196,7 @@ public class ContainerBag extends Container
 
 	private void setupModuleInventories()
 	{
+		this.modules = null;
 		Builder<IBagModule, Triple<Integer, Integer, Boolean>> builder = ImmutableMap.builder();
 
 		int moduleCount = getMaxModules(invSize);
@@ -260,6 +261,7 @@ public class ContainerBag extends Container
 		this.modules = builder.build();
 	}
 
+	//TODO: Detect when stack is dropped with Q
 	@Override
 	public ItemStack quickMoveStack(PlayerEntity playerIn, int index)
 	{
@@ -420,13 +422,14 @@ public class ContainerBag extends Container
 
 	public void updateModule(String name, CompoundNBT nbt)
 	{
-		modules.forEach((module, triple) -> {
-			if (module.getName().equals(name))
+		for(IBagModule mod : bagCap.getModules())
+		{
+			if (mod.getName().equals(name))
 			{
-				module.deserializeNBT(nbt);
+				mod.deserializeNBT(nbt);
 			}
-		});
-
+		}
+		
 		update();
 	}
 

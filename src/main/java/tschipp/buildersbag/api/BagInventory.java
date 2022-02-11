@@ -1,24 +1,28 @@
-package tschipp.buildersbag.api.datastructures;
+package tschipp.buildersbag.api;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.IItemHandler;
-import tschipp.buildersbag.api.IBagModule;
-import tschipp.buildersbag.api.datastructures.RequirementListener.RequirementItem;
+import tschipp.buildersbag.BuildersBag;
+import tschipp.buildersbag.api.RequirementListener.ItemCreationRequirements;
 
 public class BagInventory
 {
 	Map<Item, ItemHolder> inventoryItems = new HashMap<>();
 	Map<Item, CreateableItemHolder> createableItems = new HashMap<>();
 
-	private IItemHandler realInventory;
+	IItemHandler realInventory;
 	private BagComplex complex;
+	private Set<Item> pendingCreations = new HashSet<>();
 
 	public BagInventory(IItemHandler inv, BagComplex bagComplex)
 	{
@@ -54,6 +58,14 @@ public class BagInventory
 		}
 	}
 
+	void initCreateable()
+	{
+		for (ItemHolder holder : inventoryItems.values())
+		{
+			complex.notifyItemAdded(holder.getItem());
+		}
+	}
+
 	/**
 	 * Tries to remove the provided amount of items from the inventory (actually
 	 * removes them). The amount returned is the amount that was removed.
@@ -65,10 +77,32 @@ public class BagInventory
 			return 0;
 
 		int removed = holder.remove(amount);
-		if(holder.getCount() == 0)
+		if (holder.getCount() == 0)
 			inventoryItems.remove(item);
-			
+		
+		if(BuildersBag.TESTING)
+			Testing.assertHolderCorrectness(this, item);
+
 		return removed;
+	}
+
+	public int tryCreating(Item item, int amount, PlayerEntity player)
+	{
+		BuildersBag.LOGGER.info("Trying to create " + amount + " of " + item);
+
+		CreateableItemHolder createable = createableItems.get(item);
+		if (createable == null)
+			return 0;
+
+		if (!pendingCreations.contains(item))
+		{
+			pendingCreations.add(item);
+			int created = createable.create(amount, player);
+			pendingCreations.remove(item);
+			return created;
+		}
+		
+		return 0;
 	}
 
 	/**
@@ -76,10 +110,16 @@ public class BagInventory
 	 */
 	public void addPhysical(ItemStack stack, @Nullable BiConsumer<Item, Integer> excessHandler)
 	{
+		if (stack.isEmpty())
+			return;
+
 		if (inventoryItems.containsKey(stack.getItem()))
 		{
 			ItemHolder holder = inventoryItems.get(stack.getItem());
 			holder.add(stack.getCount(), excessHandler);
+			
+			if(BuildersBag.TESTING)
+				Testing.assertHolderCorrectness(this, stack.getItem());
 		}
 		else
 		{
@@ -93,6 +133,10 @@ public class BagInventory
 
 					ItemHolder holder = ItemHolder.of(realInventory, i);
 					inventoryItems.put(stack.getItem(), holder);
+					
+					if(BuildersBag.TESTING)
+						Testing.assertHolderCorrectness(this, stack.getItem());
+					
 					return;
 				}
 			}
@@ -121,7 +165,7 @@ public class BagInventory
 	 */
 	public boolean hasPhysical(Item item, int amount)
 	{
-		return getPhysical(item, amount) >= amount;
+		return getPhysical(item) >= amount;
 	}
 
 	/**
@@ -136,12 +180,12 @@ public class BagInventory
 	/**
 	 * Returns the amount of physical items of this type
 	 */
-	public int getPhysical(Item item, int amount)
+	public int getPhysical(Item item)
 	{
 		return inventoryItems.containsKey(item) ? inventoryItems.get(item).getCount() : 0;
 	}
 
-	public void addCraftable(Item item, IBagModule module, RequirementItem req)
+	public void addCraftable(Item item, IBagModule module, ItemCreationRequirements req)
 	{
 		complex.notifyItemAddedWithCheck(item);
 		CreateableItemHolder createable = createableItems.getOrDefault(item, new CreateableItemHolder(item, complex));
@@ -149,7 +193,7 @@ public class BagInventory
 		createableItems.put(item, createable);
 	}
 
-	public void removeCraftable(Item item, IBagModule module, RequirementItem req)
+	public void removeCraftable(Item item, IBagModule module, ItemCreationRequirements req)
 	{
 		CreateableItemHolder createable = createableItems.getOrDefault(item, new CreateableItemHolder(item, complex));
 		if (createable.removeProvider(module, req))

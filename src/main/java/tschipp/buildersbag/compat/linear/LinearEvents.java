@@ -65,7 +65,7 @@
 //			if (requested <= 0)
 //				break;
 //
-//			if (player.world.isRemote)
+//			if (player.level.isRemote)
 //				BagCache.startSimulation(bag);
 //
 //			IBagCap bagCap = CapHelper.getBagCap(bag);
@@ -73,19 +73,19 @@
 //			{
 //				if (bagCap.hasModuleAndEnabled("buildersbag:supplier"))
 //				{
-//					NonNullList<ItemStack> provided = BagHelper.getOrProvideStackWithCount(stack, requested + (player.world.isRemote ? 1 : 0), bagCap, player, null);
+//					NonNullList<ItemStack> provided = BagHelper.getOrProvideStackWithCount(stack, requested + (player.level.isRemote ? 1 : 0), bagCap, player, null);
 //					if (!provided.isEmpty())
-//						providedBlocks += provided.size() - (player.world.isRemote ? 1 : 0);
+//						providedBlocks += provided.size() - (player.level.isRemote ? 1 : 0);
 //
 //					requested -= provided.size();
 //
-//					if (!player.world.isRemote)
+//					if (!player.level.isRemote)
 //						for (ItemStack prov : provided)
 //							BagHelper.addStack(prov, bagCap, player);
 //				}
 //			}
 //
-//			if (player.world.isRemote)
+//			if (player.level.isRemote)
 //				BagCache.stopSimulation(bag);
 //
 //		}
@@ -112,7 +112,7 @@
 //			if (placementStack.isEmpty() || !(placementStack.getItem() instanceof BlockItem))
 //				return;
 //
-//			if (player.world.isRemote)
+//			if (player.level.isRemote)
 //				BagCache.startSimulation(stack);
 //
 //			NonNullList<ItemStack> provided = NonNullList.create();
@@ -120,7 +120,7 @@
 //
 //			if (bagCap.hasModuleAndEnabled("buildersbag:random"))
 //			{
-//				if (player.world.isRemote)
+//				if (player.level.isRemote)
 //				{
 //					newlyProvided += BagHelper.getAllAvailableStacksCount(bagCap, player);
 //					providedBlocks += newlyProvided;
@@ -129,18 +129,18 @@
 //					provided = BagHelper.getOrProvideStackWithCountDominating(requested, bagCap, player);
 //			}
 //			else
-//				provided = BagHelper.getOrProvideStackWithCount(placementStack, requested + (player.world.isRemote ? requested + 5 : 0), bagCap, player, null);
+//				provided = BagHelper.getOrProvideStackWithCount(placementStack, requested + (player.level.isRemote ? requested + 5 : 0), bagCap, player, null);
 //			
 //			if (!provided.isEmpty())
 //				providedBlocks += provided.size();
 //
-//			if (!player.world.isRemote)
+//			if (!player.level.isRemote)
 //				for (ItemStack prov : provided)
 //					BagHelper.addStack(prov, bagCap, player);
 //
 //			requested -= (provided.size() + newlyProvided);
 //
-//			if (player.world.isRemote)
+//			if (player.level.isRemote)
 //				BagCache.stopSimulation(stack);
 //		}
 //
@@ -258,7 +258,7 @@
 //	{
 //		PlayerEntity player = event.getPlayer();
 //		ItemStack stack = event.getStack();
-//		World world = player.world;
+//		World world = player.level;
 //
 //		if (stack.getItem() instanceof BuildersBagItem)
 //		{
@@ -304,7 +304,7 @@
 //	{
 //		PlayerEntity player = event.getPlayer();
 //		ItemStack stack = event.getStack();
-//		World world = player.world;
+//		World world = player.level;
 //		Hand hand = event.getHand();
 //
 //		if (stack.getItem() instanceof BuildersBagItem)
@@ -354,7 +354,7 @@
 //				stand.rotationYaw = player.rotationYaw;
 //
 //				float[] hit = LinearHelper.getHitCoords(player);
-//				BlockState state = block.getStateForPlacement(player.world, LinearHelper.getLookPos(player, LinearHelper.canPlaceInMidair(player)), ray.sideHit, hit[0], hit[1], hit[2], placementStack.getMetadata(), stand, hand);
+//				BlockState state = block.getStateForPlacement(player.level, LinearHelper.getLookPos(player, LinearHelper.canPlaceInMidair(player)), ray.sideHit, hit[0], hit[1], hit[2], placementStack.getMetadata(), stand, hand);
 //
 //				if (state != null)
 //					event.setState(state);

@@ -8,9 +8,9 @@ import com.google.common.collect.Lists;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.items.ItemStackHandler;
+import tschipp.buildersbag.api.BagComplex;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
-import tschipp.buildersbag.api.datastructures.BagComplex;
 import tschipp.buildersbag.common.BuildersBagRegistry;
 import tschipp.buildersbag.common.config.Configs;
 import tschipp.buildersbag.common.inventory.BagItemStackHandler;
@@ -34,9 +34,7 @@ public class BagCap implements IBagCap
 	
 	public BagCap(int tier)
 	{
-		reInit(tier);
-		
-		this.complex = new BagComplex(this);
+		reInit(tier);		
 	}
 	
 	private void initModules(List<? extends String> modules)
@@ -152,6 +150,9 @@ public class BagCap implements IBagCap
 			inv = new BagItemStackHandler(Configs.Settings.tier5Slots.get());
 			break;
 		}
+		
+		this.complex = new BagComplex(this);
+
 	}
 
 	@Override

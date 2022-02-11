@@ -14,11 +14,8 @@ import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.network.simple.SimpleChannel;
 import net.minecraftforge.forgespi.language.IModInfo;
-import tschipp.buildersbag.common.BuildersBagRegistry;
 import tschipp.buildersbag.common.config.Configs;
 
 @EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.MOD)
@@ -48,6 +45,8 @@ public class BuildersBag
 	public static final File seenModsFile = new File("seen_buildersbag_addons.txt");
 	private static final List<String> seenMods = new ArrayList<String>();
 	public static boolean isNewlyGenerated = false;
+	
+	public static boolean TESTING = true;
 	
 	public BuildersBag()
 	{

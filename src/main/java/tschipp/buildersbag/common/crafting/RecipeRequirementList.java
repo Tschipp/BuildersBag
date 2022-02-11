@@ -19,7 +19,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.Ingredient;
 import net.minecraft.util.NonNullList;
 import tschipp.buildersbag.api.IBagCap;
-import tschipp.buildersbag.api.datastructures.ItemContainer;
+import tschipp.buildersbag.api.ItemContainer;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 
 public class RecipeRequirementList

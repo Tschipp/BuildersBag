@@ -31,7 +31,7 @@
 //
 //		long time = System.currentTimeMillis();
 //		
-//		if(player.world.isRemote)
+//		if(player.level.isRemote)
 //		{
 //			BagCache.startSimulation(inventoryStack);
 //			provided = BagHelper.getOrProvideStackWithCount(stack, 500, bag, player, null);

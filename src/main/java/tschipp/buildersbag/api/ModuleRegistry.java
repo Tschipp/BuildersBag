@@ -1,11 +1,5 @@
 package tschipp.buildersbag.api;
 
-import java.util.function.Supplier;
-
-import net.minecraft.util.ResourceLocation;
-import tschipp.buildersbag.BuildersBag;
-import tschipp.buildersbag.common.BuildersBagRegistry;
-
 public class ModuleRegistry
 {
 //	/** TODO remove, use registry events

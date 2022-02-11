@@ -1,4 +1,4 @@
-package tschipp.buildersbag.api.datastructures;
+package tschipp.buildersbag.api;
 
 public class Tuple<A, B>
 {

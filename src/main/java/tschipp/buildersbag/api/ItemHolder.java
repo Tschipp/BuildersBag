@@ -1,4 +1,4 @@
-package tschipp.buildersbag.api.datastructures;
+package tschipp.buildersbag.api;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -142,5 +142,11 @@ public class ItemHolder
 	public boolean isItem(Item item)
 	{
 		return containedItem == item;
+	}
+	
+	@Override
+	public String toString()
+	{
+		return containedAmount + " x " + containedItem;
 	}
 }

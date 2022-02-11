@@ -4,7 +4,6 @@ import java.util.List;
 
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.items.ItemStackHandler;
-import tschipp.buildersbag.api.datastructures.BagComplex;
 
 public interface IBagCap
 {

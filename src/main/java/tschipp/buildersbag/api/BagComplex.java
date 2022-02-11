@@ -1,8 +1,6 @@
-package tschipp.buildersbag.api.datastructures;
+package tschipp.buildersbag.api;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -10,9 +8,7 @@ import javax.annotation.Nullable;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
-import tschipp.buildersbag.api.BagModuleType;
-import tschipp.buildersbag.api.IBagCap;
-import tschipp.buildersbag.api.IBagModule;
+import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.common.helper.BagHelper;
 
 public class BagComplex
@@ -20,13 +16,12 @@ public class BagComplex
 	private boolean valid = false;
 	private BagInventory inventory;
 	private IBagCap bagCap;
-	private Map<BagModuleType<? extends IBagModule>, IBagModule> modules;
-	
+	private Set<Item> pendingAdditions = new HashSet<>();
+
 	public BagComplex(IBagCap cap)
 	{
 		this.bagCap = cap;
 		this.inventory = new BagInventory(cap.getBlockInventory(), this);
-		this.modules = new HashMap<>();
 	}
 	
 	public boolean isValid()
@@ -42,8 +37,9 @@ public class BagComplex
 
 	public void validate()
 	{
-		this.inventory = new BagInventory(bagCap.getBlockInventory(), this);
 		this.valid = true;
+		this.inventory = new BagInventory(bagCap.getBlockInventory(), this);
+		this.inventory.initCreateable();
 	}
 	
 	public void invalidate()
@@ -60,19 +56,43 @@ public class BagComplex
 	@Nullable
 	public IBagModule getModule(BagModuleType<? extends IBagModule> type)
 	{
-		return modules.get(type);
+		for(IBagModule bm : bagCap.getModules())
+		{
+			if(bm.getType() == type)
+				return bm;
+		}
+		return null;
 	}
 	
-	public int take(Item item, int amount, PlayerEntity player)
+	public int take(Item item, int amount, PlayerEntity player, boolean reAddExtra)
 	{
+		amount = Math.max(amount, 0);
+		
 		BagInventory inv = getInventory();
 		int available = inv.removePhysical(item, amount);
 		
-		boolean anyLeft = inv.has(item); //Only notify if there's really no items of this type left
-		if(!anyLeft && available > 0)
+		if(available < amount)
+		{
+			available += inv.tryCreating(item, amount - available, player);
+		}	
+		
+		boolean anyLeft = inv.has(item); //Only notify if there's really no items of this type left, dosn't work yet
+		if(!anyLeft && available-amount <= 0)
 			notifyItemRemoved(item);
 		
+		if(reAddExtra && available - amount > 0)
+			add(item, available-amount, player);
+		
+		runTests();
+		
 		return available;
+	}
+	
+	
+	
+	public int take(Item item, int amount, PlayerEntity player)
+	{
+		return take(item, amount, player, true);
 	}
 	
 	public void add(Item item, int amount, PlayerEntity player)
@@ -84,6 +104,8 @@ public class BagComplex
 		
 		if(notify)
 			notifyItemAdded(item);
+		
+		runTests();
 	}
 	
 	/*
@@ -93,23 +115,31 @@ public class BagComplex
 	
 	public void notifyItemAdded(Item item)
 	{
-		for(BagModuleType<?> type : modules.keySet())
+		for(IBagModule bm : bagCap.getModules())
 		{
-			type.getListener().notifyAdded(item, this);
+			bm.getType().getListener().notifyAdded(item, this);
+			runTests();
 		}
 	}
 	
 	public void notifyItemAddedWithCheck(Item item)
 	{
-		if(!getInventory().has(item))
+		if(!pendingAdditions.contains(item))
+		{
+			pendingAdditions.add(item);
 			notifyItemAdded(item);
+			pendingAdditions.remove(item);
+		}
 	}
 	
+	//TODO: this doesn't quite work yet, sometimes when a item was created but is no longer creatable, the
+	//creatable is not removed. Also, somehow made charcoal from coal block?
 	public void notifyItemRemoved(Item item)
 	{
-		for(BagModuleType<?> type : modules.keySet())
+		for(IBagModule bm : bagCap.getModules())
 		{
-			type.getListener().notifyRemoved(item, this);
+			bm.getType().getListener().notifyRemoved(item, this);
+			runTests();
 		}
 	}
 	
@@ -131,5 +161,13 @@ public class BagComplex
 		all.addAll(getCreateableItems());
 		all.addAll(getPhysicalItems());
 		return all;
+	}
+	
+	private void runTests()
+	{
+		if(BuildersBag.TESTING)
+		{
+			Testing.assertBagCorrectness(bagCap);
+		}
 	}
 }

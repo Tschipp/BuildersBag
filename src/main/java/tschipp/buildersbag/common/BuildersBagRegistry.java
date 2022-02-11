@@ -2,7 +2,6 @@ package tschipp.buildersbag.common;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nullable;
 
@@ -22,12 +21,15 @@ import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.BagModuleType;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
-import tschipp.buildersbag.api.datastructures.RequirementListener;
+import tschipp.buildersbag.api.RequirementListener;
 import tschipp.buildersbag.common.caps.BagCap;
 import tschipp.buildersbag.common.caps.BagCapStorage;
+import tschipp.buildersbag.common.crafting.CraftingHandler;
+import tschipp.buildersbag.common.crafting.CraftingRecipesLoadedEvent;
 import tschipp.buildersbag.common.inventory.ContainerBag;
 import tschipp.buildersbag.common.inventory.ContainerBag.BagContainerFactory;
 import tschipp.buildersbag.common.item.BuildersBagItem;
+import tschipp.buildersbag.common.modules.CraftingModule;
 import tschipp.buildersbag.common.modules.RandomnessModule;
 import tschipp.buildersbag.common.modules.SupplierModule;
 
@@ -63,6 +65,9 @@ public class BuildersBagRegistry
 	@ObjectHolder("supplier")
 	public static final BagModuleType<SupplierModule> MODULE_SUPPLIER = null;
 	
+	@ObjectHolder("crafting")
+	public static final BagModuleType<SupplierModule> MODULE_CRAFTING = null;
+	
 	@SubscribeEvent
 	public static void onRegistriesRegister(RegistryEvent.NewRegistry event)
 	{
@@ -96,7 +101,8 @@ public class BuildersBagRegistry
 	{
 		event.getRegistry().registerAll(
 				BagModuleType.create(rs("random"), RandomnessModule::new,  RequirementListener::builder, 1, 2, 3, 4, 5),
-				BagModuleType.create(rs("supplier"), SupplierModule::new,  RequirementListener::builder, 5)
+				BagModuleType.create(rs("supplier"), SupplierModule::new,  RequirementListener::builder, 5),
+				BagModuleType.create(rs("crafting"), CraftingModule::new,  CraftingHandler::createRecipeListener, CraftingRecipesLoadedEvent.class, 4, 5)
 				);
 	}
 	

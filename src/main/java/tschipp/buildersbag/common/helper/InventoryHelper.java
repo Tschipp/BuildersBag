@@ -14,7 +14,7 @@ import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.IBagCap;
 import tschipp.buildersbag.api.IBagModule;
 import tschipp.buildersbag.api.IBlockSource;
-import tschipp.buildersbag.api.datastructures.Tuple;
+import tschipp.buildersbag.api.Tuple;
 import tschipp.buildersbag.common.item.BuildersBagItem;
 import tschipp.buildersbag.compat.baubles.BaubleHelper;
 import tschipp.buildersbag.compat.blocksourceadapter.BlockSourceAdapterHandler;

@@ -12,7 +12,7 @@
 //			return OreTiersAPI.getStageInfo(block);
 //		}
 //		
-//		return new Tuple("", Blocks.AIR.getDefaultState());
+//		return new Tuple("", Blocks.AIR.defaultBlockState());
 //	}
 //
 //}

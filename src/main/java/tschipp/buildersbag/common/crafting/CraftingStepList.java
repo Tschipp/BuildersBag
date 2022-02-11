@@ -13,7 +13,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.NonNullList;
 import tschipp.buildersbag.api.IBagCap;
-import tschipp.buildersbag.api.datastructures.ItemContainer;
+import tschipp.buildersbag.api.ItemContainer;
 import tschipp.buildersbag.common.crafting.CraftingStepList.CraftingStep;
 import tschipp.buildersbag.common.helper.InventoryHelper;
 import tschipp.buildersbag.common.helper.MapHelper;

@@ -3,13 +3,13 @@ package tschipp.buildersbag.common.modules;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.NonNullList;
 import net.minecraftforge.items.ItemStackHandler;
 import tschipp.buildersbag.api.AbstractBagModule;
+import tschipp.buildersbag.api.BagComplex;
 import tschipp.buildersbag.api.BagModuleType;
-import tschipp.buildersbag.api.IBagCap;
+import tschipp.buildersbag.api.CreateableItemsManager;
 import tschipp.buildersbag.api.IBagModule;
-import tschipp.buildersbag.api.datastructures.CreateableItemsManager;
+import tschipp.buildersbag.api.RequirementListener.ItemCreationRequirements;
 import tschipp.buildersbag.common.BuildersBagRegistry;
 
 public class SupplierModule extends AbstractBagModule
@@ -42,12 +42,6 @@ public class SupplierModule extends AbstractBagModule
 	}
 
 	@Override
-	public NonNullList<ItemStack> createStackWithCount(ItemStack stack, int count, IBagCap bag, PlayerEntity player)
-	{
-		return NonNullList.create();
-	}
-
-	@Override
 	public CreateableItemsManager getCreateableItemsManager()
 	{
 		return null;
@@ -57,5 +51,11 @@ public class SupplierModule extends AbstractBagModule
 	public BagModuleType<? extends IBagModule> getType()
 	{
 		return BuildersBagRegistry.MODULE_SUPPLIER;
+	}
+
+	@Override
+	public int createItems(ItemCreationRequirements req, int count, BagComplex complex, PlayerEntity player)
+	{
+		return 0;
 	}
 }

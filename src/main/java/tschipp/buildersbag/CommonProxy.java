@@ -13,6 +13,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.network.NetworkDirection;
 import net.minecraftforge.fml.network.NetworkRegistry;
 import net.minecraftforge.fml.network.PacketDistributor;
+import tschipp.buildersbag.api.IngredientMapper;
 import tschipp.buildersbag.common.BuildersBagRegistry;
 import tschipp.buildersbag.network.client.GrowItemClient;
 import tschipp.buildersbag.network.client.ModifyCacheClient;
@@ -65,6 +66,7 @@ public class CommonProxy implements IProxy
 
 //		NetworkRegistry.INSTANCE.registerGuiHandler(BuildersBag.instance, new BagGuiHandler());
 		BuildersBagRegistry.registerCapabilities();
+		IngredientMapper.init();
 		
 //		BuildersBagConfig.setDefaultsOnFirstLoad();
 
@@ -79,7 +81,7 @@ public class CommonProxy implements IProxy
 
 //		if (ModList.get().isLoaded("chiselsandbits"))
 //		{
-//			FMLEmbeddedChannel server = NetworkRegistry.INSTANCE.getChannel("ChiselsAndBits", Side.SERVER);
+//			FMLEmbeddedChannel server = NetworkRegistry.INSTANCE.getChannel("ChiselsAndBits", Dist.DEDICATED_SERVER);
 //			NetworkEventFiringHandler handler = server.pipeline().get(NetworkEventFiringHandler.class);
 //			try
 //			{
