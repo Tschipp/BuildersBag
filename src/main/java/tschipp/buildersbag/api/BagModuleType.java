@@ -1,13 +1,7 @@
 package tschipp.buildersbag.api;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
-
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.Event;
@@ -16,7 +10,12 @@ import net.minecraftforge.registries.ForgeRegistryEntry;
 import tschipp.buildersbag.BuildersBag;
 import tschipp.buildersbag.api.RequirementListener.Builder;
 
-public class BagModuleType<T extends IBagModule> extends ForgeRegistryEntry<BagModuleType<T>>
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+public class BagModuleType<T extends IBagModule> extends ForgeRegistryEntry<BagModuleType<?>>
 {
 	private final Supplier<T> factory;
 	private final Function<Event, RequirementListener.Builder> listenerEventFactory;
@@ -46,8 +45,6 @@ public class BagModuleType<T extends IBagModule> extends ForgeRegistryEntry<BagM
 				RequirementListener.Builder builder = this.listenerEventFactory.apply(event);
 				builder.setType(this);
 				listener = builder.build();
-//				listener.printGraph();
-//				System.out.println("Foo");
 			});
 		}
 
@@ -56,12 +53,12 @@ public class BagModuleType<T extends IBagModule> extends ForgeRegistryEntry<BagM
 	@SuppressWarnings("unchecked")
 	public static <T extends IBagModule, E extends Event> BagModuleType<T> create(ResourceLocation name, Supplier<T> factory, Function<E, RequirementListener.Builder> listenerEventFactory, Class<E> eventClass, int... levels)
 	{
-		return new BagModuleType<T>(factory, null, (Function<Event, Builder>) listenerEventFactory, eventClass, levels).setRegistryName(name);
+		return (BagModuleType<T>) new BagModuleType<T>(factory, null, (Function<Event, Builder>) listenerEventFactory, eventClass, levels).setRegistryName(name);
 	}
 
 	public static <T extends IBagModule> BagModuleType<T> create(ResourceLocation name, Supplier<T> factory, Supplier<RequirementListener.Builder> listenerFactory, int... levels)
 	{
-		return new BagModuleType<T>(factory, listenerFactory, null, null, levels).setRegistryName(name);
+		return (BagModuleType<T>) new BagModuleType<T>(factory, listenerFactory, null, null, levels).setRegistryName(name);
 	}
 
 	public T create()

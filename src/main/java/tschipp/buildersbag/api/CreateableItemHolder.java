@@ -1,13 +1,13 @@
 package tschipp.buildersbag.api;
 
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
+import tschipp.buildersbag.api.RequirementListener.ItemCreationRequirements;
+
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Set;
-
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import tschipp.buildersbag.api.RequirementListener.ItemCreationRequirements;
 
 public class CreateableItemHolder
 {
@@ -62,12 +62,20 @@ public class CreateableItemHolder
 		return containedItem;
 	}
 
-	public void addProvider(IBagModule module, ItemCreationRequirements req)
+	/*
+	 * Returns true if the provider didn't already exist
+	 */
+	public boolean addProvider(IBagModule module, ItemCreationRequirements req)
 	{
 		Tuple<IBagModule, ItemCreationRequirements> t = new Tuple<>(module, req);
 		providerModules.add(t);
 		if (!priorityQueue.contains(t))
+		{
 			priorityQueue.add(t);
+			return true;
+		}
+		else
+			return false;
 	}
 
 	public boolean removeProvider(IBagModule module, ItemCreationRequirements req)
@@ -101,6 +109,27 @@ public class CreateableItemHolder
 		}
 		return created;
 
+	}
+	
+	IBagModule getClosestCreationModule()
+	{
+		return priorityQueue.peek().getFirst();
+	}
+	
+	ItemCreationRequirements getClosestProvider()
+	{
+		return priorityQueue.peek().getSecond();
+	}
+
+	IBagModule getClosestCreationModuleExcept(IBagModule module)
+	{
+		for(Tuple<IBagModule, ItemCreationRequirements> t : priorityQueue)
+		{
+			if(module == t.getFirst())
+				continue;
+			return t.getFirst();
+		}
+		return null;
 	}
 
 	@Override

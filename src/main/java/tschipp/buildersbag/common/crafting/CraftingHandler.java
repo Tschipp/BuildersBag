@@ -51,12 +51,8 @@ public class CraftingHandler
 
 		RequirementListener.Builder builder = RequirementListener.builder();
 
-//		top:
 		for (ICraftingRecipe r : recipes)
-		{
-			if(r.getResultItem().getItem() == Items.PISTON)
-				System.out.println("Foo");
-			
+		{	
 			if (r.getIngredients().isEmpty() || r.getResultItem().isEmpty())
 				continue;
 
@@ -76,8 +72,7 @@ public class CraftingHandler
 
 					keys.add(key);
 				}
-//				else
-//					continue top;
+
 			}
 
 			Item result = r.getResultItem().getItem();

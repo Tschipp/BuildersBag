@@ -22,7 +22,8 @@ public class BagInventory
 
 	IItemHandler realInventory;
 	private BagComplex complex;
-	private Set<Item> pendingCreations = new HashSet<>();
+	Set<Item> pendingCreations = new HashSet<>();
+	Item creationStart = null;
 
 	public BagInventory(IItemHandler inv, BagComplex bagComplex)
 	{
@@ -79,8 +80,8 @@ public class BagInventory
 		int removed = holder.remove(amount);
 		if (holder.getCount() == 0)
 			inventoryItems.remove(item);
-		
-		if(BuildersBag.TESTING)
+
+		if (BuildersBag.TESTING)
 			Testing.assertHolderCorrectness(this, item);
 
 		return removed;
@@ -88,21 +89,40 @@ public class BagInventory
 
 	public int tryCreating(Item item, int amount, PlayerEntity player)
 	{
-		BuildersBag.LOGGER.info("Trying to create " + amount + " of " + item);
-
-		CreateableItemHolder createable = createableItems.get(item);
-		if (createable == null)
-			return 0;
-
-		if (!pendingCreations.contains(item))
+		try
 		{
-			pendingCreations.add(item);
-			int created = createable.create(amount, player);
-			pendingCreations.remove(item);
-			return created;
+			BuildersBag.LOGGER.info("Trying to create " + amount + " of " + item);
+
+			CreateableItemHolder createable = createableItems.get(item);
+			if (createable == null)
+				return 0;
+
+			if (creationStart == null)
+				creationStart = item;
+
+			if (!pendingCreations.contains(item))
+			{
+				pendingCreations.add(item);
+				int created = createable.create(amount, player);
+				if (created > 0)
+					pendingCreations.remove(item);
+				return created;
+			}
+			else
+			{
+				BuildersBag.LOGGER.info("Blocked creation of " + item + " because creation was pending");
+			}
+
+			return 0;
 		}
-		
-		return 0;
+		finally
+		{
+			if(creationStart == item)
+			{
+				pendingCreations.clear();
+				creationStart = null;
+			}
+		}
 	}
 
 	/**
@@ -117,15 +137,15 @@ public class BagInventory
 		{
 			ItemHolder holder = inventoryItems.get(stack.getItem());
 			holder.add(stack.getCount(), excessHandler);
-			
-			if(BuildersBag.TESTING)
+
+			if (BuildersBag.TESTING)
 				Testing.assertHolderCorrectness(this, stack.getItem());
 		}
 		else
 		{
 			for (int i = 0; i < realInventory.getSlots(); i++)
 			{
-				if (realInventory.insertItem(i, stack, true) != stack)
+				if (!ItemStack.isSame(realInventory.insertItem(i, stack, true), stack))
 				{
 					ItemStack rest = realInventory.insertItem(i, stack, false);
 					if (!rest.isEmpty())
@@ -133,10 +153,10 @@ public class BagInventory
 
 					ItemHolder holder = ItemHolder.of(realInventory, i);
 					inventoryItems.put(stack.getItem(), holder);
-					
-					if(BuildersBag.TESTING)
+
+					if (BuildersBag.TESTING)
 						Testing.assertHolderCorrectness(this, stack.getItem());
-					
+
 					return;
 				}
 			}
@@ -160,6 +180,14 @@ public class BagInventory
 	}
 
 	/**
+	 * returns true if the Bag can create a given item
+	 */
+	public boolean hasCraftable(Item item)
+	{
+		return createableItems.containsKey(item);
+	}
+
+	/**
 	 * returns true if the Bag actually has at least the specified amount of
 	 * items
 	 */
@@ -174,7 +202,7 @@ public class BagInventory
 	 */
 	public boolean has(Item item)
 	{
-		return hasPhysical(item, 1) || createableItems.containsKey(item);
+		return hasPhysical(item, 1) || hasCraftable(item);
 	}
 
 	/**
@@ -187,9 +215,9 @@ public class BagInventory
 
 	public void addCraftable(Item item, IBagModule module, ItemCreationRequirements req)
 	{
-		complex.notifyItemAddedWithCheck(item);
 		CreateableItemHolder createable = createableItems.getOrDefault(item, new CreateableItemHolder(item, complex));
-		createable.addProvider(module, req);
+		if (createable.addProvider(module, req))
+			complex.notifyItemAddedWithCheck(item);
 		createableItems.put(item, createable);
 	}
 
@@ -202,5 +230,14 @@ public class BagInventory
 			complex.notifyItemRemoved(item);
 		}
 	}
+
+	public boolean isCraftableExcept(Item item, IBagModule module)
+	{
+		CreateableItemHolder createable = createableItems.getOrDefault(item, new CreateableItemHolder(item, complex));
+		IBagModule nextClosest = createable.getClosestCreationModuleExcept(module);
+		return nextClosest != null;
+	}
+
+
 
 }

@@ -41,7 +41,7 @@ if (System.getenv('BUILD_NUMBER') != null) {
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
-    mappings channel: 'parchment', version: "${mapping_version}-${minecraft_version}"
+    mappings channel: 'parchment', version: "${mapping_version}"
    
     runs {
         client {
@@ -143,7 +143,8 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
 	implementation fg.deobf("team.chisel.ctm:CTM:${ctm_version}") //CTM
-	//deobfCompile "team.chisel:Chisel:${chisel_version}" //Chisel //not yet available
+	implementation fg.deobf("team.chisel:base:${chisel_version}:slim") //Chisel
+	implementation fg.deobf("com.tterrag.registrate:Registrate:${registrate_version}") //Registrate, Chisel Dependency
 	//compile "curse.maven:littletiles:${littletiles_version}" //LT //not yet available
 	//compile "curse.maven:creativecore:${creativecore_version}" //Creative Core //not yet available
 	implementation fg.deobf("curse.maven:chisels-bits-231095:${chisels_and_bits_version}") //C & B

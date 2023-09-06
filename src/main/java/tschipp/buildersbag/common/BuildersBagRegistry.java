@@ -1,17 +1,14 @@
 package tschipp.buildersbag.common;
 
-import java.util.Collections;
-import java.util.List;
-
-import javax.annotation.Nullable;
-
 import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.Item;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.extensions.IForgeContainerType;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.event.TagsUpdatedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 import net.minecraftforge.registries.IForgeRegistry;
@@ -29,9 +26,14 @@ import tschipp.buildersbag.common.crafting.CraftingRecipesLoadedEvent;
 import tschipp.buildersbag.common.inventory.ContainerBag;
 import tschipp.buildersbag.common.inventory.ContainerBag.BagContainerFactory;
 import tschipp.buildersbag.common.item.BuildersBagItem;
+import tschipp.buildersbag.common.modules.ChiselModule;
 import tschipp.buildersbag.common.modules.CraftingModule;
 import tschipp.buildersbag.common.modules.RandomnessModule;
 import tschipp.buildersbag.common.modules.SupplierModule;
+
+import javax.annotation.Nullable;
+import java.util.Collections;
+import java.util.List;
 
 @ObjectHolder(BuildersBag.MODID)
 @EventBusSubscriber(modid = BuildersBag.MODID, bus = Bus.MOD)
@@ -68,6 +70,9 @@ public class BuildersBagRegistry
 	@ObjectHolder("crafting")
 	public static final BagModuleType<SupplierModule> MODULE_CRAFTING = null;
 	
+	@ObjectHolder("chisel")
+	public static final BagModuleType<ChiselModule> MODULE_CHISEL = null;
+	
 	@SubscribeEvent
 	public static void onRegistriesRegister(RegistryEvent.NewRegistry event)
 	{
@@ -99,11 +104,15 @@ public class BuildersBagRegistry
 	@SubscribeEvent
 	public static void onBagModuleRegister(RegistryEvent.Register<BagModuleType<?>> event)
 	{
-		event.getRegistry().registerAll(
+		IForgeRegistry<BagModuleType<?>> reg = event.getRegistry();
+		reg.registerAll(
 				BagModuleType.create(rs("random"), RandomnessModule::new,  RequirementListener::builder, 1, 2, 3, 4, 5),
 				BagModuleType.create(rs("supplier"), SupplierModule::new,  RequirementListener::builder, 5),
 				BagModuleType.create(rs("crafting"), CraftingModule::new,  CraftingHandler::createRecipeListener, CraftingRecipesLoadedEvent.class, 4, 5)
 				);
+		
+		if(ModList.get().isLoaded("chisel"))
+			reg.register(BagModuleType.create(rs("chisel"), ChiselModule::new,  ChiselModule::createRecipeListener, TagsUpdatedEvent.class, 2, 3, 4, 5));
 	}
 	
 	private static ResourceLocation rs(String name)
@@ -170,7 +179,7 @@ public class BuildersBagRegistry
 
 	public static String[] getDefaultModulesForTier(int tier)
 	{
-		return new String[] {"buildersbag:random", "buildersbag:supplier"};
+		return new String[] {"buildersbag:random", "buildersbag:supplier", "buildersbag:crafting", "buildersbag:chisel"};
 //		return REGISTRY_MODULES.getValues()
 //		.stream()
 //		.filter(type -> type.getBagLevels().contains(tier))

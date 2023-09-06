@@ -85,11 +85,13 @@ public class ItemHolder
 		
 		for(int slot : slots)
 		{
-			if(handler.insertItem(slot, insertionStack, true) != insertionStack)
+			if(!ItemStack.isSame(handler.insertItem(slot, insertionStack, true), insertionStack))
 			{
 				ItemStack rest = handler.insertItem(slot, insertionStack, false);
 				if(!rest.isEmpty())
 					amount += rest.getCount();
+				
+				containedAmount += insertionStack.getCount();
 				
 				if(amount == 0)
 					return;
@@ -101,11 +103,13 @@ public class ItemHolder
 		
 		for (int i = 0; i < handler.getSlots(); i++)
 		{
-			if(handler.insertItem(i, insertionStack, true) != insertionStack)
+			if(!ItemStack.isSame(handler.insertItem(i, insertionStack, true), insertionStack))
 			{
 				ItemStack rest = handler.insertItem(i, insertionStack, false);
 				if(!rest.isEmpty())
 					amount += rest.getCount();
+				
+				containedAmount += insertionStack.getCount();
 				
 				if(amount == 0)
 					return;

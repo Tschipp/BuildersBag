@@ -254,7 +254,7 @@ public class CraftingModule extends AbstractBagModule
 
 				if (total < needed)
 				{
-					reAddOverflow(player, gatheredIngs, inv);
+					reAddOverflow(player, gatheredIngs, complex);
 					break crafter;
 				}
 			}
@@ -307,13 +307,14 @@ public class CraftingModule extends AbstractBagModule
 		return created;
 	}
 
-	private void reAddOverflow(PlayerEntity player, Map<IngredientKey, LinkedList<Item>> gatheredIngs, BagInventory inv)
+	private void reAddOverflow(PlayerEntity player, Map<IngredientKey, LinkedList<Item>> gatheredIngs, BagComplex complex)
 	{		
 		for (Entry<IngredientKey, LinkedList<Item>> e : gatheredIngs.entrySet())
 		{
 			//TODO: This seems to be the issue witht he desyncs, look into this.
 			e.getValue().forEach(it -> {
-				inv.addPhysical(it, 1, BagHelper.handleExcess(player));
+				complex.add(it, 1, player);
+//				inv.addPhysical(it, 1, BagHelper.handleExcess(player));
 			});
 		}
 	}

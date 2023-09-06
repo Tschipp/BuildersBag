@@ -1,6 +1,6 @@
 package tschipp.buildersbag.api;
 
-public enum ModulePriority
+public enum ModulePriority implements Comparable<ModulePriority>
 {
 	HIGHEST(4),
 	HIGH(3),
@@ -19,5 +19,6 @@ public enum ModulePriority
 	{
 		return val;
 	}
+	
 
 }

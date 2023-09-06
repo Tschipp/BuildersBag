@@ -2,6 +2,7 @@ package tschipp.buildersbag;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScreenManager;
+import net.minecraft.client.gui.ScreenManager.IScreenFactory;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
@@ -15,6 +16,7 @@ import tschipp.buildersbag.client.gui.GuiBag;
 import tschipp.buildersbag.client.rendering.BagItemStackRenderer;
 import tschipp.buildersbag.client.rendering.ItemRendering;
 import tschipp.buildersbag.common.BuildersBagRegistry;
+import tschipp.buildersbag.common.inventory.ContainerBag;
 
 
 @EventBusSubscriber(bus = Bus.MOD, value = Dist.CLIENT)
@@ -27,10 +29,8 @@ public class ClientProxy implements IProxy
 		BuildersBagKeybinds.registerKeybinds();
 		ItemRendering.regItemRenders();
 		
-		ScreenManager.register(BuildersBagRegistry.BAG_CONTAINER_TYPE, (container, inv, name) -> {
-			return new GuiBag(container, inv.player, name);
-		});
-		
+		ScreenManager.register(BuildersBagRegistry.BAG_CONTAINER_TYPE, (IScreenFactory<ContainerBag, GuiBag>) (container, inv, name) -> new GuiBag(container, inv.player, name));
+
 		new KeyboardCallbackWrapper().setup(Minecraft.getInstance());
 	}
 	

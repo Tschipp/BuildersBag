@@ -69,6 +69,7 @@ public class CommonProxy implements IProxy
 		IngredientMapper.init();
 		
 //		BuildersBagConfig.setDefaultsOnFirstLoad();
+		//TODO Configs and Compat
 
 //		if (ModList.get().isLoaded("betterbuilderswands"))
 //			BBWCompat.register();

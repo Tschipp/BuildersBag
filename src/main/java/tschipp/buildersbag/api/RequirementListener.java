@@ -31,47 +31,48 @@ public class RequirementListener
 
 	public void notifyAdded(Item item, BagComplex complex)
 	{
+		IBagModule module = complex.getModule(moduleType);
+		if (module == null)
+		{
+			BuildersBag.LOGGER.error("Complex didn't contain expected Bag Module");
+			return;
+		}
+
+		if (!module.isEnabled())
+			return;
+		
 		for (IngredientKey key : IngredientMapper.getKeys(item))
 		{
 			Collection<ItemCreationRequirements> updated = listeners.get(key);
 			if (updated.isEmpty())
-				return;
-
-			IBagModule module = complex.getModule(moduleType);
-			if (module == null)
-			{
-				BuildersBag.LOGGER.error("Complex didn't contain expected Bag Module");
-				return;
-			}
-
-			if (!module.isEnabled())
-				return;
+				continue;
 
 			for (ItemCreationRequirements req : updated)
-				module.getCreateableItemsManager().add(complex, req, key);
+				module.getCreateableItemsManager().add(complex, req, key, item);
 		}
 	}
 
 	public void notifyRemoved(Item item, BagComplex complex)
 	{
+
+		IBagModule module = complex.getModule(moduleType);
+		if (module == null)
+		{
+			BuildersBag.LOGGER.error("Complex didn't contain expected Bag Module");
+			return;
+		}
+
+		if (!module.isEnabled())
+			return;
+		
 		for (IngredientKey key : IngredientMapper.getKeys(item))
 		{
-			IBagModule module = complex.getModule(moduleType);
-			if (module == null)
-			{
-				BuildersBag.LOGGER.error("Complex didn't contain expected Bag Module");
-				continue;
-			}
-
-			if (!module.isEnabled())
-				continue;
-
 			Collection<ItemCreationRequirements> updated = listeners.get(key);
 			if (updated.isEmpty())
 				continue;
 
 			for (ItemCreationRequirements req : updated)
-				module.getCreateableItemsManager().remove(complex, req, key);
+				module.getCreateableItemsManager().remove(complex, req, key, item);
 		}
 	}
 
@@ -118,7 +119,7 @@ public class RequirementListener
 
 		public <T> Builder add(Item created, @Nullable T meta, IngredientKey... required)
 		{
-			ItemCreationRequirements reqItem = new ItemCreationRequirements(created, required);
+			ItemCreationRequirements reqItem = new ItemCreationRequirements(created, meta, required);
 			for (IngredientKey req : required)
 			{
 				builder.put(req, reqItem);
@@ -193,5 +194,50 @@ public class RequirementListener
 		{
 			return requirements + " -> " + output;
 		}
+
+		@Override
+		public int hashCode()
+		{
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((meta == null) ? 0 : meta.hashCode());
+			result = prime * result + ((output == null) ? 0 : output.hashCode());
+			result = prime * result + ((requirements == null) ? 0 : requirements.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			ItemCreationRequirements other = (ItemCreationRequirements) obj;
+			if (meta == null)
+			{
+				if (other.meta != null)
+					return false;
+			}
+			else if (!meta.equals(other.meta))
+				return false;
+			if (output == null)
+			{
+				if (other.output != null)
+					return false;
+			}
+			else if (!output.equals(other.output))
+				return false;
+			if (requirements == null)
+			{
+				if (other.requirements != null)
+					return false;
+			}
+			else if (!requirements.equals(other.requirements))
+				return false;
+			return true;
+		}	
 	}
 }

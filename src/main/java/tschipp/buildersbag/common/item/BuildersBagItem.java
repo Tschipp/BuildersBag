@@ -220,6 +220,7 @@ public class BuildersBagItem extends Item implements INamedContainerProvider
 			if (!player.isCreative())
 			{
 				int removed = complex.take(placementItem, 1, player);
+				complex.runCreateableTests();
 				if (removed < 1)
 				{
 					player.displayClientMessage(new TranslationTextComponent("buildersbag.nomaterials", requestedStack.getHoverName()).withStyle(TextFormatting.RED), true);
